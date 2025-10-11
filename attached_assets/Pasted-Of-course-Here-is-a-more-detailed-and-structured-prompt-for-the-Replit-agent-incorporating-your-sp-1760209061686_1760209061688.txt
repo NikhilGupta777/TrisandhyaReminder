@@ -1,0 +1,112 @@
+Of course. Here is a more detailed and structured prompt for the Replit agent, incorporating your specific database requirement and aiming for the highest quality outcome. This prompt is designed to be a comprehensive blueprint for the AI.
+
+***
+
+### **Full, Detailed Prompt for Replit Agent**
+
+"Hello Replit Agent,
+
+I need you to build a world-class web application called **"Trisandhya Sadhana Companion."** This platform will be a digital guide and reminder tool for followers of the spiritual practices described on the **Bhavishyamalika.com** website. The primary goal is to create a serene, reliable, and feature-rich Progressive Web App (PWA) that users can install directly onto their mobile phones from the website.
+
+All spiritual information, timings, and context **must be sourced directly from [https://en.bhavishyamalika.com/](https://en.bhavishyamalika.com/)** to ensure authenticity.
+
+---
+
+### **1. Core Architecture: Progressive Web App (PWA)**
+
+The entire application must be built as a PWA from the ground up. This is crucial for meeting the requirement of being "downloadable" from the website.
+
+* **Installable:** It must have a `manifest.json` file and a service worker, prompting users on both Android and iOS to "Add to Home Screen."
+* **Offline Capability:** The service worker should cache essential assets (like the alarm interface, key text content, and sounds) so the core alarm functionality works even if the user is offline.
+* **Push Notifications:** Implement push notifications via the service worker for prayer reminders.
+
+---
+
+### **2. Homepage Dashboard**
+
+This is the first screen users will see. It needs to be both informative and spiritually motivating.
+
+* **Greeting:** A personalized greeting, like "Jai Jagannath, [User's Name]!"
+* **Live Clock:** Display the current date and time.
+* **Next Sandhya Countdown:** A prominent, real-time countdown timer to the next Sandhya period (Morning, Afternoon, or Evening). It should clearly state which Sandhya is next (e.g., "Abhijit Muhurta begins in 2:15:30").
+* **Today's Sadhana Checklist:** A simple, interactive checklist for the day:
+    * \[ ] Morning Sandhya
+    * \[ ] Afternoon Sandhya
+    * \[ ] Evening Sandhya
+    * \[ ] Shrimad Bhagwat Mahapuran (Chapter Reading)
+    * \[ ] Madhav Naam Jap (Chanting)
+* **Quick Access Panels:** Visually appealing cards linking to the main sections: "Sadhana Guide," "Media Library," and "Community."
+
+
+
+---
+
+### **3. The Trisandhya Alarm System**
+
+This is the central feature of the application.
+
+* **Accurate Timings:** The alarms must trigger within these specific windows:
+    * **Pratah Sandhya (Brahma Muhurta):** 3:35 AM - 6:30 AM
+    * **Madhyahna Sandhya (Abhijit Muhurta):** 11:30 AM - 1:00 PM
+    * **Sayam Sandhya (Godhuli Bela):** 5:30 PM - 6:30 PM
+* **User Configuration:**
+    * Allow users to toggle each of the three alarms on or off individually.
+    * Provide a choice of alarm sounds: Gentle Temple Bell, Conch Shell (Shankh), or a short "Madhav" chant.
+    * Include a volume control and a "snooze" function.
+* **Alarm Screen:** When the alarm goes off, it should display a full-screen, calming image (e.g., Lord Jagannath) with the name of the Sandhya (e.g., "Pratah Sandhya") and buttons to "Begin Sadhana" (which takes them to the guide) or "Dismiss."
+
+---
+
+### **4. Sadhana Guide Section**
+
+This section is for detailed instructions and practices.
+
+* **"What is Trisandhya?":** A dedicated page explaining the profound spiritual and scientific significance of these three daily practices, using content sourced directly from Bhavishyamalika.com.
+* **"Mahapuran Path":**
+    * A page dedicated to the daily reading of one chapter of the "Shrimad Bhagwat Mahapuran."
+    * Include a button to mark the day's chapter as "Complete."
+    * Provide a link to an embedded PDF reader or an external website with the scripture.
+* **"Madhav Naam Jap Counter":**
+    * An interactive chanting tool.
+    * It should feature a large button that the user can tap for each chant.
+    * A counter should keep track of the number of chants in the current session.
+    * Include an option to play a continuous, soft background chant audio to help with focus.
+
+---
+
+### **5. Media Library**
+
+A curated collection of spiritual media.
+
+* **Bhajans:** An audio player with a categorized playlist of Bhajans (e.g., Bhajans for Lord Vishnu, Lord Jagannath). Allow users to create their own favorite playlists.
+* **Pravachan (Discourses):** A video section with embedded YouTube videos or playlists from authoritative sources related to Bhavishya Malika.
+* **Trisandhya Videos:** A dedicated section with any available guided videos for performing the Sandhya rituals.
+
+---
+
+### **6. User Accounts & Progress**
+
+* **Authentication:** Simple and secure user sign-up/login using email/password and Google OAuth.
+* **User Profile:** Users can save their name and alarm preferences.
+* **Sadhana Tracker:** A calendar view that visually tracks the user's consistency and streaks for completing their daily Sadhana checklist. This adds a motivational element.
+
+---
+
+### **7. Technical Specifications**
+
+* **Frontend:** **Next.js (React)** for a high-performance, server-rendered application that's great for SEO and PWA functionality. Use **Tailwind CSS** for styling.
+* **Backend:** **Node.js with Express.js** or **NestJS** to build a robust API for user management, preferences, and push notifications.
+* **Database:** **Postgres via Neon**. You will be provided with the database connection string. The schema should include tables for `users`, `user_preferences`, and `sadhana_progress`.
+* **Push Notifications:** Use a service like Web-Push for sending notifications.
+* **Deployment:** The entire application will be deployed and hosted on **Replit**.
+
+---
+
+### **8. UI/UX Design**
+
+* **Aesthetic:** Clean, minimalist, and serene. The focus should be on spirituality, not flashy design.
+* **Color Palette:** Use a Sattvic color scheme: saffron, cream, light yellows, whites, and gentle blues.
+* **Typography:** Choose a clear, readable font that is elegant and easy on the eyes.
+* **Imagery:** Use high-resolution, respectful images of deities (especially Lord Jagannath), temple architecture, and serene natural landscapes.
+
+Please begin by setting up the project structure with Next.js and connecting to the Neon Postgres database. Prioritize the core alarm and PWA functionality first, then build out the content and media sections. The final product should be a stable, beautiful, and deeply useful tool for any devotee on their spiritual journey."
