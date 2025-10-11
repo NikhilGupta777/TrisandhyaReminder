@@ -5,54 +5,122 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
+import { AdminSidebar } from "@/components/AdminSidebar";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import Dashboard from "@/pages/Dashboard";
+import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/button";
+import { Shield } from "lucide-react";
+import Landing from "@/pages/Landing";
+import DashboardConnected from "@/pages/DashboardConnected";
 import SadhanaGuide from "@/pages/SadhanaGuide";
-import MediaLibrary from "@/pages/MediaLibrary";
-import Progress from "@/pages/Progress";
-import Alarms from "@/pages/Alarms";
-import Settings from "@/pages/Settings";
+import MediaLibraryConnected from "@/pages/MediaLibraryConnected";
+import ProgressConnected from "@/pages/ProgressConnected";
+import AlarmsConnected from "@/pages/AlarmsConnected";
+import SettingsConnected from "@/pages/SettingsConnected";
+import AdminDashboard from "@/pages/admin/AdminDashboard";
+import UserManagement from "@/pages/admin/UserManagement";
+import MediaManagement from "@/pages/admin/MediaManagement";
 import NotFound from "@/pages/not-found";
 
-function Router() {
+function AdminRouter() {
   return (
     <Switch>
-      <Route path="/" component={Dashboard} />
-      <Route path="/guide" component={SadhanaGuide} />
-      <Route path="/media" component={MediaLibrary} />
-      <Route path="/progress" component={Progress} />
-      <Route path="/alarms" component={Alarms} />
-      <Route path="/settings" component={Settings} />
+      <Route path="/admin" component={AdminDashboard} />
+      <Route path="/admin/users" component={UserManagement} />
+      <Route path="/admin/media" component={MediaManagement} />
       <Route component={NotFound} />
     </Switch>
   );
 }
 
-export default function App() {
+function UserRouter() {
+  return (
+    <Switch>
+      <Route path="/" component={DashboardConnected} />
+      <Route path="/guide" component={SadhanaGuide} />
+      <Route path="/media" component={MediaLibraryConnected} />
+      <Route path="/progress" component={ProgressConnected} />
+      <Route path="/alarms" component={AlarmsConnected} />
+      <Route path="/settings" component={SettingsConnected} />
+      <Route component={NotFound} />
+    </Switch>
+  );
+}
+
+function AuthenticatedApp() {
+  const { user, isAdmin } = useAuth();
+  const isAdminRoute = window.location.pathname.startsWith("/admin");
+
   const style = {
     "--sidebar-width": "16rem",
   };
 
   return (
+    <SidebarProvider style={style as React.CSSProperties}>
+      <div className="flex h-screen w-full">
+        {isAdminRoute ? <AdminSidebar /> : <AppSidebar />}
+        <div className="flex flex-col flex-1 overflow-hidden">
+          <header className="flex items-center justify-between p-4 border-b">
+            <div className="flex items-center gap-4">
+              <SidebarTrigger data-testid="button-sidebar-toggle" />
+              {isAdmin && !isAdminRoute && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => window.location.href = "/admin"}
+                  data-testid="button-admin-panel"
+                >
+                  <Shield className="h-4 w-4 mr-2" />
+                  Admin Panel
+                </Button>
+              )}
+            </div>
+            <div className="flex items-center gap-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => window.location.href = "/api/logout"}
+                data-testid="button-logout"
+              >
+                Logout
+              </Button>
+              <ThemeToggle />
+            </div>
+          </header>
+          <main className="flex-1 overflow-auto p-6">
+            {isAdminRoute ? <AdminRouter /> : <UserRouter />}
+          </main>
+        </div>
+      </div>
+    </SidebarProvider>
+  );
+}
+
+function Router() {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return isAuthenticated ? <AuthenticatedApp /> : <Landing />;
+}
+
+export default function App() {
+  return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <TooltipProvider>
-          <SidebarProvider style={style as React.CSSProperties}>
-            <div className="flex h-screen w-full">
-              <AppSidebar />
-              <div className="flex flex-col flex-1 overflow-hidden">
-                <header className="flex items-center justify-between p-4 border-b">
-                  <SidebarTrigger data-testid="button-sidebar-toggle" />
-                  <ThemeToggle />
-                </header>
-                <main className="flex-1 overflow-auto p-6">
-                  <Router />
-                </main>
-              </div>
-            </div>
-          </SidebarProvider>
           <Toaster />
+          <Router />
         </TooltipProvider>
       </ThemeProvider>
     </QueryClientProvider>
