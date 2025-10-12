@@ -1,10 +1,111 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useToast } from "@/hooks/use-toast";
 import { SiGoogle } from "react-icons/si";
-import { Sparkles, Bell, BookOpen, BarChart3 } from "lucide-react";
+import { Sparkles, Mail, Lock, User, Loader2 } from "lucide-react";
 import deityBg from "@assets/stock_images/sunrise_golden_hour__a22c9f34.jpg";
 
 export default function Login() {
+  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState("login");
+
+  const [loginData, setLoginData] = useState({
+    email: "",
+    password: "",
+  });
+
+  const [registerData, setRegisterData] = useState({
+    email: "",
+    password: "",
+    firstName: "",
+    lastName: "",
+  });
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(loginData),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast({
+          title: "Success!",
+          description: "Logged in successfully",
+        });
+        window.location.href = "/";
+      } else {
+        toast({
+          title: "Login Failed",
+          description: data.message || "Invalid credentials",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "An error occurred during login",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(registerData),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast({
+          title: "Registration Successful!",
+          description: "Please check your email to verify your account.",
+        });
+        setRegisterData({
+          email: "",
+          password: "",
+          firstName: "",
+          lastName: "",
+        });
+        setActiveTab("login");
+      } else {
+        toast({
+          title: "Registration Failed",
+          description: data.message || "Failed to register",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "An error occurred during registration",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative">
       <div
@@ -29,44 +130,200 @@ export default function Login() {
         </CardHeader>
         
         <CardContent className="space-y-6">
-          <Button
-            size="lg"
-            className="w-full py-6 text-lg font-medium bg-white dark:bg-gray-900 text-gray-900 dark:text-white border-2 border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 shadow-md hover:shadow-lg transition-all duration-200"
-            onClick={() => window.location.href = "/api/auth/google"}
-            data-testid="button-google-login"
-          >
-            <SiGoogle className="mr-3 h-5 w-5" />
-            Continue with Google
-          </Button>
-          
-          <div className="grid grid-cols-3 gap-4 pt-4">
-            <div className="text-center space-y-2">
-              <div className="mx-auto w-12 h-12 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">
-                <Bell className="h-6 w-6 text-orange-600 dark:text-orange-400" />
-              </div>
-              <p className="text-xs text-gray-600 dark:text-gray-400">Smart Alarms</p>
-            </div>
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-2 mb-4">
+              <TabsTrigger value="login" data-testid="tab-login">Login</TabsTrigger>
+              <TabsTrigger value="register" data-testid="tab-register">Register</TabsTrigger>
+            </TabsList>
             
-            <div className="text-center space-y-2">
-              <div className="mx-auto w-12 h-12 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">
-                <BookOpen className="h-6 w-6 text-orange-600 dark:text-orange-400" />
+            <TabsContent value="login" className="space-y-4">
+              <form onSubmit={handleLogin} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="login-email">Email</Label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                    <Input
+                      id="login-email"
+                      type="email"
+                      placeholder="your@email.com"
+                      className="pl-10"
+                      value={loginData.email}
+                      onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
+                      required
+                      data-testid="input-login-email"
+                    />
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="login-password">Password</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                    <Input
+                      id="login-password"
+                      type="password"
+                      placeholder="••••••••"
+                      className="pl-10"
+                      value={loginData.password}
+                      onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
+                      required
+                      data-testid="input-login-password"
+                    />
+                  </div>
+                </div>
+
+                <Button 
+                  type="submit" 
+                  className="w-full bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white"
+                  disabled={isLoading}
+                  data-testid="button-login"
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Logging in...
+                    </>
+                  ) : (
+                    "Login"
+                  )}
+                </Button>
+              </form>
+
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-gray-200 dark:border-gray-800" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-white dark:bg-gray-950 px-2 text-gray-500">Or continue with</span>
+                </div>
               </div>
-              <p className="text-xs text-gray-600 dark:text-gray-400">Sacred Guide</p>
-            </div>
+
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full border-2"
+                onClick={() => window.location.href = "/api/auth/google"}
+                data-testid="button-google-login"
+              >
+                <SiGoogle className="mr-2 h-4 w-4" />
+                Google
+              </Button>
+            </TabsContent>
             
-            <div className="text-center space-y-2">
-              <div className="mx-auto w-12 h-12 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">
-                <BarChart3 className="h-6 w-6 text-orange-600 dark:text-orange-400" />
+            <TabsContent value="register" className="space-y-4">
+              <form onSubmit={handleRegister} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="register-firstname">First Name</Label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                      <Input
+                        id="register-firstname"
+                        type="text"
+                        placeholder="First"
+                        className="pl-10"
+                        value={registerData.firstName}
+                        onChange={(e) => setRegisterData({ ...registerData, firstName: e.target.value })}
+                        required
+                        data-testid="input-register-firstname"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="register-lastname">Last Name</Label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                      <Input
+                        id="register-lastname"
+                        type="text"
+                        placeholder="Last"
+                        className="pl-10"
+                        value={registerData.lastName}
+                        onChange={(e) => setRegisterData({ ...registerData, lastName: e.target.value })}
+                        required
+                        data-testid="input-register-lastname"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="register-email">Email</Label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                    <Input
+                      id="register-email"
+                      type="email"
+                      placeholder="your@email.com"
+                      className="pl-10"
+                      value={registerData.email}
+                      onChange={(e) => setRegisterData({ ...registerData, email: e.target.value })}
+                      required
+                      data-testid="input-register-email"
+                    />
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="register-password">Password</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                    <Input
+                      id="register-password"
+                      type="password"
+                      placeholder="••••••••"
+                      className="pl-10"
+                      value={registerData.password}
+                      onChange={(e) => setRegisterData({ ...registerData, password: e.target.value })}
+                      required
+                      minLength={6}
+                      data-testid="input-register-password"
+                    />
+                  </div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    Must be at least 6 characters
+                  </p>
+                </div>
+
+                <Button 
+                  type="submit" 
+                  className="w-full bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white"
+                  disabled={isLoading}
+                  data-testid="button-register"
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Creating account...
+                    </>
+                  ) : (
+                    "Create Account"
+                  )}
+                </Button>
+              </form>
+
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-gray-200 dark:border-gray-800" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-white dark:bg-gray-950 px-2 text-gray-500">Or continue with</span>
+                </div>
               </div>
-              <p className="text-xs text-gray-600 dark:text-gray-400">Track Progress</p>
-            </div>
-          </div>
-          
-          <div className="pt-4 border-t border-gray-200 dark:border-gray-800">
-            <p className="text-center text-sm text-gray-500 dark:text-gray-400">
-              Secure authentication powered by Google
-            </p>
-          </div>
+
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full border-2"
+                onClick={() => window.location.href = "/api/auth/google"}
+                data-testid="button-google-register"
+              >
+                <SiGoogle className="mr-2 h-4 w-4" />
+                Google
+              </Button>
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
     </div>

@@ -2,16 +2,158 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated, isAdmin } from "./googleAuth";
+import passport from "passport";
+import { sendVerificationEmail, sendWelcomeEmail } from "./sendgrid";
 import {
   insertAlarmSettingsSchema,
   insertSadhanaProgressSchema,
   insertMediaContentSchema,
   insertScriptureContentSchema,
+  registerUserSchema,
+  loginUserSchema,
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
+
+  // Registration endpoint
+  app.post("/api/auth/register", async (req, res, next) => {
+    try {
+      const validatedData = registerUserSchema.parse(req.body);
+      
+      passport.authenticate("local-signup", async (err: any, user: any, info: any) => {
+        if (err) {
+          return res.status(500).json({ message: "Registration failed" });
+        }
+        
+        if (!user) {
+          return res.status(400).json({ message: info?.message || "Registration failed" });
+        }
+
+        try {
+          await sendVerificationEmail(user.email, user.firstName, user.verificationToken);
+          res.status(201).json({ 
+            message: "Registration successful! Please check your email to verify your account.",
+            email: user.email 
+          });
+        } catch (emailError) {
+          console.error("Failed to send verification email:", emailError);
+          res.status(201).json({ 
+            message: "Registration successful, but we couldn't send the verification email. Please contact support.",
+            email: user.email 
+          });
+        }
+      })(req, res, next);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message || "Invalid registration data" });
+    }
+  });
+
+  // Login endpoint
+  app.post("/api/auth/login", async (req, res, next) => {
+    try {
+      const validatedData = loginUserSchema.parse(req.body);
+      
+      passport.authenticate("local-login", (err: any, user: any, info: any) => {
+        if (err) {
+          return res.status(500).json({ message: "Login failed" });
+        }
+        
+        if (!user) {
+          return res.status(401).json({ message: info?.message || "Invalid credentials" });
+        }
+
+        req.login(user, (loginErr) => {
+          if (loginErr) {
+            return res.status(500).json({ message: "Login failed" });
+          }
+          
+          res.json({ 
+            message: "Login successful",
+            user: {
+              id: user.id,
+              email: user.email,
+              firstName: user.firstName,
+              lastName: user.lastName,
+              isAdmin: user.isAdmin,
+            }
+          });
+        });
+      })(req, res, next);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message || "Invalid login data" });
+    }
+  });
+
+  // Email verification endpoint
+  app.get("/api/auth/verify-email", async (req, res) => {
+    try {
+      const token = req.query.token as string;
+      
+      if (!token) {
+        return res.status(400).send(`
+          <!DOCTYPE html>
+          <html>
+          <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
+            <h1>❌ Invalid Verification Link</h1>
+            <p>This verification link is invalid.</p>
+          </body>
+          </html>
+        `);
+      }
+
+      const user = await storage.verifyUserEmail(token);
+      
+      if (!user) {
+        return res.status(400).send(`
+          <!DOCTYPE html>
+          <html>
+          <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
+            <h1>❌ Verification Failed</h1>
+            <p>This verification link is invalid or has expired.</p>
+            <a href="/login" style="color: #f97316;">Go to Login</a>
+          </body>
+          </html>
+        `);
+      }
+
+      await sendWelcomeEmail(user.email!, user.firstName!);
+
+      res.send(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; text-align: center; padding: 50px; background: linear-gradient(135deg, #f97316 0%, #fb923c 100%); }
+            .container { background: white; padding: 40px; border-radius: 10px; max-width: 500px; margin: 0 auto; }
+            h1 { color: #f97316; }
+            .button { display: inline-block; background: #f97316; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; margin-top: 20px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <h1>✅ Email Verified!</h1>
+            <p>Your email has been successfully verified.</p>
+            <p>You can now log in to your account.</p>
+            <a href="/login" class="button">Go to Login</a>
+          </div>
+        </body>
+        </html>
+      `);
+    } catch (error) {
+      console.error("Error verifying email:", error);
+      res.status(500).send(`
+        <!DOCTYPE html>
+        <html>
+        <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
+          <h1>❌ Verification Error</h1>
+          <p>An error occurred during verification. Please try again later.</p>
+        </body>
+        </html>
+      `);
+    }
+  });
 
   // Auth routes
   app.get("/api/auth/user", isAuthenticated, async (req: any, res) => {

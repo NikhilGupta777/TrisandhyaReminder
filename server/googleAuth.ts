@@ -4,6 +4,7 @@ import session from "express-session";
 import type { Express, RequestHandler } from "express";
 import MemoryStore from "memorystore";
 import { storage } from "./storage";
+import { setupLocalAuth } from "./localAuth";
 
 export function getSession() {
   if (!process.env.SESSION_SECRET) {
@@ -38,44 +39,57 @@ export async function setupAuth(app: Express) {
   app.use(passport.initialize());
   app.use(passport.session());
 
+  setupLocalAuth();
+
   if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
-    console.warn("Google OAuth credentials not configured. Authentication will not work.");
-    return;
-  }
+    console.warn("Google OAuth credentials not configured. Google login will not work.");
+  } else {
+    const callbackURL = process.env.NODE_ENV === "production" 
+      ? `https://${process.env.REPL_SLUG}.replit.app/api/auth/google/callback`
+      : "http://localhost:5000/api/auth/google/callback";
 
-  const callbackURL = process.env.NODE_ENV === "production" 
-    ? `https://${process.env.REPL_SLUG}.replit.app/api/auth/google/callback`
-    : "http://localhost:5000/api/auth/google/callback";
+    passport.use(
+      new GoogleStrategy(
+        {
+          clientID: process.env.GOOGLE_CLIENT_ID,
+          clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+          callbackURL: callbackURL,
+        },
+        async (accessToken, refreshToken, profile, done) => {
+          try {
+            const email = profile.emails?.[0]?.value || "";
+            const firstName = profile.name?.givenName || "";
+            const lastName = profile.name?.familyName || "";
+            const profileImageUrl = profile.photos?.[0]?.value || "";
 
-  passport.use(
-    new GoogleStrategy(
-      {
-        clientID: process.env.GOOGLE_CLIENT_ID,
-        clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-        callbackURL: callbackURL,
-      },
-      async (accessToken, refreshToken, profile, done) => {
-        try {
-          const email = profile.emails?.[0]?.value || "";
-          const firstName = profile.name?.givenName || "";
-          const lastName = profile.name?.familyName || "";
-          const profileImageUrl = profile.photos?.[0]?.value || "";
+            await storage.upsertUser({
+              id: profile.id,
+              email,
+              firstName,
+              lastName,
+              profileImageUrl,
+              emailVerified: true,
+            });
 
-          await storage.upsertUser({
-            id: profile.id,
-            email,
-            firstName,
-            lastName,
-            profileImageUrl,
-          });
-
-          done(null, { id: profile.id, email, firstName, lastName, profileImageUrl });
-        } catch (error) {
-          done(error as Error);
+            done(null, { id: profile.id, email, firstName, lastName, profileImageUrl });
+          } catch (error) {
+            done(error as Error);
+          }
         }
+      )
+    );
+
+    app.get("/api/auth/google", passport.authenticate("google", {
+      scope: ["profile", "email"],
+    }));
+
+    app.get("/api/auth/google/callback", 
+      passport.authenticate("google", { failureRedirect: "/login" }),
+      (req, res) => {
+        res.redirect("/");
       }
-    )
-  );
+    );
+  }
 
   passport.serializeUser((user: any, done) => {
     done(null, user.id);
@@ -89,17 +103,6 @@ export async function setupAuth(app: Express) {
       done(error);
     }
   });
-
-  app.get("/api/auth/google", passport.authenticate("google", {
-    scope: ["profile", "email"],
-  }));
-
-  app.get("/api/auth/google/callback", 
-    passport.authenticate("google", { failureRedirect: "/login" }),
-    (req, res) => {
-      res.redirect("/");
-    }
-  );
 
   app.get("/api/logout", (req, res) => {
     req.logout(() => {
