@@ -6,6 +6,10 @@ import MemoryStore from "memorystore";
 import { storage } from "./storage";
 
 export function getSession() {
+  if (!process.env.SESSION_SECRET) {
+    throw new Error("SESSION_SECRET environment variable must be set for secure session management");
+  }
+
   const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week in milliseconds
   const MemStore = MemoryStore(session);
   const sessionStore = new MemStore({
@@ -13,7 +17,7 @@ export function getSession() {
   });
   
   return session({
-    secret: process.env.SESSION_SECRET || "your-secret-key-change-this",
+    secret: process.env.SESSION_SECRET,
     store: sessionStore,
     resave: false,
     saveUninitialized: false,
@@ -26,7 +30,10 @@ export function getSession() {
 }
 
 export async function setupAuth(app: Express) {
-  app.set("trust proxy", 1);
+  if (process.env.NODE_ENV === "production") {
+    app.set("trust proxy", 1);
+  }
+  
   app.use(getSession());
   app.use(passport.initialize());
   app.use(passport.session());
@@ -37,7 +44,7 @@ export async function setupAuth(app: Express) {
   }
 
   const callbackURL = process.env.NODE_ENV === "production" 
-    ? `${process.env.REPL_SLUG}.replit.app/api/auth/google/callback`
+    ? `https://${process.env.REPL_SLUG}.replit.app/api/auth/google/callback`
     : "http://localhost:5000/api/auth/google/callback";
 
   passport.use(
@@ -96,7 +103,10 @@ export async function setupAuth(app: Express) {
 
   app.get("/api/logout", (req, res) => {
     req.logout(() => {
-      res.redirect("/login");
+      req.session.destroy(() => {
+        res.clearCookie('connect.sid');
+        res.redirect("/login");
+      });
     });
   });
 }
