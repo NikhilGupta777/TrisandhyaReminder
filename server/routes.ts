@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated, isAdmin } from "./replitAuth";
+import { setupAuth, isAuthenticated, isAdmin } from "./googleAuth";
 import {
   insertAlarmSettingsSchema,
   insertSadhanaProgressSchema,
@@ -16,7 +16,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes
   app.get("/api/auth/user", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const user = await storage.getUser(userId);
       res.json(user);
     } catch (error) {
@@ -28,7 +28,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Alarm settings routes
   app.get("/api/alarm-settings", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       let settings = await storage.getAlarmSettings(userId);
       
       if (!settings) {
@@ -51,7 +51,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/alarm-settings", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const validatedData = insertAlarmSettingsSchema.parse({
         ...req.body,
         userId,
@@ -68,7 +68,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Sadhana progress routes
   app.get("/api/sadhana-progress/today", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const today = new Date().toISOString().split("T")[0];
       
       let progress = await storage.getSadhanaProgress(userId, today);
@@ -95,7 +95,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/sadhana-progress", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const validatedData = insertSadhanaProgressSchema.parse({
         ...req.body,
         userId,
@@ -111,7 +111,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/sadhana-progress/stats", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const stats = await storage.getUserStats(userId);
       res.json(stats);
     } catch (error) {
@@ -122,7 +122,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/sadhana-progress/range", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const { startDate, endDate } = req.query;
       
       const progress = await storage.getSadhanaProgressByDateRange(

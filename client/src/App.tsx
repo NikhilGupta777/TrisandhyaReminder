@@ -12,6 +12,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Shield } from "lucide-react";
 import Landing from "@/pages/Landing";
+import Login from "@/pages/Login";
 import DashboardConnected from "@/pages/DashboardConnected";
 import SadhanaGuide from "@/pages/SadhanaGuide";
 import MediaLibraryConnected from "@/pages/MediaLibraryConnected";
@@ -99,6 +100,7 @@ function AuthenticatedApp() {
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
+  const isLoginPage = window.location.pathname === "/login";
 
   if (isLoading) {
     return (
@@ -111,7 +113,11 @@ function Router() {
     );
   }
 
-  return isAuthenticated ? <AuthenticatedApp /> : <Landing />;
+  if (isAuthenticated) {
+    return <AuthenticatedApp />;
+  }
+
+  return isLoginPage ? <Login /> : <Landing />;
 }
 
 export default function App() {

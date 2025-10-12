@@ -24,7 +24,7 @@ export default function Landing() {
             <Button 
               size="lg" 
               className="px-12 py-6 text-lg rounded-full"
-              onClick={() => window.location.href = "/api/login"}
+              onClick={() => window.location.href = "/login"}
               data-testid="button-login"
             >
               Begin Your Journey
@@ -77,11 +77,11 @@ export default function Landing() {
         <div className="max-w-4xl mx-auto text-center space-y-6">
           <h2 className="text-3xl font-bold font-serif">Ready to Begin?</h2>
           <p className="text-lg text-muted-foreground">
-            Sign in with your Replit account to start your spiritual journey
+            Sign in with your Google account to start your spiritual journey
           </p>
           <Button 
             size="lg" 
-            onClick={() => window.location.href = "/api/login"}
+            onClick={() => window.location.href = "/login"}
             className="px-12 py-6 text-lg"
             data-testid="button-login-bottom"
           >
