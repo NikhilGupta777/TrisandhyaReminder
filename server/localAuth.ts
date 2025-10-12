@@ -1,6 +1,7 @@
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import bcrypt from "bcrypt";
+import crypto from "crypto";
 import { storage } from "./storage";
 import type { User } from "@shared/schema";
 
@@ -21,8 +22,7 @@ export function setupLocalAuth() {
           }
 
           const hashedPassword = await bcrypt.hash(password, 10);
-          const verificationToken = Math.random().toString(36).substring(2, 15) + 
-                                   Math.random().toString(36).substring(2, 15);
+          const verificationToken = crypto.randomBytes(32).toString('hex');
 
           const user = await storage.createLocalUser({
             email,
