@@ -4,6 +4,9 @@ import {
   sadhanaProgress,
   mediaContent,
   scriptureContent,
+  sadhanaContent,
+  alarmSounds,
+  registrationAttempts,
   type User,
   type UpsertUser,
   type AlarmSettings,
@@ -14,13 +17,18 @@ import {
   type InsertMediaContent,
   type ScriptureContent,
   type InsertScriptureContent,
+  type SadhanaContent,
+  type InsertSadhanaContent,
+  type AlarmSound,
+  type InsertAlarmSound,
+  type RegistrationAttempt,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, gte, lte } from "drizzle-orm";
 
 export interface IStorage {
   // User operations (required for Replit Auth)
-  getUser(id: number): Promise<User | undefined>;
+  getUser(id: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
   createLocalUser(user: Omit<UpsertUser, 'id'>): Promise<User>;
@@ -31,14 +39,14 @@ export interface IStorage {
   resetPasswordWithCode(email: string, code: string, newPassword: string): Promise<User | undefined>;
   
   // Alarm settings
-  getAlarmSettings(userId: number): Promise<AlarmSettings | undefined>;
+  getAlarmSettings(userId: string): Promise<AlarmSettings | undefined>;
   upsertAlarmSettings(settings: InsertAlarmSettings): Promise<AlarmSettings>;
   
   // Sadhana progress
-  getSadhanaProgress(userId: number, date: string): Promise<SadhanaProgress | undefined>;
-  getSadhanaProgressByDateRange(userId: number, startDate: string, endDate: string): Promise<SadhanaProgress[]>;
+  getSadhanaProgress(userId: string, date: string): Promise<SadhanaProgress | undefined>;
+  getSadhanaProgressByDateRange(userId: string, startDate: string, endDate: string): Promise<SadhanaProgress[]>;
   upsertSadhanaProgress(progress: InsertSadhanaProgress): Promise<SadhanaProgress>;
-  getUserStats(userId: number): Promise<{
+  getUserStats(userId: string): Promise<{
     currentStreak: number;
     longestStreak: number;
     totalJapCount: number;
@@ -47,27 +55,46 @@ export interface IStorage {
   
   // Media content
   getAllMedia(type?: string): Promise<MediaContent[]>;
-  getMediaById(id: number): Promise<MediaContent | undefined>;
+  getMediaById(id: string): Promise<MediaContent | undefined>;
   createMedia(media: InsertMediaContent): Promise<MediaContent>;
-  updateMedia(id: number, media: Partial<InsertMediaContent>): Promise<MediaContent>;
-  deleteMedia(id: number): Promise<void>;
+  updateMedia(id: string, media: Partial<InsertMediaContent>): Promise<MediaContent>;
+  deleteMedia(id: string): Promise<void>;
   
   // Scripture content
   getAllScriptures(): Promise<ScriptureContent[]>;
   getScriptureByChapter(chapterNumber: number): Promise<ScriptureContent | undefined>;
   createScripture(scripture: InsertScriptureContent): Promise<ScriptureContent>;
-  updateScripture(id: number, scripture: Partial<InsertScriptureContent>): Promise<ScriptureContent>;
-  deleteScripture(id: number): Promise<void>;
+  updateScripture(id: string, scripture: Partial<InsertScriptureContent>): Promise<ScriptureContent>;
+  deleteScripture(id: string): Promise<void>;
+  
+  // Sadhana content
+  getAllSadhanaContent(category?: string): Promise<SadhanaContent[]>;
+  getSadhanaContentById(id: string): Promise<SadhanaContent | undefined>;
+  createSadhanaContent(content: InsertSadhanaContent): Promise<SadhanaContent>;
+  updateSadhanaContent(id: string, content: Partial<InsertSadhanaContent>): Promise<SadhanaContent>;
+  deleteSadhanaContent(id: string): Promise<void>;
+  
+  // Alarm sounds
+  getAllAlarmSounds(): Promise<AlarmSound[]>;
+  getAlarmSoundById(id: string): Promise<AlarmSound | undefined>;
+  createAlarmSound(sound: InsertAlarmSound): Promise<AlarmSound>;
+  updateAlarmSound(id: string, sound: Partial<InsertAlarmSound>): Promise<AlarmSound>;
+  deleteAlarmSound(id: string): Promise<void>;
   
   // Admin operations
   getAllUsers(): Promise<User[]>;
-  updateUserAdminStatus(userId: number, isAdmin: boolean): Promise<User>;
-  deleteUser(userId: number): Promise<void>;
+  updateUserAdminStatus(userId: string, isAdmin: boolean): Promise<User>;
+  deleteUser(userId: string): Promise<void>;
+  
+  // Rate limiting
+  getRecentRegistrationAttempts(email: string, since: Date): Promise<RegistrationAttempt[]>;
+  recordRegistrationAttempt(email: string, ipAddress?: string): Promise<RegistrationAttempt>;
+  cleanupOldAttempts(before: Date): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
   // User operations
-  async getUser(id: number): Promise<User | undefined> {
+  async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user;
   }
@@ -238,7 +265,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Alarm settings
-  async getAlarmSettings(userId: number): Promise<AlarmSettings | undefined> {
+  async getAlarmSettings(userId: string): Promise<AlarmSettings | undefined> {
     const [settings] = await db
       .select()
       .from(alarmSettings)
@@ -266,7 +293,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Sadhana progress
-  async getSadhanaProgress(userId: number, date: string): Promise<SadhanaProgress | undefined> {
+  async getSadhanaProgress(userId: string, date: string): Promise<SadhanaProgress | undefined> {
     const [progress] = await db
       .select()
       .from(sadhanaProgress)
@@ -275,7 +302,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getSadhanaProgressByDateRange(
-    userId: number,
+    userId: string,
     startDate: string,
     endDate: string
   ): Promise<SadhanaProgress[]> {
@@ -308,7 +335,7 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async getUserStats(userId: number): Promise<{
+  async getUserStats(userId: string): Promise<{
     currentStreak: number;
     longestStreak: number;
     totalJapCount: number;
@@ -369,7 +396,7 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(mediaContent).orderBy(desc(mediaContent.createdAt));
   }
 
-  async getMediaById(id: number): Promise<MediaContent | undefined> {
+  async getMediaById(id: string): Promise<MediaContent | undefined> {
     const [media] = await db.select().from(mediaContent).where(eq(mediaContent.id, id));
     return media;
   }
@@ -379,7 +406,7 @@ export class DatabaseStorage implements IStorage {
     return media;
   }
 
-  async updateMedia(id: number, mediaData: Partial<InsertMediaContent>): Promise<MediaContent> {
+  async updateMedia(id: string, mediaData: Partial<InsertMediaContent>): Promise<MediaContent> {
     const [updated] = await db
       .update(mediaContent)
       .set({ ...mediaData, updatedAt: new Date() })
@@ -388,7 +415,7 @@ export class DatabaseStorage implements IStorage {
     return updated;
   }
 
-  async deleteMedia(id: number): Promise<void> {
+  async deleteMedia(id: string): Promise<void> {
     await db.delete(mediaContent).where(eq(mediaContent.id, id));
   }
 
@@ -410,7 +437,7 @@ export class DatabaseStorage implements IStorage {
     return scripture;
   }
 
-  async updateScripture(id: number, scriptureData: Partial<InsertScriptureContent>): Promise<ScriptureContent> {
+  async updateScripture(id: string, scriptureData: Partial<InsertScriptureContent>): Promise<ScriptureContent> {
     const [updated] = await db
       .update(scriptureContent)
       .set({ ...scriptureData, updatedAt: new Date() })
@@ -419,16 +446,88 @@ export class DatabaseStorage implements IStorage {
     return updated;
   }
 
-  async deleteScripture(id: number): Promise<void> {
+  async deleteScripture(id: string): Promise<void> {
     await db.delete(scriptureContent).where(eq(scriptureContent.id, id));
+  }
+
+  // Sadhana content operations
+  async getAllSadhanaContent(category?: string): Promise<SadhanaContent[]> {
+    if (category) {
+      return await db
+        .select()
+        .from(sadhanaContent)
+        .where(eq(sadhanaContent.category, category))
+        .orderBy(sadhanaContent.orderNumber);
+    }
+    return await db
+      .select()
+      .from(sadhanaContent)
+      .orderBy(sadhanaContent.category, sadhanaContent.orderNumber);
+  }
+
+  async getSadhanaContentById(id: string): Promise<SadhanaContent | undefined> {
+    const [content] = await db
+      .select()
+      .from(sadhanaContent)
+      .where(eq(sadhanaContent.id, id));
+    return content;
+  }
+
+  async createSadhanaContent(contentData: InsertSadhanaContent): Promise<SadhanaContent> {
+    const [content] = await db
+      .insert(sadhanaContent)
+      .values(contentData)
+      .returning();
+    return content;
+  }
+
+  async updateSadhanaContent(id: string, contentData: Partial<InsertSadhanaContent>): Promise<SadhanaContent> {
+    const [updated] = await db
+      .update(sadhanaContent)
+      .set({ ...contentData, updatedAt: new Date() })
+      .where(eq(sadhanaContent.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteSadhanaContent(id: string): Promise<void> {
+    await db.delete(sadhanaContent).where(eq(sadhanaContent.id, id));
+  }
+
+  // Alarm sounds operations
+  async getAllAlarmSounds(): Promise<AlarmSound[]> {
+    return await db.select().from(alarmSounds).orderBy(desc(alarmSounds.isDefault), alarmSounds.name);
+  }
+
+  async getAlarmSoundById(id: string): Promise<AlarmSound | undefined> {
+    const [sound] = await db.select().from(alarmSounds).where(eq(alarmSounds.id, id));
+    return sound;
+  }
+
+  async createAlarmSound(soundData: InsertAlarmSound): Promise<AlarmSound> {
+    const [sound] = await db.insert(alarmSounds).values(soundData).returning();
+    return sound;
+  }
+
+  async updateAlarmSound(id: string, soundData: Partial<InsertAlarmSound>): Promise<AlarmSound> {
+    const [updated] = await db
+      .update(alarmSounds)
+      .set({ ...soundData, updatedAt: new Date() })
+      .where(eq(alarmSounds.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteAlarmSound(id: string): Promise<void> {
+    await db.delete(alarmSounds).where(eq(alarmSounds.id, id));
   }
 
   // Admin operations
   async getAllUsers(): Promise<User[]> {
-    return await db.select().from(users).orderBy(desc(users.createdAt));
+    return await db.select().from(users).where(eq(users.emailVerified, true)).orderBy(desc(users.createdAt));
   }
 
-  async updateUserAdminStatus(userId: number, isAdmin: boolean): Promise<User> {
+  async updateUserAdminStatus(userId: string, isAdmin: boolean): Promise<User> {
     const [updated] = await db
       .update(users)
       .set({ isAdmin, updatedAt: new Date() })
@@ -437,8 +536,37 @@ export class DatabaseStorage implements IStorage {
     return updated;
   }
 
-  async deleteUser(userId: number): Promise<void> {
+  async deleteUser(userId: string): Promise<void> {
     await db.delete(users).where(eq(users.id, userId));
+  }
+  
+  // Rate limiting
+  async getRecentRegistrationAttempts(email: string, since: Date): Promise<RegistrationAttempt[]> {
+    return await db
+      .select()
+      .from(registrationAttempts)
+      .where(and(
+        eq(registrationAttempts.email, email),
+        gte(registrationAttempts.attemptedAt, since)
+      ))
+      .orderBy(desc(registrationAttempts.attemptedAt));
+  }
+
+  async recordRegistrationAttempt(email: string, ipAddress?: string): Promise<RegistrationAttempt> {
+    const [attempt] = await db
+      .insert(registrationAttempts)
+      .values({
+        email,
+        ipAddress: ipAddress || null,
+      })
+      .returning();
+    return attempt;
+  }
+
+  async cleanupOldAttempts(before: Date): Promise<void> {
+    await db.delete(registrationAttempts).where(
+      lte(registrationAttempts.attemptedAt, before)
+    );
   }
 }
 

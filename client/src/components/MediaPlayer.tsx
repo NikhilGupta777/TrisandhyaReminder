@@ -16,7 +16,6 @@ export function MediaPlayer({ title, artist, type }: MediaPlayerProps) {
 
   const togglePlay = () => {
     setIsPlaying(!isPlaying);
-    console.log(isPlaying ? "Paused" : "Playing");
   };
 
   return (

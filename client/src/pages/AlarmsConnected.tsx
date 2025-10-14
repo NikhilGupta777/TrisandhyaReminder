@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,19 +7,27 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { AlarmInterface } from "@/components/AlarmInterface";
+import { Play, Pause } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import type { AlarmSettings } from "@shared/schema";
-import bellImage from "@assets/stock_images/sacred_temple_bell_h_edbb7860.jpg";
-import conchImage from "@assets/stock_images/conch_shell_shankh_h_85a28022.jpg";
+import type { AlarmSettings, AlarmSound } from "@shared/schema";
 
 export default function AlarmsConnected() {
   const { toast } = useToast();
   const [showAlarm, setShowAlarm] = useState(false);
+  const [playingSound, setPlayingSound] = useState<string | null>(null);
+  const [audio] = useState(new Audio());
   
   const { data: settings } = useQuery<AlarmSettings>({
     queryKey: ["/api/alarm-settings"],
   });
+
+  const { data: alarmSounds = [] } = useQuery<AlarmSound[]>({
+    queryKey: ["/api/alarm-sounds"],
+  });
+
+  const defaultSound = alarmSounds.find(s => s.isDefault);
+  const currentSoundId = settings?.alarmSoundId || defaultSound?.id;
 
   const updateSettingsMutation = useMutation({
     mutationFn: async (data: Partial<AlarmSettings>) => {
@@ -34,6 +42,35 @@ export default function AlarmsConnected() {
   const toggleAlarm = (key: string, value: boolean) => {
     updateSettingsMutation.mutate({ [key]: value });
   };
+
+  const handlePlaySound = async (sound: AlarmSound) => {
+    if (playingSound === sound.id) {
+      audio.pause();
+      setPlayingSound(null);
+    } else {
+      audio.src = sound.url;
+      audio.volume = (settings?.volume || 80) / 100;
+      
+      try {
+        await audio.play();
+        setPlayingSound(sound.id);
+        audio.onended = () => setPlayingSound(null);
+      } catch (error) {
+        toast({
+          title: "Playback Error",
+          description: "Failed to play alarm sound. The audio file may not be available.",
+          variant: "destructive",
+        });
+        setPlayingSound(null);
+      }
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      audio.pause();
+    };
+  }, [audio]);
 
   return (
     <div className="space-y-6">
@@ -80,22 +117,27 @@ export default function AlarmsConnected() {
         <div className="space-y-2">
           <Label htmlFor="alarm-sound">Alarm Sound</Label>
           <Select
-            value={settings?.soundType}
-            onValueChange={(value) => updateSettingsMutation.mutate({ soundType: value })}
+            value={currentSoundId}
+            onValueChange={(value) => updateSettingsMutation.mutate({ alarmSoundId: value })}
           >
             <SelectTrigger id="alarm-sound" data-testid="select-alarm-sound">
-              <SelectValue />
+              <SelectValue placeholder="Select alarm sound" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="bell">Temple Bell</SelectItem>
-              <SelectItem value="conch">Conch Shell (Shankh)</SelectItem>
-              <SelectItem value="madhav">Madhav Chant</SelectItem>
+              {alarmSounds.map((sound) => (
+                <SelectItem key={sound.id} value={sound.id}>
+                  {sound.name} {sound.isDefault && "(Default)"}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="alarm-volume">Volume</Label>
+          <div className="flex items-center justify-between">
+            <Label htmlFor="alarm-volume">Volume</Label>
+            <span className="text-sm text-muted-foreground">{settings?.volume || 80}%</span>
+          </div>
           <Slider
             id="alarm-volume"
             value={[settings?.volume || 80]}
@@ -108,20 +150,35 @@ export default function AlarmsConnected() {
       </Card>
 
       <Card className="p-6 space-y-4">
-        <h3 className="font-semibold">Alarm Sounds Preview</h3>
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="relative h-32 rounded-md overflow-hidden">
-            <img src={bellImage} alt="Temple Bell" className="w-full h-full object-cover" />
-            <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-              <span className="text-white font-semibold">Temple Bell</span>
+        <h3 className="font-semibold">Available Alarm Sounds</h3>
+        <div className="space-y-3">
+          {alarmSounds.map((sound) => (
+            <div key={sound.id} className="flex items-center justify-between p-3 border rounded-md" data-testid={`sound-preview-${sound.id}`}>
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <p className="font-medium">{sound.name}</p>
+                  {sound.isDefault && (
+                    <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">Default</span>
+                  )}
+                </div>
+                {sound.description && (
+                  <p className="text-sm text-muted-foreground">{sound.description}</p>
+                )}
+              </div>
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={() => handlePlaySound(sound)}
+                data-testid={`button-play-sound-${sound.id}`}
+              >
+                {playingSound === sound.id ? (
+                  <Pause className="h-4 w-4" />
+                ) : (
+                  <Play className="h-4 w-4" />
+                )}
+              </Button>
             </div>
-          </div>
-          <div className="relative h-32 rounded-md overflow-hidden">
-            <img src={conchImage} alt="Conch Shell" className="w-full h-full object-cover" />
-            <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-              <span className="text-white font-semibold">Conch Shell</span>
-            </div>
-          </div>
+          ))}
         </div>
       </Card>
 

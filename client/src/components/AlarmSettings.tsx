@@ -16,7 +16,6 @@ export function AlarmSettings() {
 
   const toggleAlarm = (key: keyof typeof alarms) => {
     setAlarms((prev) => ({ ...prev, [key]: !prev[key] }));
-    console.log(`${key} alarm toggled`);
   };
 
   return (

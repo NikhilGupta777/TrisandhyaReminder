@@ -27,7 +27,7 @@ export const sessions = pgTable(
 
 // User storage table for Replit Auth
 export const users = pgTable("users", {
-  id: serial("id").primaryKey(),
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   email: varchar("email").unique(),
   password: varchar("hashed_password"),
   firstName: varchar("first_name"),
@@ -90,12 +90,12 @@ export type ResetPassword = z.infer<typeof resetPasswordSchema>;
 
 // Alarm settings for each user
 export const alarmSettings = pgTable("alarm_settings", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
   pratahEnabled: boolean("pratah_enabled").default(true).notNull(),
   madhyahnaEnabled: boolean("madhyahna_enabled").default(true).notNull(),
   sayamEnabled: boolean("sayam_enabled").default(true).notNull(),
-  soundType: varchar("sound_type", { length: 20 }).default("bell").notNull(),
+  alarmSoundId: varchar("alarm_sound_id").references(() => alarmSounds.id),
   volume: integer("volume").default(80).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -112,8 +112,8 @@ export type AlarmSettings = typeof alarmSettings.$inferSelect;
 
 // Daily sadhana progress
 export const sadhanaProgress = pgTable("sadhana_progress", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
   date: date("date").notNull(),
   pratahCompleted: boolean("pratah_completed").default(false).notNull(),
   madhyahnaCompleted: boolean("madhyahna_completed").default(false).notNull(),
@@ -136,7 +136,7 @@ export type SadhanaProgress = typeof sadhanaProgress.$inferSelect;
 
 // Media content (bhajans, pravachans)
 export const mediaContent = pgTable("media_content", {
-  id: serial("id").primaryKey(),
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   title: varchar("title", { length: 255 }).notNull(),
   type: varchar("type", { length: 20 }).notNull(), // 'bhajan' or 'pravachan'
   artist: varchar("artist", { length: 255 }),
@@ -159,7 +159,7 @@ export type MediaContent = typeof mediaContent.$inferSelect;
 
 // Scripture content (for Mahapuran Path)
 export const scriptureContent = pgTable("scripture_content", {
-  id: serial("id").primaryKey(),
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   chapterNumber: integer("chapter_number").notNull(),
   title: varchar("title", { length: 255 }).notNull(),
   content: text("content").notNull(),
@@ -176,3 +176,59 @@ export const insertScriptureContentSchema = createInsertSchema(scriptureContent)
 
 export type InsertScriptureContent = z.infer<typeof insertScriptureContentSchema>;
 export type ScriptureContent = typeof scriptureContent.$inferSelect;
+
+// Sadhana Guide content (mantras, prayers, instructions)
+export const sadhanaContent = pgTable("sadhana_content", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  category: varchar("category", { length: 50 }).notNull(), // 'trisandhya', 'mahapuran', 'jap', 'timing'
+  sectionTitle: varchar("section_title", { length: 255 }).notNull(),
+  orderNumber: integer("order_number").notNull(),
+  sanskritText: text("sanskrit_text"),
+  englishTranslation: text("english_translation"),
+  description: text("description"),
+  repeatCount: varchar("repeat_count", { length: 50 }), // e.g., "3 times", "7 times"
+  contentType: varchar("content_type", { length: 50 }), // 'mantra', 'stotram', 'prayer', 'instruction', 'timing'
+  additionalNotes: text("additional_notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertSadhanaContentSchema = createInsertSchema(sadhanaContent).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertSadhanaContent = z.infer<typeof insertSadhanaContentSchema>;
+export type SadhanaContent = typeof sadhanaContent.$inferSelect;
+
+// Alarm sounds library
+export const alarmSounds = pgTable("alarm_sounds", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: varchar("name", { length: 255 }).notNull(),
+  url: text("url").notNull(), // URL to the sound file
+  duration: integer("duration"), // Duration in seconds (optional)
+  description: text("description"),
+  isDefault: boolean("is_default").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertAlarmSoundSchema = createInsertSchema(alarmSounds).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertAlarmSound = z.infer<typeof insertAlarmSoundSchema>;
+export type AlarmSound = typeof alarmSounds.$inferSelect;
+
+// Registration attempts tracking for rate limiting
+export const registrationAttempts = pgTable("registration_attempts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  email: varchar("email", { length: 255 }).notNull(),
+  attemptedAt: timestamp("attempted_at").defaultNow().notNull(),
+  ipAddress: varchar("ip_address", { length: 45 }),
+});
+
+export type RegistrationAttempt = typeof registrationAttempts.$inferSelect;

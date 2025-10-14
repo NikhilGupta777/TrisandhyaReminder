@@ -32,7 +32,7 @@ export default function MediaManagement() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: number; data: any }) => {
+    mutationFn: async ({ id, data }: { id: string; data: any }) => {
       return await apiRequest("PATCH", `/api/admin/media/${id}`, data);
     },
     onSuccess: () => {
@@ -43,7 +43,7 @@ export default function MediaManagement() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: async (id: number) => {
+    mutationFn: async (id: string) => {
       return await apiRequest("DELETE", `/api/admin/media/${id}`);
     },
     onSuccess: () => {

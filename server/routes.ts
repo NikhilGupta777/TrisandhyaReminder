@@ -27,6 +27,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const validatedData = registerUserSchema.parse(req.body);
       
+      // Rate limiting check: 3 attempts per 15 minutes per email
+      const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
+      const recentAttempts = await storage.getRecentRegistrationAttempts(validatedData.email, fifteenMinutesAgo);
+      
+      if (recentAttempts.length >= 3) {
+        return res.status(429).json({ 
+          message: "Too many registration attempts. Please try again in 15 minutes." 
+        });
+      }
+      
+      // Record this attempt
+      const ipAddress = req.ip || req.socket.remoteAddress;
+      await storage.recordRegistrationAttempt(validatedData.email, ipAddress);
+      
+      // Clean up old attempts (older than 24 hours)
+      const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      storage.cleanupOldAttempts(oneDayAgo).catch(err => console.error('Failed to cleanup old attempts:', err));
+      
       passport.authenticate("local-signup", async (err: any, user: any, info: any) => {
         if (err) {
           return res.status(500).json({ message: "Registration failed" });
@@ -105,6 +123,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Email is required" });
       }
 
+      // Rate limiting check: 3 attempts per 15 minutes per email
+      const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
+      const recentAttempts = await storage.getRecentRegistrationAttempts(email, fifteenMinutesAgo);
+      
+      if (recentAttempts.length >= 3) {
+        return res.status(429).json({ 
+          message: "Too many verification requests. Please try again in 15 minutes." 
+        });
+      }
+
       const user = await storage.getUserByEmail(email);
       
       if (!user) {
@@ -114,6 +142,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (user.emailVerified) {
         return res.status(400).json({ message: "Email already verified" });
       }
+
+      // Record this attempt
+      const ipAddress = req.ip || req.socket.remoteAddress;
+      await storage.recordRegistrationAttempt(email, ipAddress);
 
       // Generate new code and token
       const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
@@ -149,6 +181,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/auth/forgot-password", async (req, res) => {
     try {
       const validatedData = forgotPasswordSchema.parse(req.body);
+      
+      // Rate limiting check: 3 attempts per 15 minutes per email
+      const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
+      const recentAttempts = await storage.getRecentRegistrationAttempts(validatedData.email, fifteenMinutesAgo);
+      
+      if (recentAttempts.length >= 3) {
+        return res.status(429).json({ 
+          message: "Too many password reset requests. Please try again in 15 minutes." 
+        });
+      }
+
       const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
       
       const user = await storage.setResetPasswordCode(validatedData.email, resetCode);
@@ -156,6 +199,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!user) {
         return res.status(404).json({ message: "Email not found" });
       }
+
+      // Record this attempt
+      const ipAddress = req.ip || req.socket.remoteAddress;
+      await storage.recordRegistrationAttempt(validatedData.email, ipAddress);
 
       // Send password reset email
       try {
@@ -447,7 +494,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/media/:id", async (req, res) => {
     try {
-      const media = await storage.getMediaById(parseInt(req.params.id));
+      const media = await storage.getMediaById(req.params.id);
       if (!media) {
         return res.status(404).json({ message: "Media not found" });
       }
@@ -499,7 +546,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch("/api/admin/users/:id/admin", isAuthenticated, isAdmin, async (req, res) => {
     try {
       const { isAdmin: adminStatus } = req.body;
-      const user = await storage.updateUserAdminStatus(parseInt(req.params.id), adminStatus);
+      const user = await storage.updateUserAdminStatus(req.params.id, adminStatus);
       res.json(user);
     } catch (error) {
       console.error("Error updating user admin status:", error);
@@ -509,7 +556,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/admin/users/:id", isAuthenticated, isAdmin, async (req, res) => {
     try {
-      await storage.deleteUser(parseInt(req.params.id));
+      await storage.deleteUser(req.params.id);
       res.json({ message: "User deleted successfully" });
     } catch (error) {
       console.error("Error deleting user:", error);
@@ -531,7 +578,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/admin/media/:id", isAuthenticated, isAdmin, async (req, res) => {
     try {
-      const media = await storage.updateMedia(parseInt(req.params.id), req.body);
+      const media = await storage.updateMedia(req.params.id, req.body);
       res.json(media);
     } catch (error) {
       console.error("Error updating media:", error);
@@ -541,7 +588,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/admin/media/:id", isAuthenticated, isAdmin, async (req, res) => {
     try {
-      await storage.deleteMedia(parseInt(req.params.id));
+      await storage.deleteMedia(req.params.id);
       res.json({ message: "Media deleted successfully" });
     } catch (error) {
       console.error("Error deleting media:", error);
@@ -563,7 +610,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/admin/scriptures/:id", isAuthenticated, isAdmin, async (req, res) => {
     try {
-      const scripture = await storage.updateScripture(parseInt(req.params.id), req.body);
+      const scripture = await storage.updateScripture(req.params.id, req.body);
       res.json(scripture);
     } catch (error) {
       console.error("Error updating scripture:", error);
@@ -573,11 +620,98 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/admin/scriptures/:id", isAuthenticated, isAdmin, async (req, res) => {
     try {
-      await storage.deleteScripture(parseInt(req.params.id));
+      await storage.deleteScripture(req.params.id);
       res.json({ message: "Scripture deleted successfully" });
     } catch (error) {
       console.error("Error deleting scripture:", error);
       res.status(500).json({ message: "Failed to delete scripture" });
+    }
+  });
+
+  // Admin routes - Sadhana content management
+  app.get("/api/sadhana-content", async (req, res) => {
+    try {
+      const category = req.query.category as string | undefined;
+      const content = await storage.getAllSadhanaContent(category);
+      res.json(content);
+    } catch (error) {
+      console.error("Error fetching sadhana content:", error);
+      res.status(500).json({ message: "Failed to fetch sadhana content" });
+    }
+  });
+
+  app.post("/api/admin/sadhana-content", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { insertSadhanaContentSchema } = await import("@shared/schema");
+      const validatedData = insertSadhanaContentSchema.parse(req.body);
+      const content = await storage.createSadhanaContent(validatedData);
+      res.json(content);
+    } catch (error) {
+      console.error("Error creating sadhana content:", error);
+      res.status(400).json({ message: "Invalid sadhana content data" });
+    }
+  });
+
+  app.patch("/api/admin/sadhana-content/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const content = await storage.updateSadhanaContent(req.params.id, req.body);
+      res.json(content);
+    } catch (error) {
+      console.error("Error updating sadhana content:", error);
+      res.status(500).json({ message: "Failed to update sadhana content" });
+    }
+  });
+
+  app.delete("/api/admin/sadhana-content/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      await storage.deleteSadhanaContent(req.params.id);
+      res.json({ message: "Sadhana content deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting sadhana content:", error);
+      res.status(500).json({ message: "Failed to delete sadhana content" });
+    }
+  });
+
+  // Alarm sounds routes
+  app.get("/api/alarm-sounds", async (req, res) => {
+    try {
+      const sounds = await storage.getAllAlarmSounds();
+      res.json(sounds);
+    } catch (error) {
+      console.error("Error fetching alarm sounds:", error);
+      res.status(500).json({ message: "Failed to fetch alarm sounds" });
+    }
+  });
+
+  app.post("/api/admin/alarm-sounds", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { insertAlarmSoundSchema } = await import("@shared/schema");
+      const validatedData = insertAlarmSoundSchema.parse(req.body);
+      const sound = await storage.createAlarmSound(validatedData);
+      res.json(sound);
+    } catch (error) {
+      console.error("Error creating alarm sound:", error);
+      res.status(400).json({ message: "Invalid alarm sound data" });
+    }
+  });
+
+  app.patch("/api/admin/alarm-sounds/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const sound = await storage.updateAlarmSound(req.params.id, req.body);
+      res.json(sound);
+    } catch (error) {
+      console.error("Error updating alarm sound:", error);
+      res.status(500).json({ message: "Failed to update alarm sound" });
+    }
+  });
+
+  app.delete("/api/admin/alarm-sounds/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      await storage.deleteAlarmSound(req.params.id);
+      res.json({ message: "Alarm sound deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting alarm sound:", error);
+      res.status(500).json({ message: "Failed to delete alarm sound" });
     }
   });
 

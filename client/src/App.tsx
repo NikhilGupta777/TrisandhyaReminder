@@ -1,4 +1,4 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -22,6 +22,9 @@ import SettingsConnected from "@/pages/SettingsConnected";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
 import UserManagement from "@/pages/admin/UserManagement";
 import MediaManagement from "@/pages/admin/MediaManagement";
+import ScriptureManagement from "@/pages/admin/ScriptureManagement";
+import SadhanaContentManagement from "@/pages/admin/SadhanaContentManagement";
+import AlarmSoundsManagement from "@/pages/admin/AlarmSoundsManagement";
 import NotFound from "@/pages/not-found";
 
 function AdminRouter() {
@@ -30,6 +33,9 @@ function AdminRouter() {
       <Route path="/admin" component={AdminDashboard} />
       <Route path="/admin/users" component={UserManagement} />
       <Route path="/admin/media" component={MediaManagement} />
+      <Route path="/admin/scriptures" component={ScriptureManagement} />
+      <Route path="/admin/sadhana-content" component={SadhanaContentManagement} />
+      <Route path="/admin/alarm-sounds" component={AlarmSoundsManagement} />
       <Route component={NotFound} />
     </Switch>
   );
@@ -51,7 +57,8 @@ function UserRouter() {
 
 function AuthenticatedApp() {
   const { user, isAdmin } = useAuth();
-  const isAdminRoute = window.location.pathname.startsWith("/admin");
+  const [location] = useLocation();
+  const isAdminRoute = location.startsWith("/admin");
 
   const style = {
     "--sidebar-width": "16rem",

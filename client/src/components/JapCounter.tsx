@@ -9,17 +9,14 @@ export function JapCounter() {
 
   const handleTap = () => {
     setCount((prev) => prev + 1);
-    console.log("Jap count:", count + 1);
   };
 
   const handleReset = () => {
     setCount(0);
-    console.log("Counter reset");
   };
 
   const toggleAudio = () => {
     setIsPlaying(!isPlaying);
-    console.log(isPlaying ? "Audio stopped" : "Audio playing");
   };
 
   return (

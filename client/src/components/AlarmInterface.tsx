@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { VisuallyHidden } from "@/components/ui/visually-hidden";
 import deityImage from "@assets/stock_images/lord_jagannath_deity_12203068.jpg";
 
 type AlarmInterfaceProps = {
@@ -10,23 +11,26 @@ type AlarmInterfaceProps = {
 
 export function AlarmInterface({ open, onOpenChange, sandhyaName }: AlarmInterfaceProps) {
   const handleBeginSadhana = () => {
-    console.log("Begin Sadhana clicked");
     onOpenChange(false);
   };
 
   const handleDismiss = () => {
-    console.log("Alarm dismissed");
     onOpenChange(false);
   };
 
   const handleSnooze = () => {
-    console.log("Snoozed for 5 minutes");
     onOpenChange(false);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-full h-screen p-0 border-0">
+        <VisuallyHidden>
+          <DialogTitle>{sandhyaName} Alarm</DialogTitle>
+          <DialogDescription>
+            It's time for {sandhyaName}. Choose to begin your Sadhana practice, dismiss the alarm, or snooze for 5 minutes.
+          </DialogDescription>
+        </VisuallyHidden>
         <div className="relative h-full w-full flex items-center justify-center">
           <div
             className="absolute inset-0 bg-cover bg-center"
