@@ -530,7 +530,11 @@ export default function Login() {
 
       {/* Verification Code Dialog */}
       <Dialog open={showVerification} onOpenChange={setShowVerification}>
-        <DialogContent className="sm:max-w-md" data-testid="dialog-verification">
+        <DialogContent 
+          className="sm:max-w-md" 
+          data-testid="dialog-verification"
+          onInteractOutside={(e) => e.preventDefault()}
+        >
           <DialogHeader>
             <DialogTitle className="text-center text-xl">Verify Your Email</DialogTitle>
             <DialogDescription className="text-center">

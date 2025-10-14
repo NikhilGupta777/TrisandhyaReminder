@@ -18,7 +18,12 @@ export function setupLocalAuth() {
         try {
           const existingUser = await storage.getUserByEmail(email);
           if (existingUser) {
-            return done(null, false, { message: "Email already registered" });
+            // If email is verified, user cannot re-register
+            if (existingUser.emailVerified) {
+              return done(null, false, { message: "Email already registered" });
+            }
+            // If email is not verified, delete the old unverified user to allow re-registration
+            await storage.deleteUser(existingUser.id);
           }
 
           const hashedPassword = await bcrypt.hash(password, 10);
