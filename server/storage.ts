@@ -26,6 +26,7 @@ export interface IStorage {
   createLocalUser(user: Omit<UpsertUser, 'id'>): Promise<User>;
   verifyUserEmail(token: string): Promise<User | undefined>;
   verifyUserCode(email: string, code: string): Promise<User | undefined>;
+  updateVerificationCode(email: string, code: string, token: string, expiry: Date): Promise<User | undefined>;
   setResetPasswordCode(email: string, code: string): Promise<User | undefined>;
   resetPasswordWithCode(email: string, code: string, newPassword: string): Promise<User | undefined>;
   
@@ -146,6 +147,30 @@ export class DatabaseStorage implements IStorage {
         emailVerified: true,
         verificationCode: null,
         verificationCodeExpiry: null,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, user.id))
+      .returning();
+
+    return updatedUser;
+  }
+
+  async updateVerificationCode(email: string, code: string, token: string, expiry: Date): Promise<User | undefined> {
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, email));
+    
+    if (!user) {
+      return undefined;
+    }
+
+    const [updatedUser] = await db
+      .update(users)
+      .set({
+        verificationCode: code,
+        verificationToken: token,
+        verificationCodeExpiry: expiry,
         updatedAt: new Date(),
       })
       .where(eq(users.id, user.id))

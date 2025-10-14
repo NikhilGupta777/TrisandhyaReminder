@@ -3,6 +3,15 @@ import sgMail from '@sendgrid/mail';
 let connectionSettings: any;
 
 async function getCredentials() {
+  // First, try environment variables as fallback
+  if (process.env.SENDGRID_API_KEY && process.env.SENDGRID_FROM_EMAIL) {
+    return {
+      apiKey: process.env.SENDGRID_API_KEY,
+      email: process.env.SENDGRID_FROM_EMAIL
+    };
+  }
+
+  // Then try Replit connector
   const hostname = process.env.REPLIT_CONNECTORS_HOSTNAME
   const xReplitToken = process.env.REPL_IDENTITY 
     ? 'repl ' + process.env.REPL_IDENTITY 
@@ -11,23 +20,28 @@ async function getCredentials() {
     : null;
 
   if (!xReplitToken) {
-    throw new Error('X_REPLIT_TOKEN not found for repl/depl');
+    throw new Error('SendGrid not configured. Please set SENDGRID_API_KEY and SENDGRID_FROM_EMAIL environment variables or configure the SendGrid connector.');
   }
 
-  connectionSettings = await fetch(
-    'https://' + hostname + '/api/v2/connection?include_secrets=true&connector_names=sendgrid',
-    {
-      headers: {
-        'Accept': 'application/json',
-        'X_REPLIT_TOKEN': xReplitToken
+  try {
+    connectionSettings = await fetch(
+      'https://' + hostname + '/api/v2/connection?include_secrets=true&connector_names=sendgrid',
+      {
+        headers: {
+          'Accept': 'application/json',
+          'X_REPLIT_TOKEN': xReplitToken
+        }
       }
-    }
-  ).then(res => res.json()).then(data => data.items?.[0]);
+    ).then(res => res.json()).then(data => data.items?.[0]);
 
-  if (!connectionSettings || (!connectionSettings.settings.api_key || !connectionSettings.settings.from_email)) {
-    throw new Error('SendGrid not connected');
+    if (connectionSettings && connectionSettings.settings.api_key && connectionSettings.settings.from_email) {
+      return {apiKey: connectionSettings.settings.api_key, email: connectionSettings.settings.from_email};
+    }
+  } catch (error) {
+    console.error('Failed to fetch SendGrid connector credentials:', error);
   }
-  return {apiKey: connectionSettings.settings.api_key, email: connectionSettings.settings.from_email};
+
+  throw new Error('SendGrid not configured. Please set SENDGRID_API_KEY and SENDGRID_FROM_EMAIL environment variables or configure the SendGrid connector.');
 }
 
 async function getUncachableSendGridClient() {
@@ -95,6 +109,137 @@ export async function sendVerificationEmail(to: string, firstName: string, verif
   } catch (error) {
     console.error('Error sending verification email:', error);
     throw new Error('Failed to send verification email');
+  }
+}
+
+export async function sendVerificationCodeEmail(to: string, firstName: string, verificationCode: string, verificationToken: string) {
+  try {
+    const { client, fromEmail } = await getUncachableSendGridClient();
+    
+    const verificationUrl = process.env.NODE_ENV === "production"
+      ? `https://${process.env.REPL_SLUG}.replit.app/api/auth/verify-email?token=${verificationToken}`
+      : `http://localhost:5000/api/auth/verify-email?token=${verificationToken}`;
+
+    const msg = {
+      to,
+      from: fromEmail,
+      subject: 'Verify your Trisandhya Sadhana account',
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: linear-gradient(135deg, #f97316 0%, #fb923c 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+            .content { background: #f9fafb; padding: 30px; border-radius: 0 0 10px 10px; }
+            .code-box { background: white; border: 2px dashed #f97316; border-radius: 8px; padding: 20px; margin: 20px 0; text-align: center; }
+            .code { font-size: 32px; font-weight: bold; color: #f97316; letter-spacing: 8px; font-family: monospace; }
+            .button { display: inline-block; background: #f97316; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; margin: 20px 0; font-weight: bold; }
+            .footer { text-align: center; margin-top: 30px; color: #6b7280; font-size: 14px; }
+            .divider { margin: 30px 0; text-align: center; color: #6b7280; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>🕉️ Trisandhya Sadhana Companion</h1>
+            </div>
+            <div class="content">
+              <p>Namaste ${firstName},</p>
+              <p>Welcome to Trisandhya Sadhana Companion! We're delighted to have you join our spiritual community.</p>
+              <p>Please verify your email address using one of the following methods:</p>
+              
+              <h3>Option 1: Enter Verification Code</h3>
+              <div class="code-box">
+                <p style="margin: 0 0 10px 0; color: #6b7280; font-size: 14px;">Your verification code:</p>
+                <div class="code">${verificationCode}</div>
+                <p style="margin: 10px 0 0 0; color: #6b7280; font-size: 12px;">This code expires in 15 minutes</p>
+              </div>
+              
+              <div class="divider">OR</div>
+              
+              <h3>Option 2: Click Verification Link</h3>
+              <div style="text-align: center;">
+                <a href="${verificationUrl}" class="button">Verify Email Address</a>
+              </div>
+              <p style="color: #6b7280; font-size: 14px;">If the button doesn't work, copy and paste this link into your browser:</p>
+              <p style="word-break: break-all; color: #6b7280; font-size: 12px;">${verificationUrl}</p>
+              
+              <p style="margin-top: 30px;">Jai Kalki Avatar,<br>The Trisandhya Sadhana Team</p>
+            </div>
+            <div class="footer">
+              <p>If you didn't create an account, you can safely ignore this email.</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `,
+    };
+
+    await client.send(msg);
+    console.log('Verification code email sent to:', to);
+  } catch (error) {
+    console.error('Error sending verification code email:', error);
+    throw new Error('Failed to send verification email');
+  }
+}
+
+export async function sendPasswordResetEmail(to: string, firstName: string, resetCode: string) {
+  try {
+    const { client, fromEmail } = await getUncachableSendGridClient();
+
+    const msg = {
+      to,
+      from: fromEmail,
+      subject: 'Reset your Trisandhya Sadhana password',
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: linear-gradient(135deg, #f97316 0%, #fb923c 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+            .content { background: #f9fafb; padding: 30px; border-radius: 0 0 10px 10px; }
+            .code-box { background: white; border: 2px dashed #f97316; border-radius: 8px; padding: 20px; margin: 20px 0; text-align: center; }
+            .code { font-size: 32px; font-weight: bold; color: #f97316; letter-spacing: 8px; font-family: monospace; }
+            .footer { text-align: center; margin-top: 30px; color: #6b7280; font-size: 14px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>🕉️ Trisandhya Sadhana Companion</h1>
+            </div>
+            <div class="content">
+              <p>Namaste ${firstName},</p>
+              <p>We received a request to reset your password. Use the code below to reset your password:</p>
+              
+              <div class="code-box">
+                <p style="margin: 0 0 10px 0; color: #6b7280; font-size: 14px;">Your password reset code:</p>
+                <div class="code">${resetCode}</div>
+                <p style="margin: 10px 0 0 0; color: #6b7280; font-size: 12px;">This code expires in 15 minutes</p>
+              </div>
+              
+              <p style="color: #dc2626; margin-top: 20px;"><strong>Security Notice:</strong> If you didn't request a password reset, please ignore this email and ensure your account is secure.</p>
+              
+              <p style="margin-top: 30px;">Jai Kalki Avatar,<br>The Trisandhya Sadhana Team</p>
+            </div>
+            <div class="footer">
+              <p>This is an automated email. Please do not reply.</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `,
+    };
+
+    await client.send(msg);
+    console.log('Password reset email sent to:', to);
+  } catch (error) {
+    console.error('Error sending password reset email:', error);
+    throw new Error('Failed to send password reset email');
   }
 }
 

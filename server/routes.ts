@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated, isAdmin } from "./googleAuth";
 import passport from "passport";
-import { sendVerificationEmail, sendWelcomeEmail } from "./sendgrid";
+import { sendVerificationEmail, sendVerificationCodeEmail, sendPasswordResetEmail, sendWelcomeEmail } from "./sendgrid";
 import {
   insertAlarmSettingsSchema,
   insertSadhanaProgressSchema,
@@ -35,10 +35,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(400).json({ message: info?.message || "Registration failed" });
         }
 
+        // Send verification email with code and link
+        try {
+          await sendVerificationCodeEmail(
+            user.email,
+            user.firstName,
+            user.verificationCode,
+            user.verificationToken
+          );
+        } catch (emailError) {
+          console.error('Failed to send verification email:', emailError);
+          // Continue with registration even if email fails
+        }
+
         res.status(201).json({ 
-          message: "Registration successful! Please enter the verification code to verify your email.",
+          message: "Registration successful! Please check your email for the verification code.",
           email: user.email,
-          verificationCode: user.verificationCode,
           requiresVerification: true
         });
       })(req, res, next);
@@ -73,6 +85,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Resend verification email endpoint
+  app.post("/api/auth/resend-verification", async (req, res) => {
+    try {
+      const { email } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ message: "Email is required" });
+      }
+
+      const user = await storage.getUserByEmail(email);
+      
+      if (!user) {
+        return res.status(404).json({ message: "Email not found" });
+      }
+
+      if (user.emailVerified) {
+        return res.status(400).json({ message: "Email already verified" });
+      }
+
+      // Generate new code and token
+      const crypto = require('crypto');
+      const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+      const verificationToken = crypto.randomBytes(32).toString('hex');
+      const verificationCodeExpiry = new Date();
+      verificationCodeExpiry.setMinutes(verificationCodeExpiry.getMinutes() + 15);
+
+      // Update user with new codes
+      await storage.updateVerificationCode(email, verificationCode, verificationToken, verificationCodeExpiry);
+
+      // Send verification email
+      try {
+        await sendVerificationCodeEmail(
+          email, // Use the email from request since it's guaranteed to be string
+          (user.firstName as string) || 'User',
+          verificationCode,
+          verificationToken
+        );
+      } catch (emailError) {
+        console.error('Failed to resend verification email:', emailError);
+        return res.status(500).json({ message: "Failed to send verification email" });
+      }
+
+      res.json({ 
+        message: "Verification email resent successfully. Please check your inbox.",
+      });
+    } catch (error: any) {
+      res.status(400).json({ message: error.message || "Invalid request" });
+    }
+  });
+
   // Forgot password - request reset code
   app.post("/api/auth/forgot-password", async (req, res) => {
     try {
@@ -85,10 +147,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Email not found" });
       }
 
+      // Send password reset email
+      try {
+        await sendPasswordResetEmail(
+          validatedData.email, // Use the validated email from request
+          (user.firstName as string) || 'User',
+          resetCode
+        );
+      } catch (emailError) {
+        console.error('Failed to send password reset email:', emailError);
+        return res.status(500).json({ message: "Failed to send reset email" });
+      }
+
       res.json({ 
-        message: "Password reset code generated. Please use it to reset your password.",
-        email: user.email,
-        resetCode: resetCode
+        message: "Password reset code has been sent to your email.",
+        email: validatedData.email
       });
     } catch (error: any) {
       res.status(400).json({ message: error.message || "Invalid request" });

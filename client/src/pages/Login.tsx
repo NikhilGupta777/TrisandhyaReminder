@@ -33,7 +33,6 @@ export default function Login() {
   const [verificationData, setVerificationData] = useState({
     email: "",
     code: "",
-    verificationCodeDisplay: "",
   });
 
   const [forgotPasswordData, setForgotPasswordData] = useState({
@@ -44,7 +43,6 @@ export default function Login() {
     email: "",
     code: "",
     password: "",
-    resetCodeDisplay: "",
   });
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -101,12 +99,11 @@ export default function Login() {
         setVerificationData({
           email: registerData.email,
           code: "",
-          verificationCodeDisplay: data.verificationCode,
         });
         setShowVerification(true);
         toast({
           title: "Registration Successful!",
-          description: `Your verification code is: ${data.verificationCode}`,
+          description: "Please check your email for the verification code.",
           duration: 10000,
         });
       } else {
@@ -155,7 +152,7 @@ export default function Login() {
           firstName: "",
           lastName: "",
         });
-        setVerificationData({ email: "", code: "", verificationCodeDisplay: "" });
+        setVerificationData({ email: "", code: "" });
         setActiveTab("login");
       } else {
         toast({
@@ -193,13 +190,12 @@ export default function Login() {
           email: forgotPasswordData.email,
           code: "",
           password: "",
-          resetCodeDisplay: data.resetCode,
         });
         setShowForgotPassword(false);
         setShowResetPassword(true);
         toast({
-          title: "Reset Code Generated",
-          description: `Your reset code is: ${data.resetCode}`,
+          title: "Reset Code Sent",
+          description: "Please check your email for the password reset code.",
           duration: 10000,
         });
       } else {
@@ -244,7 +240,7 @@ export default function Login() {
         });
         setShowResetPassword(false);
         setForgotPasswordData({ email: "" });
-        setResetPasswordData({ email: "", code: "", password: "", resetCodeDisplay: "" });
+        setResetPasswordData({ email: "", code: "", password: "" });
         setActiveTab("login");
       } else {
         toast({
@@ -257,6 +253,41 @@ export default function Login() {
       toast({
         title: "Error",
         description: "An error occurred during password reset",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    setIsLoading(true);
+
+    try {
+      const response = await fetch("/api/auth/resend-verification", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: verificationData.email }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast({
+          title: "Email Sent!",
+          description: "A new verification code has been sent to your email.",
+        });
+      } else {
+        toast({
+          title: "Failed to Resend",
+          description: data.message || "Could not resend verification email",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "An error occurred while resending the email",
         variant: "destructive",
       });
     } finally {
@@ -333,8 +364,8 @@ export default function Login() {
                 <div className="text-right">
                   <Button
                     type="button"
-                    variant="link"
-                    className="text-orange-600 dark:text-orange-400 px-0"
+                    variant="ghost"
+                    className="text-orange-600 dark:text-orange-400 px-0 h-auto"
                     onClick={() => setShowForgotPassword(true)}
                     data-testid="button-forgot-password"
                   >
@@ -503,15 +534,15 @@ export default function Login() {
           <DialogHeader>
             <DialogTitle className="text-center text-xl">Verify Your Email</DialogTitle>
             <DialogDescription className="text-center">
-              Enter the 6-digit verification code displayed on screen
+              We've sent a 6-digit verification code to your email. Please enter it below.
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleVerifyCode}>
             <div className="space-y-4 py-4">
-              <div className="p-4 bg-orange-50 dark:bg-orange-950/30 rounded-lg text-center">
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Your verification code:</p>
-                <p className="text-3xl font-bold text-orange-600 dark:text-orange-400 tracking-wider" data-testid="text-verification-code">
-                  {verificationData.verificationCodeDisplay}
+              <div className="p-4 bg-blue-50 dark:bg-blue-950/30 rounded-lg text-center">
+                <Mail className="h-12 w-12 text-blue-600 dark:text-blue-400 mx-auto mb-2" />
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Check your email inbox for the verification code.
                 </p>
               </div>
               <div className="space-y-2">
@@ -530,6 +561,20 @@ export default function Login() {
                     data-testid="input-verification-code"
                   />
                 </div>
+              </div>
+              <div className="text-center">
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                  Didn't receive the email?
+                </p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleResendVerification}
+                  disabled={isLoading}
+                  data-testid="button-resend-verification"
+                >
+                  Resend Verification Email
+                </Button>
               </div>
             </div>
             <DialogFooter>
@@ -608,15 +653,15 @@ export default function Login() {
           <DialogHeader>
             <DialogTitle className="text-center text-xl">Reset Password</DialogTitle>
             <DialogDescription className="text-center">
-              Enter the reset code and your new password
+              Enter the reset code from your email and your new password
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleResetPassword}>
             <div className="space-y-4 py-4">
-              <div className="p-4 bg-orange-50 dark:bg-orange-950/30 rounded-lg text-center">
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Your reset code:</p>
-                <p className="text-3xl font-bold text-orange-600 dark:text-orange-400 tracking-wider" data-testid="text-reset-code">
-                  {resetPasswordData.resetCodeDisplay}
+              <div className="p-4 bg-blue-50 dark:bg-blue-950/30 rounded-lg text-center">
+                <Mail className="h-12 w-12 text-blue-600 dark:text-blue-400 mx-auto mb-2" />
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Check your email for the password reset code.
                 </p>
               </div>
               <div className="space-y-2">

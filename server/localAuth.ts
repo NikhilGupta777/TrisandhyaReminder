@@ -23,6 +23,7 @@ export function setupLocalAuth() {
 
           const hashedPassword = await bcrypt.hash(password, 10);
           const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+          const verificationToken = crypto.randomBytes(32).toString('hex');
           const verificationCodeExpiry = new Date();
           verificationCodeExpiry.setMinutes(verificationCodeExpiry.getMinutes() + 15);
 
@@ -32,6 +33,7 @@ export function setupLocalAuth() {
             firstName: req.body.firstName,
             lastName: req.body.lastName,
             verificationCode,
+            verificationToken,
             verificationCodeExpiry,
             emailVerified: false,
           });
