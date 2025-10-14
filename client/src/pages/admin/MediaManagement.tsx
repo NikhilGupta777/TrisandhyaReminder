@@ -32,7 +32,7 @@ export default function MediaManagement() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: any }) => {
+    mutationFn: async ({ id, data }: { id: number; data: any }) => {
       return await apiRequest("PATCH", `/api/admin/media/${id}`, data);
     },
     onSuccess: () => {
@@ -43,7 +43,7 @@ export default function MediaManagement() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
+    mutationFn: async (id: number) => {
       return await apiRequest("DELETE", `/api/admin/media/${id}`);
     },
     onSuccess: () => {
@@ -60,7 +60,9 @@ export default function MediaManagement() {
       type: formData.get("type"),
       artist: formData.get("artist"),
       url: formData.get("url"),
+      thumbnailUrl: formData.get("thumbnailUrl"),
       duration: formData.get("duration"),
+      description: formData.get("description"),
     };
 
     if (editingMedia) {
@@ -111,12 +113,22 @@ export default function MediaManagement() {
                 <Input id="artist" name="artist" data-testid="input-artist" />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="url">URL</Label>
-                <Input id="url" name="url" type="url" required data-testid="input-url" />
+                <Label htmlFor="url">YouTube URL</Label>
+                <Input id="url" name="url" type="url" required placeholder="https://www.youtube.com/watch?v=..." data-testid="input-url" />
+                <p className="text-xs text-muted-foreground">Paste the full YouTube video URL</p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="thumbnailUrl">Thumbnail URL (Optional)</Label>
+                <Input id="thumbnailUrl" name="thumbnailUrl" type="url" placeholder="https://i.ytimg.com/vi/..." data-testid="input-thumbnail" />
+                <p className="text-xs text-muted-foreground">YouTube thumbnail will be auto-extracted if not provided</p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="duration">Duration</Label>
                 <Input id="duration" name="duration" placeholder="e.g., 5:30" data-testid="input-duration" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="description">Description (Optional)</Label>
+                <Input id="description" name="description" placeholder="Brief description of the content" data-testid="input-description" />
               </div>
               <Button type="submit" className="w-full" data-testid="button-submit">
                 Create Media
@@ -172,12 +184,20 @@ export default function MediaManagement() {
                         <Input id="edit-artist" name="artist" defaultValue={editingMedia?.artist || ""} />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="edit-url">URL</Label>
+                        <Label htmlFor="edit-url">YouTube URL</Label>
                         <Input id="edit-url" name="url" type="url" defaultValue={editingMedia?.url} required />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="edit-thumbnailUrl">Thumbnail URL (Optional)</Label>
+                        <Input id="edit-thumbnailUrl" name="thumbnailUrl" type="url" defaultValue={editingMedia?.thumbnailUrl || ""} />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="edit-duration">Duration</Label>
                         <Input id="edit-duration" name="duration" defaultValue={editingMedia?.duration || ""} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="edit-description">Description (Optional)</Label>
+                        <Input id="edit-description" name="description" defaultValue={editingMedia?.description || ""} />
                       </div>
                       <Button type="submit" className="w-full">Update Media</Button>
                     </form>
