@@ -36,6 +36,10 @@ export const users = pgTable("users", {
   isAdmin: boolean("is_admin").default(false).notNull(),
   emailVerified: boolean("email_verified").default(false).notNull(),
   verificationToken: varchar("verification_token"),
+  verificationCode: varchar("verification_code", { length: 6 }),
+  verificationCodeExpiry: timestamp("verification_code_expiry"),
+  resetPasswordCode: varchar("reset_password_code", { length: 6 }),
+  resetPasswordCodeExpiry: timestamp("reset_password_code_expiry"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
   googleId: text("google_id"),
@@ -62,6 +66,27 @@ export const loginUserSchema = z.object({
 });
 
 export type LoginUser = z.infer<typeof loginUserSchema>;
+
+export const verifyCodeSchema = z.object({
+  email: z.string().email("Please enter a valid email address"),
+  code: z.string().length(6, "Verification code must be 6 digits"),
+});
+
+export type VerifyCode = z.infer<typeof verifyCodeSchema>;
+
+export const forgotPasswordSchema = z.object({
+  email: z.string().email("Please enter a valid email address"),
+});
+
+export type ForgotPassword = z.infer<typeof forgotPasswordSchema>;
+
+export const resetPasswordSchema = z.object({
+  email: z.string().email("Please enter a valid email address"),
+  code: z.string().length(6, "Reset code must be 6 digits"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+});
+
+export type ResetPassword = z.infer<typeof resetPasswordSchema>;
 
 // Alarm settings for each user
 export const alarmSettings = pgTable("alarm_settings", {
