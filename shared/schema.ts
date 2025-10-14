@@ -9,6 +9,7 @@ import {
   boolean,
   integer,
   date,
+  serial,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -26,17 +27,21 @@ export const sessions = pgTable(
 
 // User storage table for Replit Auth
 export const users = pgTable("users", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  id: serial("id").primaryKey(),
   email: varchar("email").unique(),
-  password: varchar("password"),
+  password: varchar("hashed_password"),
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
-  profileImageUrl: varchar("profile_image_url"),
+  profileImageUrl: varchar("avatar_url"),
   isAdmin: boolean("is_admin").default(false).notNull(),
   emailVerified: boolean("email_verified").default(false).notNull(),
   verificationToken: varchar("verification_token"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
+  googleId: text("google_id"),
+  username: varchar("username"),
+  role: varchar("role"),
+  lastLogin: timestamp("last_login"),
 });
 
 export type UpsertUser = typeof users.$inferInsert;
@@ -60,8 +65,8 @@ export type LoginUser = z.infer<typeof loginUserSchema>;
 
 // Alarm settings for each user
 export const alarmSettings = pgTable("alarm_settings", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
   pratahEnabled: boolean("pratah_enabled").default(true).notNull(),
   madhyahnaEnabled: boolean("madhyahna_enabled").default(true).notNull(),
   sayamEnabled: boolean("sayam_enabled").default(true).notNull(),
@@ -82,8 +87,8 @@ export type AlarmSettings = typeof alarmSettings.$inferSelect;
 
 // Daily sadhana progress
 export const sadhanaProgress = pgTable("sadhana_progress", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
   date: date("date").notNull(),
   pratahCompleted: boolean("pratah_completed").default(false).notNull(),
   madhyahnaCompleted: boolean("madhyahna_completed").default(false).notNull(),
@@ -106,7 +111,7 @@ export type SadhanaProgress = typeof sadhanaProgress.$inferSelect;
 
 // Media content (bhajans, pravachans)
 export const mediaContent = pgTable("media_content", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  id: serial("id").primaryKey(),
   title: varchar("title", { length: 255 }).notNull(),
   type: varchar("type", { length: 20 }).notNull(), // 'bhajan' or 'pravachan'
   artist: varchar("artist", { length: 255 }),
@@ -129,7 +134,7 @@ export type MediaContent = typeof mediaContent.$inferSelect;
 
 // Scripture content (for Mahapuran Path)
 export const scriptureContent = pgTable("scripture_content", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  id: serial("id").primaryKey(),
   chapterNumber: integer("chapter_number").notNull(),
   title: varchar("title", { length: 255 }).notNull(),
   content: text("content").notNull(),
