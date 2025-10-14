@@ -16,6 +16,7 @@ import {
   resetPasswordSchema,
 } from "@shared/schema";
 import bcrypt from "bcrypt";
+import crypto from "crypto";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
@@ -43,16 +44,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
             user.verificationCode,
             user.verificationToken
           );
+          
+          res.status(201).json({ 
+            message: "Registration successful! Please check your email for the verification code.",
+            email: user.email,
+            requiresVerification: true
+          });
         } catch (emailError) {
           console.error('Failed to send verification email:', emailError);
-          // Continue with registration even if email fails
+          
+          // Delete the user if email sending fails
+          try {
+            await storage.deleteUser(user.id);
+          } catch (deleteError) {
+            console.error('Failed to delete user after email error:', deleteError);
+          }
+          
+          return res.status(500).json({ 
+            message: "Failed to send verification email. Please check your email configuration and try again." 
+          });
         }
-
-        res.status(201).json({ 
-          message: "Registration successful! Please check your email for the verification code.",
-          email: user.email,
-          requiresVerification: true
-        });
       })(req, res, next);
     } catch (error: any) {
       res.status(400).json({ message: error.message || "Invalid registration data" });
@@ -105,7 +116,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Generate new code and token
-      const crypto = require('crypto');
       const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
       const verificationToken = crypto.randomBytes(32).toString('hex');
       const verificationCodeExpiry = new Date();
