@@ -4,15 +4,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { SiGoogle } from "react-icons/si";
-import { Sparkles, Mail, Lock, User, Loader2 } from "lucide-react";
+import { Sparkles, Mail, Lock, User, Loader2, KeyRound } from "lucide-react";
 import deityBg from "@assets/stock_images/sunrise_golden_hour__a22c9f34.jpg";
 
 export default function Login() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("login");
+  const [showVerification, setShowVerification] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [showResetPassword, setShowResetPassword] = useState(false);
 
   const [loginData, setLoginData] = useState({
     email: "",
@@ -24,6 +28,23 @@ export default function Login() {
     password: "",
     firstName: "",
     lastName: "",
+  });
+
+  const [verificationData, setVerificationData] = useState({
+    email: "",
+    code: "",
+    verificationCodeDisplay: "",
+  });
+
+  const [forgotPasswordData, setForgotPasswordData] = useState({
+    email: "",
+  });
+
+  const [resetPasswordData, setResetPasswordData] = useState({
+    email: "",
+    code: "",
+    password: "",
+    resetCodeDisplay: "",
   });
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -77,17 +98,17 @@ export default function Login() {
       const data = await response.json();
 
       if (response.ok) {
+        setVerificationData({
+          email: registerData.email,
+          code: "",
+          verificationCodeDisplay: data.verificationCode,
+        });
+        setShowVerification(true);
         toast({
           title: "Registration Successful!",
-          description: "Please check your email to verify your account.",
+          description: `Your verification code is: ${data.verificationCode}`,
+          duration: 10000,
         });
-        setRegisterData({
-          email: "",
-          password: "",
-          firstName: "",
-          lastName: "",
-        });
-        setActiveTab("login");
       } else {
         toast({
           title: "Registration Failed",
@@ -99,6 +120,143 @@ export default function Login() {
       toast({
         title: "Error",
         description: "An error occurred during registration",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleVerifyCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      const response = await fetch("/api/auth/verify-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: verificationData.email,
+          code: verificationData.code,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast({
+          title: "Email Verified!",
+          description: "You can now log in with your credentials.",
+        });
+        setShowVerification(false);
+        setRegisterData({
+          email: "",
+          password: "",
+          firstName: "",
+          lastName: "",
+        });
+        setVerificationData({ email: "", code: "", verificationCodeDisplay: "" });
+        setActiveTab("login");
+      } else {
+        toast({
+          title: "Verification Failed",
+          description: data.message || "Invalid verification code",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "An error occurred during verification",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      const response = await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(forgotPasswordData),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setResetPasswordData({
+          email: forgotPasswordData.email,
+          code: "",
+          password: "",
+          resetCodeDisplay: data.resetCode,
+        });
+        setShowForgotPassword(false);
+        setShowResetPassword(true);
+        toast({
+          title: "Reset Code Generated",
+          description: `Your reset code is: ${data.resetCode}`,
+          duration: 10000,
+        });
+      } else {
+        toast({
+          title: "Request Failed",
+          description: data.message || "Email not found",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "An error occurred",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      const response = await fetch("/api/auth/reset-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: resetPasswordData.email,
+          code: resetPasswordData.code,
+          password: resetPasswordData.password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast({
+          title: "Password Reset Successful!",
+          description: "You can now log in with your new password.",
+        });
+        setShowResetPassword(false);
+        setForgotPasswordData({ email: "" });
+        setResetPasswordData({ email: "", code: "", password: "", resetCodeDisplay: "" });
+        setActiveTab("login");
+      } else {
+        toast({
+          title: "Reset Failed",
+          description: data.message || "Invalid reset code",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "An error occurred during password reset",
         variant: "destructive",
       });
     } finally {
@@ -170,6 +328,18 @@ export default function Login() {
                       data-testid="input-login-password"
                     />
                   </div>
+                </div>
+
+                <div className="text-right">
+                  <Button
+                    type="button"
+                    variant="link"
+                    className="text-orange-600 dark:text-orange-400 px-0"
+                    onClick={() => setShowForgotPassword(true)}
+                    data-testid="button-forgot-password"
+                  >
+                    Forgot Password?
+                  </Button>
                 </div>
 
                 <Button 
@@ -326,6 +496,187 @@ export default function Login() {
           </Tabs>
         </CardContent>
       </Card>
+
+      {/* Verification Code Dialog */}
+      <Dialog open={showVerification} onOpenChange={setShowVerification}>
+        <DialogContent className="sm:max-w-md" data-testid="dialog-verification">
+          <DialogHeader>
+            <DialogTitle className="text-center text-xl">Verify Your Email</DialogTitle>
+            <DialogDescription className="text-center">
+              Enter the 6-digit verification code displayed on screen
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleVerifyCode}>
+            <div className="space-y-4 py-4">
+              <div className="p-4 bg-orange-50 dark:bg-orange-950/30 rounded-lg text-center">
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Your verification code:</p>
+                <p className="text-3xl font-bold text-orange-600 dark:text-orange-400 tracking-wider" data-testid="text-verification-code">
+                  {verificationData.verificationCodeDisplay}
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="verification-code">Verification Code</Label>
+                <div className="relative">
+                  <KeyRound className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Input
+                    id="verification-code"
+                    type="text"
+                    placeholder="000000"
+                    className="pl-10 text-center text-lg tracking-wider"
+                    maxLength={6}
+                    value={verificationData.code}
+                    onChange={(e) => setVerificationData({ ...verificationData, code: e.target.value.replace(/\D/g, '') })}
+                    required
+                    data-testid="input-verification-code"
+                  />
+                </div>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                type="submit"
+                className="w-full bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700"
+                disabled={isLoading || verificationData.code.length !== 6}
+                data-testid="button-verify-code"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Verifying...
+                  </>
+                ) : (
+                  "Verify Email"
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Forgot Password Dialog */}
+      <Dialog open={showForgotPassword} onOpenChange={setShowForgotPassword}>
+        <DialogContent className="sm:max-w-md" data-testid="dialog-forgot-password">
+          <DialogHeader>
+            <DialogTitle className="text-center text-xl">Forgot Password</DialogTitle>
+            <DialogDescription className="text-center">
+              Enter your email to receive a password reset code
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleForgotPassword}>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="forgot-email">Email</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Input
+                    id="forgot-email"
+                    type="email"
+                    placeholder="your@email.com"
+                    className="pl-10"
+                    value={forgotPasswordData.email}
+                    onChange={(e) => setForgotPasswordData({ email: e.target.value })}
+                    required
+                    data-testid="input-forgot-email"
+                  />
+                </div>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                type="submit"
+                className="w-full bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700"
+                disabled={isLoading}
+                data-testid="button-request-reset"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Sending...
+                  </>
+                ) : (
+                  "Send Reset Code"
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reset Password Dialog */}
+      <Dialog open={showResetPassword} onOpenChange={setShowResetPassword}>
+        <DialogContent className="sm:max-w-md" data-testid="dialog-reset-password">
+          <DialogHeader>
+            <DialogTitle className="text-center text-xl">Reset Password</DialogTitle>
+            <DialogDescription className="text-center">
+              Enter the reset code and your new password
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleResetPassword}>
+            <div className="space-y-4 py-4">
+              <div className="p-4 bg-orange-50 dark:bg-orange-950/30 rounded-lg text-center">
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Your reset code:</p>
+                <p className="text-3xl font-bold text-orange-600 dark:text-orange-400 tracking-wider" data-testid="text-reset-code">
+                  {resetPasswordData.resetCodeDisplay}
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="reset-code">Reset Code</Label>
+                <div className="relative">
+                  <KeyRound className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Input
+                    id="reset-code"
+                    type="text"
+                    placeholder="000000"
+                    className="pl-10 text-center text-lg tracking-wider"
+                    maxLength={6}
+                    value={resetPasswordData.code}
+                    onChange={(e) => setResetPasswordData({ ...resetPasswordData, code: e.target.value.replace(/\D/g, '') })}
+                    required
+                    data-testid="input-reset-code"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="new-password">New Password</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Input
+                    id="new-password"
+                    type="password"
+                    placeholder="••••••••"
+                    className="pl-10"
+                    minLength={6}
+                    value={resetPasswordData.password}
+                    onChange={(e) => setResetPasswordData({ ...resetPasswordData, password: e.target.value })}
+                    required
+                    data-testid="input-new-password"
+                  />
+                </div>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  Must be at least 6 characters
+                </p>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                type="submit"
+                className="w-full bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700"
+                disabled={isLoading || resetPasswordData.code.length !== 6}
+                data-testid="button-reset-password"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Resetting...
+                  </>
+                ) : (
+                  "Reset Password"
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
