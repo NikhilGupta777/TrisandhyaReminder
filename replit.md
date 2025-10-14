@@ -19,6 +19,17 @@ The Trisandhya Sadhana Companion is a Progressive Web Application (PWA) designed
 
 Preferred communication style: Simple, everyday language.
 
+## Recent Changes
+
+### October 14, 2025
+- **Database Setup**: Configured Neon PostgreSQL database with proper environment variable security (DATABASE_URL secret)
+- **Landing Page Enhancement**: Added real Trisandhya content from Bhavishya Malika, mobile-responsive design, and login button in top right corner
+- **Sadhana Guide Complete**: Added all authentic mantras from en.bhavishyamalika.com including Gayatri Mantra, Vishnu Shodasha Naam Stotram, Dashavatara Stotram, Durga Madhav Stuti, and Kalki Mahamantra with meanings
+- **Media Library Implementation**: Added real YouTube video embedding with 6 sample bhajans and pravachans, fully functional video playback
+- **Admin Media Management**: Enhanced with full YouTube support including thumbnail URLs, descriptions, and proper URL handling
+- **Schema Updates**: Migrated from UUID varchar to serial integer IDs to match existing Neon database structure
+- **Fixed Type Issues**: Updated admin media management to properly handle integer IDs instead of strings
+
 ## System Architecture
 
 ### Frontend Architecture
