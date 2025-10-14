@@ -293,7 +293,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/media/:id", async (req, res) => {
     try {
-      const media = await storage.getMediaById(req.params.id);
+      const media = await storage.getMediaById(parseInt(req.params.id));
       if (!media) {
         return res.status(404).json({ message: "Media not found" });
       }
@@ -345,7 +345,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch("/api/admin/users/:id/admin", isAuthenticated, isAdmin, async (req, res) => {
     try {
       const { isAdmin: adminStatus } = req.body;
-      const user = await storage.updateUserAdminStatus(req.params.id, adminStatus);
+      const user = await storage.updateUserAdminStatus(parseInt(req.params.id), adminStatus);
       res.json(user);
     } catch (error) {
       console.error("Error updating user admin status:", error);
@@ -355,7 +355,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/admin/users/:id", isAuthenticated, isAdmin, async (req, res) => {
     try {
-      await storage.deleteUser(req.params.id);
+      await storage.deleteUser(parseInt(req.params.id));
       res.json({ message: "User deleted successfully" });
     } catch (error) {
       console.error("Error deleting user:", error);
@@ -377,7 +377,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/admin/media/:id", isAuthenticated, isAdmin, async (req, res) => {
     try {
-      const media = await storage.updateMedia(req.params.id, req.body);
+      const media = await storage.updateMedia(parseInt(req.params.id), req.body);
       res.json(media);
     } catch (error) {
       console.error("Error updating media:", error);
@@ -387,7 +387,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/admin/media/:id", isAuthenticated, isAdmin, async (req, res) => {
     try {
-      await storage.deleteMedia(req.params.id);
+      await storage.deleteMedia(parseInt(req.params.id));
       res.json({ message: "Media deleted successfully" });
     } catch (error) {
       console.error("Error deleting media:", error);
@@ -409,7 +409,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/admin/scriptures/:id", isAuthenticated, isAdmin, async (req, res) => {
     try {
-      const scripture = await storage.updateScripture(req.params.id, req.body);
+      const scripture = await storage.updateScripture(parseInt(req.params.id), req.body);
       res.json(scripture);
     } catch (error) {
       console.error("Error updating scripture:", error);
@@ -419,7 +419,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/admin/scriptures/:id", isAuthenticated, isAdmin, async (req, res) => {
     try {
-      await storage.deleteScripture(req.params.id);
+      await storage.deleteScripture(parseInt(req.params.id));
       res.json({ message: "Scripture deleted successfully" });
     } catch (error) {
       console.error("Error deleting scripture:", error);

@@ -20,21 +20,21 @@ import { eq, and, desc } from "drizzle-orm";
 
 export interface IStorage {
   // User operations (required for Replit Auth)
-  getUser(id: string): Promise<User | undefined>;
+  getUser(id: number): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
   createLocalUser(user: Omit<UpsertUser, 'id'>): Promise<User>;
   verifyUserEmail(token: string): Promise<User | undefined>;
   
   // Alarm settings
-  getAlarmSettings(userId: string): Promise<AlarmSettings | undefined>;
+  getAlarmSettings(userId: number): Promise<AlarmSettings | undefined>;
   upsertAlarmSettings(settings: InsertAlarmSettings): Promise<AlarmSettings>;
   
   // Sadhana progress
-  getSadhanaProgress(userId: string, date: string): Promise<SadhanaProgress | undefined>;
-  getSadhanaProgressByDateRange(userId: string, startDate: string, endDate: string): Promise<SadhanaProgress[]>;
+  getSadhanaProgress(userId: number, date: string): Promise<SadhanaProgress | undefined>;
+  getSadhanaProgressByDateRange(userId: number, startDate: string, endDate: string): Promise<SadhanaProgress[]>;
   upsertSadhanaProgress(progress: InsertSadhanaProgress): Promise<SadhanaProgress>;
-  getUserStats(userId: string): Promise<{
+  getUserStats(userId: number): Promise<{
     currentStreak: number;
     longestStreak: number;
     totalJapCount: number;
@@ -43,27 +43,27 @@ export interface IStorage {
   
   // Media content
   getAllMedia(type?: string): Promise<MediaContent[]>;
-  getMediaById(id: string): Promise<MediaContent | undefined>;
+  getMediaById(id: number): Promise<MediaContent | undefined>;
   createMedia(media: InsertMediaContent): Promise<MediaContent>;
-  updateMedia(id: string, media: Partial<InsertMediaContent>): Promise<MediaContent>;
-  deleteMedia(id: string): Promise<void>;
+  updateMedia(id: number, media: Partial<InsertMediaContent>): Promise<MediaContent>;
+  deleteMedia(id: number): Promise<void>;
   
   // Scripture content
   getAllScriptures(): Promise<ScriptureContent[]>;
   getScriptureByChapter(chapterNumber: number): Promise<ScriptureContent | undefined>;
   createScripture(scripture: InsertScriptureContent): Promise<ScriptureContent>;
-  updateScripture(id: string, scripture: Partial<InsertScriptureContent>): Promise<ScriptureContent>;
-  deleteScripture(id: string): Promise<void>;
+  updateScripture(id: number, scripture: Partial<InsertScriptureContent>): Promise<ScriptureContent>;
+  deleteScripture(id: number): Promise<void>;
   
   // Admin operations
   getAllUsers(): Promise<User[]>;
-  updateUserAdminStatus(userId: string, isAdmin: boolean): Promise<User>;
-  deleteUser(userId: string): Promise<void>;
+  updateUserAdminStatus(userId: number, isAdmin: boolean): Promise<User>;
+  deleteUser(userId: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
   // User operations
-  async getUser(id: string): Promise<User | undefined> {
+  async getUser(id: number): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user;
   }
@@ -120,7 +120,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Alarm settings
-  async getAlarmSettings(userId: string): Promise<AlarmSettings | undefined> {
+  async getAlarmSettings(userId: number): Promise<AlarmSettings | undefined> {
     const [settings] = await db
       .select()
       .from(alarmSettings)
@@ -148,7 +148,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Sadhana progress
-  async getSadhanaProgress(userId: string, date: string): Promise<SadhanaProgress | undefined> {
+  async getSadhanaProgress(userId: number, date: string): Promise<SadhanaProgress | undefined> {
     const [progress] = await db
       .select()
       .from(sadhanaProgress)
@@ -157,7 +157,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getSadhanaProgressByDateRange(
-    userId: string,
+    userId: number,
     startDate: string,
     endDate: string
   ): Promise<SadhanaProgress[]> {
@@ -190,7 +190,7 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async getUserStats(userId: string): Promise<{
+  async getUserStats(userId: number): Promise<{
     currentStreak: number;
     longestStreak: number;
     totalJapCount: number;
@@ -251,7 +251,7 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(mediaContent).orderBy(desc(mediaContent.createdAt));
   }
 
-  async getMediaById(id: string): Promise<MediaContent | undefined> {
+  async getMediaById(id: number): Promise<MediaContent | undefined> {
     const [media] = await db.select().from(mediaContent).where(eq(mediaContent.id, id));
     return media;
   }
@@ -261,7 +261,7 @@ export class DatabaseStorage implements IStorage {
     return media;
   }
 
-  async updateMedia(id: string, mediaData: Partial<InsertMediaContent>): Promise<MediaContent> {
+  async updateMedia(id: number, mediaData: Partial<InsertMediaContent>): Promise<MediaContent> {
     const [updated] = await db
       .update(mediaContent)
       .set({ ...mediaData, updatedAt: new Date() })
@@ -270,7 +270,7 @@ export class DatabaseStorage implements IStorage {
     return updated;
   }
 
-  async deleteMedia(id: string): Promise<void> {
+  async deleteMedia(id: number): Promise<void> {
     await db.delete(mediaContent).where(eq(mediaContent.id, id));
   }
 
@@ -292,7 +292,7 @@ export class DatabaseStorage implements IStorage {
     return scripture;
   }
 
-  async updateScripture(id: string, scriptureData: Partial<InsertScriptureContent>): Promise<ScriptureContent> {
+  async updateScripture(id: number, scriptureData: Partial<InsertScriptureContent>): Promise<ScriptureContent> {
     const [updated] = await db
       .update(scriptureContent)
       .set({ ...scriptureData, updatedAt: new Date() })
@@ -301,7 +301,7 @@ export class DatabaseStorage implements IStorage {
     return updated;
   }
 
-  async deleteScripture(id: string): Promise<void> {
+  async deleteScripture(id: number): Promise<void> {
     await db.delete(scriptureContent).where(eq(scriptureContent.id, id));
   }
 
@@ -310,7 +310,7 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(users).orderBy(desc(users.createdAt));
   }
 
-  async updateUserAdminStatus(userId: string, isAdmin: boolean): Promise<User> {
+  async updateUserAdminStatus(userId: number, isAdmin: boolean): Promise<User> {
     const [updated] = await db
       .update(users)
       .set({ isAdmin, updatedAt: new Date() })
@@ -319,7 +319,7 @@ export class DatabaseStorage implements IStorage {
     return updated;
   }
 
-  async deleteUser(userId: string): Promise<void> {
+  async deleteUser(userId: number): Promise<void> {
     await db.delete(users).where(eq(users.id, userId));
   }
 }
