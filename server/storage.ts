@@ -25,6 +25,9 @@ export interface IStorage {
   upsertUser(user: UpsertUser): Promise<User>;
   createLocalUser(user: Omit<UpsertUser, 'id'>): Promise<User>;
   verifyUserEmail(token: string): Promise<User | undefined>;
+  verifyUserCode(email: string, code: string): Promise<User | undefined>;
+  setResetPasswordCode(email: string, code: string): Promise<User | undefined>;
+  resetPasswordWithCode(email: string, code: string, newPassword: string): Promise<User | undefined>;
   
   // Alarm settings
   getAlarmSettings(userId: number): Promise<AlarmSettings | undefined>;
@@ -111,6 +114,96 @@ export class DatabaseStorage implements IStorage {
       .set({
         emailVerified: true,
         verificationToken: null,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, user.id))
+      .returning();
+
+    return updatedUser;
+  }
+
+  async verifyUserCode(email: string, code: string): Promise<User | undefined> {
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, email));
+    
+    if (!user || !user.verificationCode || !user.verificationCodeExpiry) {
+      return undefined;
+    }
+
+    if (user.verificationCode !== code) {
+      return undefined;
+    }
+
+    if (new Date() > user.verificationCodeExpiry) {
+      return undefined;
+    }
+
+    const [updatedUser] = await db
+      .update(users)
+      .set({
+        emailVerified: true,
+        verificationCode: null,
+        verificationCodeExpiry: null,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, user.id))
+      .returning();
+
+    return updatedUser;
+  }
+
+  async setResetPasswordCode(email: string, code: string): Promise<User | undefined> {
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, email));
+    
+    if (!user) {
+      return undefined;
+    }
+
+    const expiry = new Date();
+    expiry.setMinutes(expiry.getMinutes() + 15);
+
+    const [updatedUser] = await db
+      .update(users)
+      .set({
+        resetPasswordCode: code,
+        resetPasswordCodeExpiry: expiry,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, user.id))
+      .returning();
+
+    return updatedUser;
+  }
+
+  async resetPasswordWithCode(email: string, code: string, newPassword: string): Promise<User | undefined> {
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, email));
+    
+    if (!user || !user.resetPasswordCode || !user.resetPasswordCodeExpiry) {
+      return undefined;
+    }
+
+    if (user.resetPasswordCode !== code) {
+      return undefined;
+    }
+
+    if (new Date() > user.resetPasswordCodeExpiry) {
+      return undefined;
+    }
+
+    const [updatedUser] = await db
+      .update(users)
+      .set({
+        password: newPassword,
+        resetPasswordCode: null,
+        resetPasswordCodeExpiry: null,
         updatedAt: new Date(),
       })
       .where(eq(users.id, user.id))

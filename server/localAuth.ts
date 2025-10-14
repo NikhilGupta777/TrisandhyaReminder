@@ -22,14 +22,17 @@ export function setupLocalAuth() {
           }
 
           const hashedPassword = await bcrypt.hash(password, 10);
-          const verificationToken = crypto.randomBytes(32).toString('hex');
+          const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+          const verificationCodeExpiry = new Date();
+          verificationCodeExpiry.setMinutes(verificationCodeExpiry.getMinutes() + 15);
 
           const user = await storage.createLocalUser({
             email,
             password: hashedPassword,
             firstName: req.body.firstName,
             lastName: req.body.lastName,
-            verificationToken,
+            verificationCode,
+            verificationCodeExpiry,
             emailVerified: false,
           });
 

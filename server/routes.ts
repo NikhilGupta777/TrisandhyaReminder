@@ -11,7 +11,11 @@ import {
   insertScriptureContentSchema,
   registerUserSchema,
   loginUserSchema,
+  verifyCodeSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
 } from "@shared/schema";
+import bcrypt from "bcrypt";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
@@ -31,22 +35,89 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(400).json({ message: info?.message || "Registration failed" });
         }
 
-        try {
-          await sendVerificationEmail(user.email, user.firstName, user.verificationToken);
-          res.status(201).json({ 
-            message: "Registration successful! Please check your email to verify your account.",
-            email: user.email 
-          });
-        } catch (emailError) {
-          console.error("Failed to send verification email:", emailError);
-          res.status(201).json({ 
-            message: "Registration successful, but we couldn't send the verification email. Please contact support.",
-            email: user.email 
-          });
-        }
+        res.status(201).json({ 
+          message: "Registration successful! Please enter the verification code to verify your email.",
+          email: user.email,
+          verificationCode: user.verificationCode,
+          requiresVerification: true
+        });
       })(req, res, next);
     } catch (error: any) {
       res.status(400).json({ message: error.message || "Invalid registration data" });
+    }
+  });
+
+  // Verify email with code endpoint
+  app.post("/api/auth/verify-code", async (req, res) => {
+    try {
+      const validatedData = verifyCodeSchema.parse(req.body);
+      const user = await storage.verifyUserCode(validatedData.email, validatedData.code);
+      
+      if (!user) {
+        return res.status(400).json({ 
+          message: "Invalid or expired verification code" 
+        });
+      }
+
+      res.json({ 
+        message: "Email verified successfully! You can now log in.",
+        user: {
+          id: user.id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+        }
+      });
+    } catch (error: any) {
+      res.status(400).json({ message: error.message || "Invalid verification data" });
+    }
+  });
+
+  // Forgot password - request reset code
+  app.post("/api/auth/forgot-password", async (req, res) => {
+    try {
+      const validatedData = forgotPasswordSchema.parse(req.body);
+      const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
+      
+      const user = await storage.setResetPasswordCode(validatedData.email, resetCode);
+      
+      if (!user) {
+        return res.status(404).json({ message: "Email not found" });
+      }
+
+      res.json({ 
+        message: "Password reset code generated. Please use it to reset your password.",
+        email: user.email,
+        resetCode: resetCode
+      });
+    } catch (error: any) {
+      res.status(400).json({ message: error.message || "Invalid request" });
+    }
+  });
+
+  // Reset password with code
+  app.post("/api/auth/reset-password", async (req, res) => {
+    try {
+      const validatedData = resetPasswordSchema.parse(req.body);
+      const hashedPassword = await bcrypt.hash(validatedData.password, 10);
+      
+      const user = await storage.resetPasswordWithCode(
+        validatedData.email,
+        validatedData.code,
+        hashedPassword
+      );
+      
+      if (!user) {
+        return res.status(400).json({ 
+          message: "Invalid or expired reset code" 
+        });
+      }
+
+      res.json({ 
+        message: "Password reset successful! You can now log in with your new password."
+      });
+    } catch (error: any) {
+      res.status(400).json({ message: error.message || "Invalid reset data" });
     }
   });
 
