@@ -82,35 +82,80 @@ export default function AlarmsConnected() {
       <Card className="p-6 space-y-6" data-testid="alarm-settings">
         <h3 className="text-lg font-semibold">Alarm Settings</h3>
 
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <Label htmlFor="pratah-alarm" className="text-base">Pratah Sandhya (3:35 AM - 6:30 AM)</Label>
-            <Switch
-              id="pratah-alarm"
-              checked={settings?.pratahEnabled}
-              onCheckedChange={(checked) => toggleAlarm("pratahEnabled", checked)}
-              data-testid="switch-pratah-alarm"
-            />
+        <div className="space-y-6">
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="pratah-alarm" className="text-base font-semibold">Pratah Sandhya</Label>
+              <Switch
+                id="pratah-alarm"
+                checked={settings?.pratahEnabled}
+                onCheckedChange={(checked) => toggleAlarm("pratahEnabled", checked)}
+                data-testid="switch-pratah-alarm"
+              />
+            </div>
+            <div className="flex items-center gap-2 pl-4">
+              <Label htmlFor="pratah-time" className="text-sm text-muted-foreground">Time:</Label>
+              <input
+                type="time"
+                id="pratah-time"
+                value={settings?.pratahTime || "05:30"}
+                onChange={(e) => updateSettingsMutation.mutate({ pratahTime: e.target.value })}
+                disabled={!settings?.pratahEnabled}
+                className="px-3 py-1.5 rounded-md border bg-background text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                data-testid="input-pratah-time"
+              />
+              <span className="text-xs text-muted-foreground">(3:35 AM - 6:30 AM)</span>
+            </div>
           </div>
 
-          <div className="flex items-center justify-between">
-            <Label htmlFor="madhyahna-alarm" className="text-base">Madhyahna Sandhya (11:30 AM - 1:00 PM)</Label>
-            <Switch
-              id="madhyahna-alarm"
-              checked={settings?.madhyahnaEnabled}
-              onCheckedChange={(checked) => toggleAlarm("madhyahnaEnabled", checked)}
-              data-testid="switch-madhyahna-alarm"
-            />
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="madhyahna-alarm" className="text-base font-semibold">Madhyahna Sandhya</Label>
+              <Switch
+                id="madhyahna-alarm"
+                checked={settings?.madhyahnaEnabled}
+                onCheckedChange={(checked) => toggleAlarm("madhyahnaEnabled", checked)}
+                data-testid="switch-madhyahna-alarm"
+              />
+            </div>
+            <div className="flex items-center gap-2 pl-4">
+              <Label htmlFor="madhyahna-time" className="text-sm text-muted-foreground">Time:</Label>
+              <input
+                type="time"
+                id="madhyahna-time"
+                value={settings?.madhyahnaTime || "12:00"}
+                onChange={(e) => updateSettingsMutation.mutate({ madhyahnaTime: e.target.value })}
+                disabled={!settings?.madhyahnaEnabled}
+                className="px-3 py-1.5 rounded-md border bg-background text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                data-testid="input-madhyahna-time"
+              />
+              <span className="text-xs text-muted-foreground">(11:30 AM - 1:00 PM)</span>
+            </div>
           </div>
 
-          <div className="flex items-center justify-between">
-            <Label htmlFor="sayam-alarm" className="text-base">Sayam Sandhya (5:30 PM - 6:30 PM)</Label>
-            <Switch
-              id="sayam-alarm"
-              checked={settings?.sayamEnabled}
-              onCheckedChange={(checked) => toggleAlarm("sayamEnabled", checked)}
-              data-testid="switch-sayam-alarm"
-            />
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="sayam-alarm" className="text-base font-semibold">Sayam Sandhya</Label>
+              <Switch
+                id="sayam-alarm"
+                checked={settings?.sayamEnabled}
+                onCheckedChange={(checked) => toggleAlarm("sayamEnabled", checked)}
+                data-testid="switch-sayam-alarm"
+              />
+            </div>
+            <div className="flex items-center gap-2 pl-4">
+              <Label htmlFor="sayam-time" className="text-sm text-muted-foreground">Time:</Label>
+              <input
+                type="time"
+                id="sayam-time"
+                value={settings?.sayamTime || "18:00"}
+                onChange={(e) => updateSettingsMutation.mutate({ sayamTime: e.target.value })}
+                disabled={!settings?.sayamEnabled}
+                className="px-3 py-1.5 rounded-md border bg-background text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                data-testid="input-sayam-time"
+              />
+              <span className="text-xs text-muted-foreground">(5:30 PM - 6:30 PM)</span>
+            </div>
           </div>
         </div>
 

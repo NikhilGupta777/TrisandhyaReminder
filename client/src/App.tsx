@@ -10,6 +10,8 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { AudioPlayerProvider } from "@/contexts/AudioPlayerContext";
 import { GlobalAudioPlayer } from "@/components/GlobalAudioPlayer";
+import { AlarmDialog } from "@/components/AlarmDialog";
+import { useAlarmMonitor } from "@/hooks/use-alarm-monitor";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Shield } from "lucide-react";
@@ -75,6 +77,7 @@ function AuthenticatedApp() {
   const { user, isAdmin } = useAuth();
   const [location] = useLocation();
   const isAdminRoute = location.startsWith("/admin");
+  const { activeAlarm, dismissAlarm, snoozeAlarm, volume } = useAlarmMonitor();
 
   const style = {
     "--sidebar-width": "16rem",
@@ -117,6 +120,16 @@ function AuthenticatedApp() {
           </main>
         </div>
       </div>
+      
+      <AlarmDialog
+        isOpen={!!activeAlarm}
+        alarmType={activeAlarm?.type || "pratah"}
+        alarmTime={activeAlarm?.time || ""}
+        alarmSound={activeAlarm?.sound}
+        volume={volume}
+        onDismiss={dismissAlarm}
+        onSnooze={snoozeAlarm}
+      />
     </SidebarProvider>
   );
 }

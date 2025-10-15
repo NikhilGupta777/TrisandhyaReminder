@@ -93,8 +93,11 @@ export const alarmSettings = pgTable("alarm_settings", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
   pratahEnabled: boolean("pratah_enabled").default(true).notNull(),
+  pratahTime: varchar("pratah_time", { length: 5 }).default("05:30").notNull(), // HH:MM format
   madhyahnaEnabled: boolean("madhyahna_enabled").default(true).notNull(),
+  madhyahnaTime: varchar("madhyahna_time", { length: 5 }).default("12:00").notNull(), // HH:MM format
   sayamEnabled: boolean("sayam_enabled").default(true).notNull(),
+  sayamTime: varchar("sayam_time", { length: 5 }).default("18:00").notNull(), // HH:MM format
   alarmSoundId: varchar("alarm_sound_id").references(() => alarmSounds.id),
   volume: integer("volume").default(80).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
