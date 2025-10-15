@@ -26,6 +26,7 @@ import MediaCategoriesManagement from "@/pages/admin/MediaCategoriesManagement";
 import ScriptureManagement from "@/pages/admin/ScriptureManagement";
 import SadhanaContentManagement from "@/pages/admin/SadhanaContentManagement";
 import AlarmSoundsManagement from "@/pages/admin/AlarmSoundsManagement";
+import JapaAudiosManagement from "@/pages/admin/JapaAudiosManagement";
 import NotFound from "@/pages/not-found";
 
 function AdminRouter() {
@@ -38,6 +39,7 @@ function AdminRouter() {
       <Route path="/admin/scriptures" component={ScriptureManagement} />
       <Route path="/admin/sadhana-content" component={SadhanaContentManagement} />
       <Route path="/admin/alarm-sounds" component={AlarmSoundsManagement} />
+      <Route path="/admin/japa-audios" component={JapaAudiosManagement} />
       <Route component={NotFound} />
     </Switch>
   );
