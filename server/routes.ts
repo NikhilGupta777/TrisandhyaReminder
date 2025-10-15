@@ -673,7 +673,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         storage: multerS3({
           s3: s3Client,
           bucket: bucketName,
-          acl: 'public-read',
           contentType: multerS3.AUTO_CONTENT_TYPE,
           metadata: (req: any, file: any, cb: any) => {
             cb(null, { fieldName: file.fieldname });
@@ -747,7 +746,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         storage: multerS3({
           s3: s3Client,
           bucket: bucketName,
-          acl: 'public-read',
           contentType: multerS3.AUTO_CONTENT_TYPE,
           metadata: (req: any, file: any, cb: any) => {
             cb(null, { fieldName: file.fieldname });
@@ -871,7 +869,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         storage: multerS3({
           s3: s3Client,
           bucket: bucketName,
-          acl: 'public-read',
           contentType: multerS3.AUTO_CONTENT_TYPE,
           metadata: (req: any, file: any, cb: any) => {
             cb(null, { fieldName: file.fieldname });
