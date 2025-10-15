@@ -7,6 +7,8 @@ import {
   scriptureContent,
   sadhanaContent,
   alarmSounds,
+  japaAudios,
+  japaSettings,
   registrationAttempts,
   type User,
   type UpsertUser,
@@ -24,6 +26,10 @@ import {
   type InsertSadhanaContent,
   type AlarmSound,
   type InsertAlarmSound,
+  type JapaAudio,
+  type InsertJapaAudio,
+  type JapaSettings,
+  type InsertJapaSettings,
   type RegistrationAttempt,
 } from "@shared/schema";
 import { db } from "./db";
@@ -91,6 +97,17 @@ export interface IStorage {
   createAlarmSound(sound: InsertAlarmSound): Promise<AlarmSound>;
   updateAlarmSound(id: string, sound: Partial<InsertAlarmSound>): Promise<AlarmSound>;
   deleteAlarmSound(id: string): Promise<void>;
+  
+  // Japa audios
+  getAllJapaAudios(): Promise<JapaAudio[]>;
+  getJapaAudioById(id: string): Promise<JapaAudio | undefined>;
+  createJapaAudio(audio: InsertJapaAudio): Promise<JapaAudio>;
+  updateJapaAudio(id: string, audio: Partial<InsertJapaAudio>): Promise<JapaAudio>;
+  deleteJapaAudio(id: string): Promise<void>;
+  
+  // Japa settings
+  getJapaSettings(userId: string): Promise<JapaSettings | undefined>;
+  upsertJapaSettings(settings: InsertJapaSettings): Promise<JapaSettings>;
   
   // Admin operations
   getAllUsers(): Promise<User[]>;
@@ -564,6 +581,55 @@ export class DatabaseStorage implements IStorage {
 
   async deleteAlarmSound(id: string): Promise<void> {
     await db.delete(alarmSounds).where(eq(alarmSounds.id, id));
+  }
+
+  // Japa audios operations
+  async getAllJapaAudios(): Promise<JapaAudio[]> {
+    return await db.select().from(japaAudios).orderBy(desc(japaAudios.isDefault), japaAudios.name);
+  }
+
+  async getJapaAudioById(id: string): Promise<JapaAudio | undefined> {
+    const [audio] = await db.select().from(japaAudios).where(eq(japaAudios.id, id));
+    return audio;
+  }
+
+  async createJapaAudio(audioData: InsertJapaAudio): Promise<JapaAudio> {
+    const [audio] = await db.insert(japaAudios).values(audioData).returning();
+    return audio;
+  }
+
+  async updateJapaAudio(id: string, audioData: Partial<InsertJapaAudio>): Promise<JapaAudio> {
+    const [updated] = await db
+      .update(japaAudios)
+      .set({ ...audioData, updatedAt: new Date() })
+      .where(eq(japaAudios.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteJapaAudio(id: string): Promise<void> {
+    await db.delete(japaAudios).where(eq(japaAudios.id, id));
+  }
+
+  // Japa settings operations
+  async getJapaSettings(userId: string): Promise<JapaSettings | undefined> {
+    const [settings] = await db.select().from(japaSettings).where(eq(japaSettings.userId, userId));
+    return settings;
+  }
+
+  async upsertJapaSettings(settingsData: InsertJapaSettings): Promise<JapaSettings> {
+    const [settings] = await db
+      .insert(japaSettings)
+      .values(settingsData)
+      .onConflictDoUpdate({
+        target: japaSettings.userId,
+        set: {
+          ...settingsData,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+    return settings;
   }
 
   // Admin operations

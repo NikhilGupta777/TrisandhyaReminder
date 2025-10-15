@@ -248,6 +248,50 @@ export const insertAlarmSoundSchema = createInsertSchema(alarmSounds).omit({
 export type InsertAlarmSound = z.infer<typeof insertAlarmSoundSchema>;
 export type AlarmSound = typeof alarmSounds.$inferSelect;
 
+// Japa audios library (for meditation/japa counter)
+export const japaAudios = pgTable("japa_audios", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: varchar("name", { length: 255 }).notNull(),
+  url: text("url").notNull(),
+  duration: integer("duration"),
+  description: text("description"),
+  isDefault: boolean("is_default").default(false).notNull(),
+  fileSize: integer("file_size"),
+  mimeType: varchar("mime_type", { length: 100 }),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertJapaAudioSchema = createInsertSchema(japaAudios).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertJapaAudio = z.infer<typeof insertJapaAudioSchema>;
+export type JapaAudio = typeof japaAudios.$inferSelect;
+
+// Japa settings for each user
+export const japaSettings = pgTable("japa_settings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  japaAudioId: varchar("japa_audio_id").references(() => japaAudios.id),
+  hapticEnabled: boolean("haptic_enabled").default(false).notNull(),
+  soundEnabled: boolean("sound_enabled").default(true).notNull(),
+  dailyGoal: integer("daily_goal").default(108).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertJapaSettingsSchema = createInsertSchema(japaSettings).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertJapaSettings = z.infer<typeof insertJapaSettingsSchema>;
+export type JapaSettings = typeof japaSettings.$inferSelect;
+
 // Registration attempts tracking for rate limiting
 export const registrationAttempts = pgTable("registration_attempts", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
