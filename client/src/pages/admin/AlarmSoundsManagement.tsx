@@ -6,8 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Trash2, Plus, Pencil, Play, Pause } from "lucide-react";
+import { Trash2, Plus, Pencil, Play, Pause, Upload, Link, Loader2 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { AlarmSound } from "@shared/schema";
@@ -18,6 +19,9 @@ export default function AlarmSoundsManagement() {
   const [editingSound, setEditingSound] = useState<AlarmSound | null>(null);
   const [playingId, setPlayingId] = useState<string | null>(null);
   const [audio] = useState(new Audio());
+  const [uploadProgress, setUploadProgress] = useState(false);
+  const [uploadedFileUrl, setUploadedFileUrl] = useState<string>("");
+  const [inputMethod, setInputMethod] = useState<string>("upload");
   
   const { data: sounds = [] } = useQuery<AlarmSound[]>({
     queryKey: ["/api/alarm-sounds"],
@@ -67,12 +71,52 @@ export default function AlarmSoundsManagement() {
     }
   };
 
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    setUploadProgress(true);
+    try {
+      const response = await fetch("/api/admin/alarm-sounds/upload", {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Upload failed");
+      }
+
+      const data = await response.json();
+      setUploadedFileUrl(data.url);
+      toast({ title: "Success", description: "File uploaded successfully" });
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } finally {
+      setUploadProgress(false);
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
+    
+    const url = inputMethod === "upload" 
+      ? uploadedFileUrl
+      : formData.get("url") as string;
+
+    if (!url) {
+      toast({ title: "Error", description: "Please provide a URL or upload a file", variant: "destructive" });
+      return;
+    }
+
     const data = {
       name: formData.get("name"),
-      url: formData.get("url"),
+      url: url,
       duration: formData.get("duration") ? parseInt(formData.get("duration") as string) : null,
       description: formData.get("description") || null,
       isDefault: formData.get("isDefault") === "on",
@@ -83,6 +127,7 @@ export default function AlarmSoundsManagement() {
     } else {
       createMutation.mutate(data);
     }
+    setUploadedFileUrl("");
   };
 
   return (
@@ -109,11 +154,44 @@ export default function AlarmSoundsManagement() {
                 <Label htmlFor="name">Sound Name</Label>
                 <Input id="name" name="name" required data-testid="input-name" placeholder="e.g., Temple Bell" />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="url">Sound URL</Label>
-                <Input id="url" name="url" type="url" required data-testid="input-url" placeholder="https://..." />
-                <p className="text-xs text-muted-foreground">Direct link to MP3, WAV, or OGG file</p>
-              </div>
+
+              <Tabs value={inputMethod} onValueChange={setInputMethod}>
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="upload" data-testid="tab-upload">
+                    <Upload className="h-4 w-4 mr-2" />
+                    Upload File
+                  </TabsTrigger>
+                  <TabsTrigger value="url" data-testid="tab-url">
+                    <Link className="h-4 w-4 mr-2" />
+                    Provide URL
+                  </TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="upload" className="space-y-2 mt-4">
+                  <Label htmlFor="audio-file">Upload Audio File</Label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      id="audio-file"
+                      type="file"
+                      accept="audio/*"
+                      onChange={handleFileUpload}
+                      disabled={uploadProgress}
+                      data-testid="input-audio-file"
+                    />
+                    {uploadProgress && <Loader2 className="h-4 w-4 animate-spin" />}
+                  </div>
+                  {uploadedFileUrl && (
+                    <p className="text-xs text-green-600">File uploaded successfully!</p>
+                  )}
+                  <p className="text-xs text-muted-foreground">Supported: MP3, WAV, OGG, AAC, FLAC (Max 50MB)</p>
+                </TabsContent>
+
+                <TabsContent value="url" className="space-y-2 mt-4">
+                  <Label htmlFor="url">Sound URL</Label>
+                  <Input id="url" name="url" type="url" required={inputMethod === "url"} data-testid="input-url" placeholder="https://..." />
+                  <p className="text-xs text-muted-foreground">Direct link to audio file</p>
+                </TabsContent>
+              </Tabs>
               <div className="space-y-2">
                 <Label htmlFor="duration">Duration (seconds, optional)</Label>
                 <Input id="duration" name="duration" type="number" data-testid="input-duration" placeholder="10" />

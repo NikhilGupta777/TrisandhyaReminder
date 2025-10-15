@@ -134,16 +134,39 @@ export const insertSadhanaProgressSchema = createInsertSchema(sadhanaProgress).o
 export type InsertSadhanaProgress = z.infer<typeof insertSadhanaProgressSchema>;
 export type SadhanaProgress = typeof sadhanaProgress.$inferSelect;
 
-// Media content (bhajans, pravachans)
+// Media categories (dynamic categories like Bhajan, Pravachan, Katha, etc.)
+export const mediaCategories = pgTable("media_categories", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: varchar("name", { length: 100 }).notNull().unique(),
+  displayName: varchar("display_name", { length: 100 }).notNull(),
+  description: text("description"),
+  orderIndex: integer("order_index").default(0).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertMediaCategorySchema = createInsertSchema(mediaCategories).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertMediaCategory = z.infer<typeof insertMediaCategorySchema>;
+export type MediaCategory = typeof mediaCategories.$inferSelect;
+
+// Media content (bhajans, pravachans, kathas, etc.)
 export const mediaContent = pgTable("media_content", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   title: varchar("title", { length: 255 }).notNull(),
-  type: varchar("type", { length: 20 }).notNull(), // 'bhajan' or 'pravachan'
+  categoryId: varchar("category_id").references(() => mediaCategories.id, { onDelete: "cascade" }),
+  type: varchar("type", { length: 20 }).notNull(), // 'audio', 'video', 'youtube'
   artist: varchar("artist", { length: 255 }),
   url: text("url").notNull(),
   thumbnailUrl: text("thumbnail_url"),
   duration: varchar("duration", { length: 20 }),
   description: text("description"),
+  fileSize: integer("file_size"),
+  mimeType: varchar("mime_type", { length: 100 }),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -206,10 +229,12 @@ export type SadhanaContent = typeof sadhanaContent.$inferSelect;
 export const alarmSounds = pgTable("alarm_sounds", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: varchar("name", { length: 255 }).notNull(),
-  url: text("url").notNull(), // URL to the sound file
-  duration: integer("duration"), // Duration in seconds (optional)
+  url: text("url").notNull(),
+  duration: integer("duration"),
   description: text("description"),
   isDefault: boolean("is_default").default(false).notNull(),
+  fileSize: integer("file_size"),
+  mimeType: varchar("mime_type", { length: 100 }),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

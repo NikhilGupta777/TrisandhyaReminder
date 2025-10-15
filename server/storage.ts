@@ -2,6 +2,7 @@ import {
   users,
   alarmSettings,
   sadhanaProgress,
+  mediaCategories,
   mediaContent,
   scriptureContent,
   sadhanaContent,
@@ -13,6 +14,8 @@ import {
   type InsertAlarmSettings,
   type SadhanaProgress,
   type InsertSadhanaProgress,
+  type MediaCategory,
+  type InsertMediaCategory,
   type MediaContent,
   type InsertMediaContent,
   type ScriptureContent,
@@ -53,8 +56,16 @@ export interface IStorage {
     completedDays: number;
   }>;
   
+  // Media categories
+  getAllMediaCategories(): Promise<MediaCategory[]>;
+  getMediaCategoryById(id: string): Promise<MediaCategory | undefined>;
+  getMediaCategoryByName(name: string): Promise<MediaCategory | undefined>;
+  createMediaCategory(category: InsertMediaCategory): Promise<MediaCategory>;
+  updateMediaCategory(id: string, category: Partial<InsertMediaCategory>): Promise<MediaCategory>;
+  deleteMediaCategory(id: string): Promise<void>;
+  
   // Media content
-  getAllMedia(type?: string): Promise<MediaContent[]>;
+  getAllMedia(categoryId?: string): Promise<MediaContent[]>;
   getMediaById(id: string): Promise<MediaContent | undefined>;
   createMedia(media: InsertMediaContent): Promise<MediaContent>;
   updateMedia(id: string, media: Partial<InsertMediaContent>): Promise<MediaContent>;
@@ -384,13 +395,46 @@ export class DatabaseStorage implements IStorage {
     return { currentStreak, longestStreak, totalJapCount, completedDays };
   }
 
+  // Media categories
+  async getAllMediaCategories(): Promise<MediaCategory[]> {
+    return await db.select().from(mediaCategories).orderBy(mediaCategories.orderIndex, mediaCategories.displayName);
+  }
+
+  async getMediaCategoryById(id: string): Promise<MediaCategory | undefined> {
+    const [category] = await db.select().from(mediaCategories).where(eq(mediaCategories.id, id));
+    return category;
+  }
+
+  async getMediaCategoryByName(name: string): Promise<MediaCategory | undefined> {
+    const [category] = await db.select().from(mediaCategories).where(eq(mediaCategories.name, name));
+    return category;
+  }
+
+  async createMediaCategory(categoryData: InsertMediaCategory): Promise<MediaCategory> {
+    const [category] = await db.insert(mediaCategories).values(categoryData).returning();
+    return category;
+  }
+
+  async updateMediaCategory(id: string, categoryData: Partial<InsertMediaCategory>): Promise<MediaCategory> {
+    const [updated] = await db
+      .update(mediaCategories)
+      .set({ ...categoryData, updatedAt: new Date() })
+      .where(eq(mediaCategories.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteMediaCategory(id: string): Promise<void> {
+    await db.delete(mediaCategories).where(eq(mediaCategories.id, id));
+  }
+
   // Media content
-  async getAllMedia(type?: string): Promise<MediaContent[]> {
-    if (type) {
+  async getAllMedia(categoryId?: string): Promise<MediaContent[]> {
+    if (categoryId) {
       return await db
         .select()
         .from(mediaContent)
-        .where(eq(mediaContent.type, type))
+        .where(eq(mediaContent.categoryId, categoryId))
         .orderBy(desc(mediaContent.createdAt));
     }
     return await db.select().from(mediaContent).orderBy(desc(mediaContent.createdAt));

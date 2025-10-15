@@ -380,7 +380,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           pratahEnabled: true,
           madhyahnaEnabled: true,
           sayamEnabled: true,
-          soundType: "bell",
           volume: 80,
         });
       }
@@ -481,10 +480,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Media content routes
+  // Media category routes
+  app.get("/api/media-categories", async (req, res) => {
+    try {
+      const categories = await storage.getAllMediaCategories();
+      res.json(categories);
+    } catch (error) {
+      console.error("Error fetching media categories:", error);
+      res.status(500).json({ message: "Failed to fetch media categories" });
+    }
+  });
+
   app.get("/api/media", async (req, res) => {
     try {
-      const type = req.query.type as string | undefined;
-      const media = await storage.getAllMedia(type);
+      const categoryId = req.query.categoryId as string | undefined;
+      const media = await storage.getAllMedia(categoryId);
       res.json(media);
     } catch (error) {
       console.error("Error fetching media:", error);
@@ -588,11 +598,196 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/admin/media/:id", isAuthenticated, isAdmin, async (req, res) => {
     try {
+      const media = await storage.getMediaById(req.params.id);
+      if (media && media.type === "audio") {
+        const { extractS3Key, deleteFromS3 } = await import("./s3-upload");
+        const key = extractS3Key(media.url);
+        if (key) {
+          await deleteFromS3(key);
+        }
+      }
       await storage.deleteMedia(req.params.id);
       res.json({ message: "Media deleted successfully" });
     } catch (error) {
       console.error("Error deleting media:", error);
       res.status(500).json({ message: "Failed to delete media" });
+    }
+  });
+
+  // Admin routes - Media category management
+  app.post("/api/admin/media-categories", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { insertMediaCategorySchema } = await import("@shared/schema");
+      const validatedData = insertMediaCategorySchema.parse(req.body);
+      const category = await storage.createMediaCategory(validatedData);
+      res.json(category);
+    } catch (error) {
+      console.error("Error creating media category:", error);
+      res.status(400).json({ message: "Invalid category data" });
+    }
+  });
+
+  app.patch("/api/admin/media-categories/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const category = await storage.updateMediaCategory(req.params.id, req.body);
+      res.json(category);
+    } catch (error) {
+      console.error("Error updating media category:", error);
+      res.status(500).json({ message: "Failed to update category" });
+    }
+  });
+
+  app.delete("/api/admin/media-categories/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      await storage.deleteMediaCategory(req.params.id);
+      res.json({ message: "Category deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting media category:", error);
+      res.status(500).json({ message: "Failed to delete category" });
+    }
+  });
+
+  // Admin routes - File upload for media
+  app.post("/api/admin/media/upload", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const multer = await import("multer");
+      const multerS3 = (await import("multer-s3")).default;
+      const { S3Client } = await import("@aws-sdk/client-s3");
+      const path = await import("path");
+      
+      const s3Client = new S3Client({
+        region: process.env.AWS_REGION!,
+        credentials: {
+          accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+          secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+        },
+      });
+
+      const bucketName = process.env.AWS_S3_BUCKET_NAME!;
+
+      const audioMimeTypes = ["audio/mpeg", "audio/mp3", "audio/wav", "audio/ogg", "audio/aac", "audio/m4a", "audio/flac"];
+      
+      const upload = multer.default({
+        storage: multerS3({
+          s3: s3Client,
+          bucket: bucketName,
+          metadata: (req: any, file: any, cb: any) => {
+            cb(null, { fieldName: file.fieldname });
+          },
+          key: (req: any, file: any, cb: any) => {
+            const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+            const ext = path.default.extname(file.originalname);
+            const basename = path.default.basename(file.originalname, ext);
+            cb(null, `media/${basename}-${uniqueSuffix}${ext}`);
+          },
+        }) as any,
+        limits: { fileSize: 50 * 1024 * 1024 },
+        fileFilter: (req: any, file: any, cb: any) => {
+          if (audioMimeTypes.includes(file.mimetype)) {
+            cb(null, true);
+          } else {
+            cb(new Error(`Invalid file type for media: ${file.mimetype}. Only audio files are allowed.`));
+          }
+        },
+      });
+      
+      upload.single("file")(req, res, async (err: any) => {
+        if (err) {
+          return res.status(400).json({ message: err.message });
+        }
+        
+        if (!req.file) {
+          return res.status(400).json({ message: "No file uploaded" });
+        }
+
+        const fileData = {
+          url: (req.file as any).location || req.file.path,
+          filename: req.file.originalname,
+          mimeType: req.file.mimetype,
+          size: req.file.size,
+        };
+
+        if (!fileData.url || fileData.url.trim() === '') {
+          return res.status(400).json({ message: "Upload failed: No URL generated" });
+        }
+
+        res.json(fileData);
+      });
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      res.status(500).json({ message: "Failed to upload file" });
+    }
+  });
+
+  // Admin routes - File upload for alarm sounds  
+  app.post("/api/admin/alarm-sounds/upload", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const multer = await import("multer");
+      const multerS3 = (await import("multer-s3")).default;
+      const { S3Client } = await import("@aws-sdk/client-s3");
+      const path = await import("path");
+      
+      const s3Client = new S3Client({
+        region: process.env.AWS_REGION!,
+        credentials: {
+          accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+          secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+        },
+      });
+
+      const bucketName = process.env.AWS_S3_BUCKET_NAME!;
+
+      const audioMimeTypes = ["audio/mpeg", "audio/mp3", "audio/wav", "audio/ogg", "audio/aac", "audio/m4a", "audio/flac"];
+      
+      const upload = multer.default({
+        storage: multerS3({
+          s3: s3Client,
+          bucket: bucketName,
+          metadata: (req: any, file: any, cb: any) => {
+            cb(null, { fieldName: file.fieldname });
+          },
+          key: (req: any, file: any, cb: any) => {
+            const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+            const ext = path.default.extname(file.originalname);
+            const basename = path.default.basename(file.originalname, ext);
+            cb(null, `alarm-sounds/${basename}-${uniqueSuffix}${ext}`);
+          },
+        }) as any,
+        limits: { fileSize: 10 * 1024 * 1024 },
+        fileFilter: (req: any, file: any, cb: any) => {
+          if (audioMimeTypes.includes(file.mimetype)) {
+            cb(null, true);
+          } else {
+            cb(new Error(`Invalid file type for alarm sounds: ${file.mimetype}. Only audio files are allowed.`));
+          }
+        },
+      });
+      
+      upload.single("file")(req, res, async (err: any) => {
+        if (err) {
+          return res.status(400).json({ message: err.message });
+        }
+        
+        if (!req.file) {
+          return res.status(400).json({ message: "No file uploaded" });
+        }
+
+        const fileData = {
+          url: (req.file as any).location || req.file.path,
+          filename: req.file.originalname,
+          mimeType: req.file.mimetype,
+          size: req.file.size,
+        };
+
+        if (!fileData.url || fileData.url.trim() === '') {
+          return res.status(400).json({ message: "Upload failed: No URL generated" });
+        }
+
+        res.json(fileData);
+      });
+    } catch (error) {
+      console.error("Error uploading alarm sound:", error);
+      res.status(500).json({ message: "Failed to upload alarm sound" });
     }
   });
 
@@ -707,6 +902,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/admin/alarm-sounds/:id", isAuthenticated, isAdmin, async (req, res) => {
     try {
+      const sound = await storage.getAlarmSoundById(req.params.id);
+      if (sound) {
+        const { extractS3Key, deleteFromS3 } = await import("./s3-upload");
+        const key = extractS3Key(sound.url);
+        if (key) {
+          await deleteFromS3(key);
+        }
+      }
       await storage.deleteAlarmSound(req.params.id);
       res.json({ message: "Alarm sound deleted successfully" });
     } catch (error) {
