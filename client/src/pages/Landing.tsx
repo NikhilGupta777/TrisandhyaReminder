@@ -10,6 +10,10 @@ import {
   Sparkles,
   Shield,
   LogIn,
+  Heart,
+  Zap,
+  Star,
+  ChevronRight,
 } from "lucide-react";
 import deityBg from "@assets/stock_images/sunrise_golden_hour__a22c9f34.jpg";
 
@@ -20,7 +24,8 @@ export default function Landing() {
         className="relative min-h-screen bg-cover bg-center flex items-center"
         style={{ backgroundImage: `url(${deityBg})` }}
       >
-        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/50 to-black/70" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/60 to-black/80" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.4)_100%)]" />
 
         {/* Top Navigation */}
         <div className="absolute top-0 left-0 right-0 z-10 p-4 sm:p-6">
@@ -38,51 +43,52 @@ export default function Landing() {
           </div>
         </div>
 
-        <div className="relative w-full flex flex-col items-center justify-center text-center px-4 sm:px-6 py-16 space-y-6 sm:space-y-8">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/20 backdrop-blur-sm rounded-full border border-primary/30">
-            <Sparkles className="h-4 w-4 text-primary" />
-            <span className="text-sm text-white/90">
+        <div className="relative w-full flex flex-col items-center justify-center text-center px-4 sm:px-6 py-16 space-y-6 sm:space-y-8 animate-in fade-in duration-700">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/30 backdrop-blur-md rounded-full border border-primary/40 shadow-lg hover:bg-primary/40 transition-all duration-300">
+            <Sparkles className="h-4 w-4 text-primary animate-pulse" />
+            <span className="text-sm font-medium text-white">
               Sacred Path to Satya Yuga
             </span>
           </div>
 
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold font-serif text-white drop-shadow-2xl max-w-5xl leading-tight">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold font-serif text-white drop-shadow-2xl max-w-5xl leading-tight animate-in slide-in-from-bottom duration-1000">
             Trisandhya Sadhana App
           </h1>
 
-          <p className="text-lg sm:text-xl text-white/95 max-w-3xl px-4 leading-relaxed">
+          <p className="text-lg sm:text-xl md:text-2xl text-white/95 max-w-3xl px-4 leading-relaxed animate-in slide-in-from-bottom duration-1000 delay-150">
             Your complete digital guide for the sacred Trikal Sandhya practice.
             Experience intelligent prayer reminders, track your spiritual
             progress, and access authentic content from Bhavishya Malika.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 pt-6">
+          <div className="flex flex-col sm:flex-row gap-4 pt-6 animate-in slide-in-from-bottom duration-1000 delay-300">
             <Button
               size="lg"
-              className="px-10 sm:px-12 py-5 sm:py-6 text-base sm:text-lg rounded-full shadow-2xl hover:scale-105 transition-transform"
+              className="px-10 sm:px-12 py-5 sm:py-6 text-base sm:text-lg rounded-full shadow-2xl hover:shadow-primary/50 hover:scale-105 active:scale-95 transition-all duration-300 gap-2 group"
               onClick={() => (window.location.href = "/login")}
               data-testid="button-login"
             >
               Begin Your Journey
+              <ChevronRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
             </Button>
           </div>
 
-          <div className="grid grid-cols-3 gap-4 sm:gap-8 pt-8 max-w-2xl">
-            <div className="text-center">
-              <div className="text-3xl sm:text-4xl font-bold text-white">
+          <div className="grid grid-cols-3 gap-4 sm:gap-8 pt-8 max-w-2xl animate-in slide-in-from-bottom duration-1000 delay-500">
+            <div className="text-center p-3 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/15 transition-all duration-300 hover:scale-105">
+              <div className="text-3xl sm:text-4xl font-bold text-white flex items-center justify-center gap-2">
                 3x
               </div>
-              <div className="text-sm text-white/80">Daily Prayers</div>
+              <div className="text-xs sm:text-sm text-white/80 mt-1">Daily Prayers</div>
             </div>
-            <div className="text-center">
-              <div className="text-3xl sm:text-4xl font-bold text-white">
+            <div className="text-center p-3 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/15 transition-all duration-300 hover:scale-105">
+              <div className="text-3xl sm:text-4xl font-bold text-white flex items-center justify-center gap-2">
                 10min
               </div>
-              <div className="text-sm text-white/80">Each Session</div>
+              <div className="text-xs sm:text-sm text-white/80 mt-1">Each Session</div>
             </div>
-            <div className="text-center">
+            <div className="text-center p-3 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/15 transition-all duration-300 hover:scale-105">
               <div className="text-3xl sm:text-4xl font-bold text-white">∞</div>
-              <div className="text-sm text-white/80">Spiritual Growth</div>
+              <div className="text-xs sm:text-sm text-white/80 mt-1">Spiritual Growth</div>
             </div>
           </div>
         </div>
@@ -103,44 +109,44 @@ export default function Landing() {
           </div>
 
           <div className="grid gap-6 sm:gap-8 md:grid-cols-2 lg:grid-cols-4">
-            <Card className="p-6 text-center space-y-4 hover:shadow-lg transition-shadow">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full mx-auto">
+            <Card className="p-6 text-center space-y-4 hover:shadow-xl hover:scale-105 hover:-translate-y-1 transition-all duration-300 border-primary/20 hover:border-primary/40 group">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-primary/20 to-primary/10 rounded-2xl mx-auto group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300">
                 <Bell className="h-8 w-8 text-primary" />
               </div>
-              <h3 className="font-semibold text-lg">Smart Alarms</h3>
+              <h3 className="font-semibold text-lg group-hover:text-primary transition-colors">Smart Alarms</h3>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Precise timing reminders(Alarms) for Pratah (3:45-6:30 AM),
+                Precise timing reminders for Pratah (3:45-6:30 AM),
                 Madhyahna (11:30 AM-1 PM), and Sayam Sandhya (5-6:30 PM)
               </p>
             </Card>
 
-            <Card className="p-6 text-center space-y-4 hover:shadow-lg transition-shadow">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full mx-auto">
+            <Card className="p-6 text-center space-y-4 hover:shadow-xl hover:scale-105 hover:-translate-y-1 transition-all duration-300 border-primary/20 hover:border-primary/40 group">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-primary/20 to-primary/10 rounded-2xl mx-auto group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300">
                 <BookOpen className="h-8 w-8 text-primary" />
               </div>
-              <h3 className="font-semibold text-lg">Complete Mantras</h3>
+              <h3 className="font-semibold text-lg group-hover:text-primary transition-colors">Complete Mantras</h3>
               <p className="text-sm text-muted-foreground leading-relaxed">
                 Authentic Vishnu Shodasha Naam, Dashavatara Stotram, Durga
                 Madhav Stuti, and Kalki Mahamantra with meanings
               </p>
             </Card>
 
-            <Card className="p-6 text-center space-y-4 hover:shadow-lg transition-shadow">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full mx-auto">
+            <Card className="p-6 text-center space-y-4 hover:shadow-xl hover:scale-105 hover:-translate-y-1 transition-all duration-300 border-primary/20 hover:border-primary/40 group">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-primary/20 to-primary/10 rounded-2xl mx-auto group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300">
                 <BarChart3 className="h-8 w-8 text-primary" />
               </div>
-              <h3 className="font-semibold text-lg">Progress Tracking</h3>
+              <h3 className="font-semibold text-lg group-hover:text-primary transition-colors">Progress Tracking</h3>
               <p className="text-sm text-muted-foreground leading-relaxed">
                 Visual calendar, streak counter, and daily Japa tracking to
                 maintain consistency in your spiritual practice
               </p>
             </Card>
 
-            <Card className="p-6 text-center space-y-4 hover:shadow-lg transition-shadow">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full mx-auto">
+            <Card className="p-6 text-center space-y-4 hover:shadow-xl hover:scale-105 hover:-translate-y-1 transition-all duration-300 border-primary/20 hover:border-primary/40 group">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-primary/20 to-primary/10 rounded-2xl mx-auto group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300">
                 <Music className="h-8 w-8 text-primary" />
               </div>
-              <h3 className="font-semibold text-lg">Media Library</h3>
+              <h3 className="font-semibold text-lg group-hover:text-primary transition-colors">Media Library</h3>
               <p className="text-sm text-muted-foreground leading-relaxed">
                 Access bhajans, pravachans, and sacred audio content to deepen
                 your spiritual understanding
