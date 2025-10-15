@@ -90,6 +90,7 @@ function AudioPlayer({ audio }: { audio: MediaContent }) {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState([80]);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const audioElement = audioRef.current;
@@ -98,15 +99,21 @@ function AudioPlayer({ audio }: { audio: MediaContent }) {
     const updateTime = () => setCurrentTime(audioElement.currentTime);
     const updateDuration = () => setDuration(audioElement.duration);
     const handleEnded = () => setIsPlaying(false);
+    const handleError = () => {
+      setError("Failed to load audio file");
+      setIsPlaying(false);
+    };
 
     audioElement.addEventListener('timeupdate', updateTime);
     audioElement.addEventListener('loadedmetadata', updateDuration);
     audioElement.addEventListener('ended', handleEnded);
+    audioElement.addEventListener('error', handleError);
 
     return () => {
       audioElement.removeEventListener('timeupdate', updateTime);
       audioElement.removeEventListener('loadedmetadata', updateDuration);
       audioElement.removeEventListener('ended', handleEnded);
+      audioElement.removeEventListener('error', handleError);
     };
   }, []);
 
@@ -116,15 +123,22 @@ function AudioPlayer({ audio }: { audio: MediaContent }) {
     }
   }, [volume]);
 
-  const togglePlay = () => {
+  const togglePlay = async () => {
     if (!audioRef.current) return;
     
     if (isPlaying) {
       audioRef.current.pause();
+      setIsPlaying(false);
     } else {
-      audioRef.current.play();
+      try {
+        await audioRef.current.play();
+        setIsPlaying(true);
+        setError(null);
+      } catch (err) {
+        setError("Failed to play audio");
+        setIsPlaying(false);
+      }
     }
-    setIsPlaying(!isPlaying);
   };
 
   const handleSeek = (value: number[]) => {
@@ -164,6 +178,7 @@ function AudioPlayer({ audio }: { audio: MediaContent }) {
           <div className="flex-1 min-w-0">
             <h3 className="font-semibold text-sm sm:text-base line-clamp-1">{audio.title}</h3>
             <p className="text-xs sm:text-sm text-muted-foreground line-clamp-1">{audio.artist || 'Unknown Artist'}</p>
+            {error && <p className="text-xs text-destructive mt-1">{error}</p>}
           </div>
         </div>
 
