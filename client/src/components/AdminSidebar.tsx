@@ -16,6 +16,7 @@ const menuItems = [
   { title: "Users", url: "/admin/users", icon: Users },
   { title: "Media", url: "/admin/media", icon: Music },
   { title: "Media Categories", url: "/admin/media-categories", icon: Folders },
+  { title: "Mahapuran", url: "/admin/mahapuran", icon: BookOpen },
   { title: "Scriptures", url: "/admin/scriptures", icon: BookOpen },
   { title: "Sadhana Guide", url: "/admin/sadhana-content", icon: Book },
   { title: "Alarm Sounds", url: "/admin/alarm-sounds", icon: Bell },
