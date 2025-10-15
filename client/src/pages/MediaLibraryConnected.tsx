@@ -7,14 +7,33 @@ import { Slider } from "@/components/ui/slider";
 import { Play, Pause, SkipBack, SkipForward, Volume2, Video, Music } from "lucide-react";
 import type { MediaContent, MediaCategory } from "@shared/schema";
 
+function extractYouTubeVideoId(url: string): string | null {
+  if (!url) return null;
+  
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\?\/\s]+)/,
+    /youtube\.com\/shorts\/([^&\?\/\s]+)/,
+    /youtube\.com\/live\/([^&\?\/\s]+)/,
+  ];
+  
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+    if (match && match[1]) {
+      return match[1].split('?')[0];
+    }
+  }
+  
+  return null;
+}
+
 function getYouTubeEmbedUrl(url: string): string {
-  const videoId = url.split('v=')[1]?.split('&')[0] || url.split('/').pop();
-  return `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+  const videoId = extractYouTubeVideoId(url);
+  return videoId ? `https://www.youtube.com/embed/${videoId}?autoplay=1` : '';
 }
 
 function getYouTubeThumbnail(url: string): string {
-  const videoId = url.split('v=')[1]?.split('&')[0] || url.split('/').pop();
-  return `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
+  const videoId = extractYouTubeVideoId(url);
+  return videoId ? `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg` : '';
 }
 
 function VideoPlayer({ video }: { video: MediaContent }) {

@@ -127,9 +127,28 @@ export default function MediaManagement() {
     }
   };
 
+  const extractYouTubeVideoId = (url: string): string | null => {
+    if (!url) return null;
+    
+    const patterns = [
+      /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\?\/\s]+)/,
+      /youtube\.com\/shorts\/([^&\?\/\s]+)/,
+      /youtube\.com\/live\/([^&\?\/\s]+)/,
+    ];
+    
+    for (const pattern of patterns) {
+      const match = url.match(pattern);
+      if (match && match[1]) {
+        return match[1].split('?')[0];
+      }
+    }
+    
+    return null;
+  };
+
   const getYouTubeThumbnail = (url: string) => {
-    const videoId = url.split('v=')[1]?.split('&')[0] || url.split('/').pop();
-    return `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
+    const videoId = extractYouTubeVideoId(url);
+    return videoId ? `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg` : '';
   };
 
   return (

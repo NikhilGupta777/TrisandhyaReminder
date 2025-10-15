@@ -29,7 +29,7 @@ export default function JapaCounter() {
   });
 
   const { data: progress } = useQuery<SadhanaProgress>({
-    queryKey: ["/api/progress", today],
+    queryKey: ["/api/sadhana-progress/today"],
   });
 
   const updateSettingsMutation = useMutation({
@@ -44,10 +44,17 @@ export default function JapaCounter() {
 
   const incrementMutation = useMutation({
     mutationFn: async (incrementCount: number) => {
-      return await apiRequest("POST", "/api/japa/increment", { count: incrementCount });
+      const newJapCount = (progress?.japCount || 0) + incrementCount;
+      return await apiRequest("POST", "/api/sadhana-progress", {
+        ...progress,
+        userId: progress?.userId,
+        date: today,
+        japCount: newJapCount,
+      });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/progress"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/sadhana-progress/today"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/sadhana-progress/stats"] });
       setCount(0);
       toast({ title: "Japa count saved to progress!" });
     },
@@ -62,6 +69,13 @@ export default function JapaCounter() {
       }
     }
   }, [settings, audios, audio]);
+
+  useEffect(() => {
+    return () => {
+      audio.pause();
+      audio.src = '';
+    };
+  }, [audio]);
 
   const handleIncrement = () => {
     setCount(prev => prev + 1);
