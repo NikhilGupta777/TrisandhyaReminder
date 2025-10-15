@@ -293,27 +293,48 @@ export default function SadhanaGuide() {
         </TabsContent>
 
         <TabsContent value="mahapuran" className="space-y-4">
-          <Card className="p-4 sm:p-6 space-y-4">
-            <h2 className="text-xl sm:text-2xl font-semibold font-serif">Shrimad Bhagwat Mahapuran</h2>
-            <p className="text-sm text-muted-foreground">
-              Daily reading of one chapter from Shrimad Bhagwat Mahapuran brings wisdom and spiritual growth
-            </p>
-            <div className="pt-4 space-y-3">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 border rounded-md">
-                <div className="flex-1">
-                  <h4 className="font-semibold text-sm sm:text-base">Today's Chapter</h4>
-                  <p className="text-xs sm:text-sm text-muted-foreground">Chapter 1: The Questions of the Sages</p>
-                </div>
-                <Button variant="outline" size="sm" data-testid="button-mark-complete">
-                  <CheckCircle className="h-4 w-4 mr-2" />
-                  Mark Complete
-                </Button>
-              </div>
-              <Button className="w-full" data-testid="button-read-scripture">Read Scripture</Button>
+          <Card className="p-6 sm:p-8 space-y-6">
+            <div className="text-center space-y-2">
+              <h2 className="text-2xl sm:text-3xl font-bold font-serif">Sacred Mahapuran Library</h2>
+              <p className="text-muted-foreground">
+                Explore the divine wisdom of the Mahapurans - ancient scriptures containing spiritual knowledge and cosmic truths
+              </p>
             </div>
-            <div className="mt-4 p-3 bg-accent/50 rounded-md">
-              <p className="text-xs text-muted-foreground">
-                💡 Tip: Read one chapter daily along with your Trisandhya practice for complete spiritual growth
+
+            <div className="bg-gradient-to-br from-primary/10 to-primary/5 p-6 rounded-lg space-y-4">
+              <h3 className="font-semibold text-lg">📚 Complete Collection</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Access the complete Mahapuran texts organized by titles, skandas (books), and chapters. Each text is presented
+                in an easy-to-read format with summaries and navigation.
+              </p>
+              <Button 
+                className="w-full sm:w-auto" 
+                onClick={() => (window.location.href = "/mahapuran")}
+                data-testid="button-browse-mahapuran"
+              >
+                <Book className="h-4 w-4 mr-2" />
+                Browse Mahapuran Library
+              </Button>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="p-4 border rounded-lg">
+                <h4 className="font-semibold mb-2">Daily Reading</h4>
+                <p className="text-sm text-muted-foreground">
+                  Reading one chapter daily brings wisdom and spiritual growth. Start your journey today!
+                </p>
+              </div>
+              <div className="p-4 border rounded-lg">
+                <h4 className="font-semibold mb-2">Organized Structure</h4>
+                <p className="text-sm text-muted-foreground">
+                  Navigate through titles → skandas → chapters with ease and track your reading progress.
+                </p>
+              </div>
+            </div>
+
+            <div className="p-4 bg-accent/50 rounded-lg">
+              <p className="text-sm text-muted-foreground text-center">
+                💡 Tip: Combine Mahapuran reading with your daily Trisandhya practice for complete spiritual development
               </p>
             </div>
           </Card>

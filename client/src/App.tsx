@@ -21,6 +21,10 @@ import MediaLibraryConnected from "@/pages/MediaLibraryConnected";
 import ProgressConnected from "@/pages/ProgressConnected";
 import AlarmsConnected from "@/pages/AlarmsConnected";
 import SettingsConnected from "@/pages/SettingsConnected";
+import MahapuranBrowse from "@/pages/MahapuranBrowse";
+import MahapuranSkandas from "@/pages/MahapuranSkandas";
+import MahapuranChapters from "@/pages/MahapuranChapters";
+import MahapuranChapterRead from "@/pages/MahapuranChapterRead";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
 import UserManagement from "@/pages/admin/UserManagement";
 import MediaManagement from "@/pages/admin/MediaManagement";
@@ -55,6 +59,10 @@ function UserRouter() {
       <Route path="/" component={DashboardConnected} />
       <Route path="/guide" component={SadhanaGuide} />
       <Route path="/media" component={MediaLibraryConnected} />
+      <Route path="/mahapuran" component={MahapuranBrowse} />
+      <Route path="/mahapuran/:titleId" component={MahapuranSkandas} />
+      <Route path="/mahapuran/:titleId/skanda/:skandaId" component={MahapuranChapters} />
+      <Route path="/mahapuran/:titleId/skanda/:skandaId/chapter/:chapterId" component={MahapuranChapterRead} />
       <Route path="/progress" component={ProgressConnected} />
       <Route path="/alarms" component={AlarmsConnected} />
       <Route path="/settings" component={SettingsConnected} />

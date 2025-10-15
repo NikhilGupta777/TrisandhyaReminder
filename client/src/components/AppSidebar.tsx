@@ -1,4 +1,4 @@
-import { Home, BookOpen, Music, BarChart3, Settings, Bell } from "lucide-react";
+import { Home, BookOpen, Music, BarChart3, Settings, Bell, Book } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -14,6 +14,7 @@ import { Link, useLocation } from "wouter";
 const menuItems = [
   { title: "Dashboard", url: "/", icon: Home },
   { title: "Sadhana Guide", url: "/guide", icon: BookOpen },
+  { title: "Mahapuran", url: "/mahapuran", icon: Book },
   { title: "Media Library", url: "/media", icon: Music },
   { title: "Progress", url: "/progress", icon: BarChart3 },
   { title: "Alarms", url: "/alarms", icon: Bell },
@@ -34,8 +35,8 @@ export function AppSidebar() {
             <SidebarMenu>
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={location === item.url}>
-                    <Link href={item.url} data-testid={`link-${item.title.toLowerCase().replace(" ", "-")}`}>
+                  <SidebarMenuButton asChild isActive={location === item.url || location.startsWith(item.url + "/")}>
+                    <Link href={item.url} data-testid={`link-${item.title.toLowerCase().replace(/ /g, "-")}`}>
                       <item.icon />
                       <span>{item.title}</span>
                     </Link>
