@@ -10,6 +10,10 @@ import {
   japaAudios,
   japaSettings,
   registrationAttempts,
+  mahapuranTitles,
+  mahapuranSkandas,
+  mahapuranChapters,
+  userMediaFavorites,
   type User,
   type UpsertUser,
   type AlarmSettings,
@@ -31,6 +35,14 @@ import {
   type JapaSettings,
   type InsertJapaSettings,
   type RegistrationAttempt,
+  type MahapuranTitle,
+  type InsertMahapuranTitle,
+  type MahapuranSkanda,
+  type InsertMahapuranSkanda,
+  type MahapuranChapter,
+  type InsertMahapuranChapter,
+  type UserMediaFavorite,
+  type InsertUserMediaFavorite,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, gte, lte } from "drizzle-orm";
@@ -118,6 +130,33 @@ export interface IStorage {
   getRecentRegistrationAttempts(email: string, since: Date): Promise<RegistrationAttempt[]>;
   recordRegistrationAttempt(email: string, ipAddress?: string): Promise<RegistrationAttempt>;
   cleanupOldAttempts(before: Date): Promise<void>;
+  
+  // Mahapuran titles
+  getAllMahapuranTitles(): Promise<MahapuranTitle[]>;
+  getMahapuranTitleById(id: string): Promise<MahapuranTitle | undefined>;
+  createMahapuranTitle(title: InsertMahapuranTitle): Promise<MahapuranTitle>;
+  updateMahapuranTitle(id: string, title: Partial<InsertMahapuranTitle>): Promise<MahapuranTitle>;
+  deleteMahapuranTitle(id: string): Promise<void>;
+  
+  // Mahapuran skandas
+  getAllMahapuranSkandas(mahapuranTitleId?: string): Promise<MahapuranSkanda[]>;
+  getMahapuranSkandaById(id: string): Promise<MahapuranSkanda | undefined>;
+  createMahapuranSkanda(skanda: InsertMahapuranSkanda): Promise<MahapuranSkanda>;
+  updateMahapuranSkanda(id: string, skanda: Partial<InsertMahapuranSkanda>): Promise<MahapuranSkanda>;
+  deleteMahapuranSkanda(id: string): Promise<void>;
+  
+  // Mahapuran chapters
+  getAllMahapuranChapters(skandaId?: string): Promise<MahapuranChapter[]>;
+  getMahapuranChapterById(id: string): Promise<MahapuranChapter | undefined>;
+  createMahapuranChapter(chapter: InsertMahapuranChapter): Promise<MahapuranChapter>;
+  updateMahapuranChapter(id: string, chapter: Partial<InsertMahapuranChapter>): Promise<MahapuranChapter>;
+  deleteMahapuranChapter(id: string): Promise<void>;
+  
+  // User media favorites
+  getUserMediaFavorites(userId: string): Promise<MediaContent[]>;
+  addMediaFavorite(favorite: InsertUserMediaFavorite): Promise<UserMediaFavorite>;
+  removeMediaFavorite(userId: string, mediaId: string): Promise<void>;
+  isMediaFavorited(userId: string, mediaId: string): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -677,6 +716,137 @@ export class DatabaseStorage implements IStorage {
     await db.delete(registrationAttempts).where(
       lte(registrationAttempts.attemptedAt, before)
     );
+  }
+  
+  // Mahapuran titles operations
+  async getAllMahapuranTitles(): Promise<MahapuranTitle[]> {
+    return await db.select().from(mahapuranTitles).orderBy(mahapuranTitles.orderIndex, mahapuranTitles.title);
+  }
+
+  async getMahapuranTitleById(id: string): Promise<MahapuranTitle | undefined> {
+    const [title] = await db.select().from(mahapuranTitles).where(eq(mahapuranTitles.id, id));
+    return title;
+  }
+
+  async createMahapuranTitle(titleData: InsertMahapuranTitle): Promise<MahapuranTitle> {
+    const [title] = await db.insert(mahapuranTitles).values(titleData).returning();
+    return title;
+  }
+
+  async updateMahapuranTitle(id: string, titleData: Partial<InsertMahapuranTitle>): Promise<MahapuranTitle> {
+    const [updated] = await db
+      .update(mahapuranTitles)
+      .set({ ...titleData, updatedAt: new Date() })
+      .where(eq(mahapuranTitles.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteMahapuranTitle(id: string): Promise<void> {
+    await db.delete(mahapuranTitles).where(eq(mahapuranTitles.id, id));
+  }
+
+  // Mahapuran skandas operations
+  async getAllMahapuranSkandas(mahapuranTitleId?: string): Promise<MahapuranSkanda[]> {
+    if (mahapuranTitleId) {
+      return await db.select().from(mahapuranSkandas).where(eq(mahapuranSkandas.mahapuranTitleId, mahapuranTitleId)).orderBy(mahapuranSkandas.skandaNumber);
+    }
+    return await db.select().from(mahapuranSkandas).orderBy(mahapuranSkandas.mahapuranTitleId, mahapuranSkandas.skandaNumber);
+  }
+
+  async getMahapuranSkandaById(id: string): Promise<MahapuranSkanda | undefined> {
+    const [skanda] = await db.select().from(mahapuranSkandas).where(eq(mahapuranSkandas.id, id));
+    return skanda;
+  }
+
+  async createMahapuranSkanda(skandaData: InsertMahapuranSkanda): Promise<MahapuranSkanda> {
+    const [skanda] = await db.insert(mahapuranSkandas).values(skandaData).returning();
+    return skanda;
+  }
+
+  async updateMahapuranSkanda(id: string, skandaData: Partial<InsertMahapuranSkanda>): Promise<MahapuranSkanda> {
+    const [updated] = await db
+      .update(mahapuranSkandas)
+      .set({ ...skandaData, updatedAt: new Date() })
+      .where(eq(mahapuranSkandas.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteMahapuranSkanda(id: string): Promise<void> {
+    await db.delete(mahapuranSkandas).where(eq(mahapuranSkandas.id, id));
+  }
+
+  // Mahapuran chapters operations
+  async getAllMahapuranChapters(skandaId?: string): Promise<MahapuranChapter[]> {
+    if (skandaId) {
+      return await db.select().from(mahapuranChapters).where(eq(mahapuranChapters.skandaId, skandaId)).orderBy(mahapuranChapters.chapterNumber);
+    }
+    return await db.select().from(mahapuranChapters).orderBy(mahapuranChapters.skandaId, mahapuranChapters.chapterNumber);
+  }
+
+  async getMahapuranChapterById(id: string): Promise<MahapuranChapter | undefined> {
+    const [chapter] = await db.select().from(mahapuranChapters).where(eq(mahapuranChapters.id, id));
+    return chapter;
+  }
+
+  async createMahapuranChapter(chapterData: InsertMahapuranChapter): Promise<MahapuranChapter> {
+    const [chapter] = await db.insert(mahapuranChapters).values(chapterData).returning();
+    return chapter;
+  }
+
+  async updateMahapuranChapter(id: string, chapterData: Partial<InsertMahapuranChapter>): Promise<MahapuranChapter> {
+    const [updated] = await db
+      .update(mahapuranChapters)
+      .set({ ...chapterData, updatedAt: new Date() })
+      .where(eq(mahapuranChapters.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteMahapuranChapter(id: string): Promise<void> {
+    await db.delete(mahapuranChapters).where(eq(mahapuranChapters.id, id));
+  }
+
+  // User media favorites operations
+  async getUserMediaFavorites(userId: string): Promise<MediaContent[]> {
+    const favorites = await db
+      .select({
+        media: mediaContent,
+      })
+      .from(userMediaFavorites)
+      .innerJoin(mediaContent, eq(userMediaFavorites.mediaId, mediaContent.id))
+      .where(eq(userMediaFavorites.userId, userId))
+      .orderBy(desc(userMediaFavorites.createdAt));
+    
+    return favorites.map(f => f.media);
+  }
+
+  async addMediaFavorite(favoriteData: InsertUserMediaFavorite): Promise<UserMediaFavorite> {
+    const [favorite] = await db.insert(userMediaFavorites).values(favoriteData).returning();
+    return favorite;
+  }
+
+  async removeMediaFavorite(userId: string, mediaId: string): Promise<void> {
+    await db.delete(userMediaFavorites).where(
+      and(
+        eq(userMediaFavorites.userId, userId),
+        eq(userMediaFavorites.mediaId, mediaId)
+      )
+    );
+  }
+
+  async isMediaFavorited(userId: string, mediaId: string): Promise<boolean> {
+    const [favorite] = await db
+      .select()
+      .from(userMediaFavorites)
+      .where(
+        and(
+          eq(userMediaFavorites.userId, userId),
+          eq(userMediaFavorites.mediaId, mediaId)
+        )
+      );
+    return !!favorite;
   }
 }
 

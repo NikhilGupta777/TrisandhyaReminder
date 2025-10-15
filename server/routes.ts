@@ -1115,6 +1115,228 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Mahapuran titles routes (public)
+  app.get("/api/mahapuran-titles", async (req, res) => {
+    try {
+      const titles = await storage.getAllMahapuranTitles();
+      res.json(titles);
+    } catch (error) {
+      console.error("Error fetching mahapuran titles:", error);
+      res.status(500).json({ message: "Failed to fetch mahapuran titles" });
+    }
+  });
+
+  app.get("/api/mahapuran-titles/:id", async (req, res) => {
+    try {
+      const title = await storage.getMahapuranTitleById(req.params.id);
+      if (!title) {
+        return res.status(404).json({ message: "Mahapuran title not found" });
+      }
+      res.json(title);
+    } catch (error) {
+      console.error("Error fetching mahapuran title:", error);
+      res.status(500).json({ message: "Failed to fetch mahapuran title" });
+    }
+  });
+
+  // Mahapuran skandas routes (public)
+  app.get("/api/mahapuran-skandas", async (req, res) => {
+    try {
+      const titleId = req.query.mahapuranTitleId as string | undefined;
+      const skandas = await storage.getAllMahapuranSkandas(titleId);
+      res.json(skandas);
+    } catch (error) {
+      console.error("Error fetching mahapuran skandas:", error);
+      res.status(500).json({ message: "Failed to fetch mahapuran skandas" });
+    }
+  });
+
+  app.get("/api/mahapuran-skandas/:id", async (req, res) => {
+    try {
+      const skanda = await storage.getMahapuranSkandaById(req.params.id);
+      if (!skanda) {
+        return res.status(404).json({ message: "Mahapuran skanda not found" });
+      }
+      res.json(skanda);
+    } catch (error) {
+      console.error("Error fetching mahapuran skanda:", error);
+      res.status(500).json({ message: "Failed to fetch mahapuran skanda" });
+    }
+  });
+
+  // Mahapuran chapters routes (public)
+  app.get("/api/mahapuran-chapters", async (req, res) => {
+    try {
+      const skandaId = req.query.skandaId as string | undefined;
+      const chapters = await storage.getAllMahapuranChapters(skandaId);
+      res.json(chapters);
+    } catch (error) {
+      console.error("Error fetching mahapuran chapters:", error);
+      res.status(500).json({ message: "Failed to fetch mahapuran chapters" });
+    }
+  });
+
+  app.get("/api/mahapuran-chapters/:id", async (req, res) => {
+    try {
+      const chapter = await storage.getMahapuranChapterById(req.params.id);
+      if (!chapter) {
+        return res.status(404).json({ message: "Mahapuran chapter not found" });
+      }
+      res.json(chapter);
+    } catch (error) {
+      console.error("Error fetching mahapuran chapter:", error);
+      res.status(500).json({ message: "Failed to fetch mahapuran chapter" });
+    }
+  });
+
+  // Admin routes - Mahapuran titles management
+  app.post("/api/admin/mahapuran-titles", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { insertMahapuranTitleSchema } = await import("@shared/schema");
+      const validatedData = insertMahapuranTitleSchema.parse(req.body);
+      const title = await storage.createMahapuranTitle(validatedData);
+      res.json(title);
+    } catch (error) {
+      console.error("Error creating mahapuran title:", error);
+      res.status(400).json({ message: "Invalid mahapuran title data" });
+    }
+  });
+
+  app.patch("/api/admin/mahapuran-titles/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const title = await storage.updateMahapuranTitle(req.params.id, req.body);
+      res.json(title);
+    } catch (error) {
+      console.error("Error updating mahapuran title:", error);
+      res.status(500).json({ message: "Failed to update mahapuran title" });
+    }
+  });
+
+  app.delete("/api/admin/mahapuran-titles/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      await storage.deleteMahapuranTitle(req.params.id);
+      res.json({ message: "Mahapuran title deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting mahapuran title:", error);
+      res.status(500).json({ message: "Failed to delete mahapuran title" });
+    }
+  });
+
+  // Admin routes - Mahapuran skandas management
+  app.post("/api/admin/mahapuran-skandas", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { insertMahapuranSkandaSchema } = await import("@shared/schema");
+      const validatedData = insertMahapuranSkandaSchema.parse(req.body);
+      const skanda = await storage.createMahapuranSkanda(validatedData);
+      res.json(skanda);
+    } catch (error) {
+      console.error("Error creating mahapuran skanda:", error);
+      res.status(400).json({ message: "Invalid mahapuran skanda data" });
+    }
+  });
+
+  app.patch("/api/admin/mahapuran-skandas/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const skanda = await storage.updateMahapuranSkanda(req.params.id, req.body);
+      res.json(skanda);
+    } catch (error) {
+      console.error("Error updating mahapuran skanda:", error);
+      res.status(500).json({ message: "Failed to update mahapuran skanda" });
+    }
+  });
+
+  app.delete("/api/admin/mahapuran-skandas/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      await storage.deleteMahapuranSkanda(req.params.id);
+      res.json({ message: "Mahapuran skanda deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting mahapuran skanda:", error);
+      res.status(500).json({ message: "Failed to delete mahapuran skanda" });
+    }
+  });
+
+  // Admin routes - Mahapuran chapters management
+  app.post("/api/admin/mahapuran-chapters", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { insertMahapuranChapterSchema } = await import("@shared/schema");
+      const validatedData = insertMahapuranChapterSchema.parse(req.body);
+      const chapter = await storage.createMahapuranChapter(validatedData);
+      res.json(chapter);
+    } catch (error) {
+      console.error("Error creating mahapuran chapter:", error);
+      res.status(400).json({ message: "Invalid mahapuran chapter data" });
+    }
+  });
+
+  app.patch("/api/admin/mahapuran-chapters/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const chapter = await storage.updateMahapuranChapter(req.params.id, req.body);
+      res.json(chapter);
+    } catch (error) {
+      console.error("Error updating mahapuran chapter:", error);
+      res.status(500).json({ message: "Failed to update mahapuran chapter" });
+    }
+  });
+
+  app.delete("/api/admin/mahapuran-chapters/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      await storage.deleteMahapuranChapter(req.params.id);
+      res.json({ message: "Mahapuran chapter deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting mahapuran chapter:", error);
+      res.status(500).json({ message: "Failed to delete mahapuran chapter" });
+    }
+  });
+
+  // User media favorites routes
+  app.get("/api/media-favorites", isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const favorites = await storage.getUserMediaFavorites(userId);
+      res.json(favorites);
+    } catch (error) {
+      console.error("Error fetching media favorites:", error);
+      res.status(500).json({ message: "Failed to fetch media favorites" });
+    }
+  });
+
+  app.post("/api/media-favorites", isAuthenticated, async (req, res) => {
+    try {
+      const { insertUserMediaFavoriteSchema } = await import("@shared/schema");
+      const validatedData = insertUserMediaFavoriteSchema.parse({
+        userId: req.user.id,
+        mediaId: req.body.mediaId,
+      });
+      const favorite = await storage.addMediaFavorite(validatedData);
+      res.json(favorite);
+    } catch (error) {
+      console.error("Error adding media favorite:", error);
+      res.status(400).json({ message: "Failed to add media favorite" });
+    }
+  });
+
+  app.delete("/api/media-favorites/:mediaId", isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user.id;
+      await storage.removeMediaFavorite(userId, req.params.mediaId);
+      res.json({ message: "Media favorite removed successfully" });
+    } catch (error) {
+      console.error("Error removing media favorite:", error);
+      res.status(500).json({ message: "Failed to remove media favorite" });
+    }
+  });
+
+  app.get("/api/media-favorites/:mediaId/check", isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const isFavorited = await storage.isMediaFavorited(userId, req.params.mediaId);
+      res.json({ isFavorited });
+    } catch (error) {
+      console.error("Error checking media favorite:", error);
+      res.status(500).json({ message: "Failed to check media favorite" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
