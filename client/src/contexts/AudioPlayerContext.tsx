@@ -266,7 +266,12 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
 
   return (
     <AudioPlayerContext.Provider value={value}>
-      <audio ref={audioRef} />
+      <audio 
+        ref={audioRef}
+        preload="metadata"
+        playsInline
+        crossOrigin="anonymous"
+      />
       {children}
     </AudioPlayerContext.Provider>
   );

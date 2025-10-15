@@ -9,6 +9,7 @@ import { AdminSidebar } from "@/components/AdminSidebar";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { AudioPlayerProvider } from "@/contexts/AudioPlayerContext";
+import { GlobalAudioPlayer } from "@/components/GlobalAudioPlayer";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Shield } from "lucide-react";
@@ -142,6 +143,7 @@ export default function App() {
           <TooltipProvider>
             <Toaster />
             <Router />
+            <GlobalAudioPlayer />
           </TooltipProvider>
         </AudioPlayerProvider>
       </ThemeProvider>
