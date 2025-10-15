@@ -9,6 +9,8 @@ import {
   insertSadhanaProgressSchema,
   insertMediaContentSchema,
   insertScriptureContentSchema,
+  insertJapaAudioSchema,
+  insertJapaSettingsSchema,
   registerUserSchema,
   loginUserSchema,
   verifyCodeSchema,
@@ -788,6 +790,198 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error uploading alarm sound:", error);
       res.status(500).json({ message: "Failed to upload alarm sound" });
+    }
+  });
+
+  // Admin routes - Japa audio management
+  app.get("/api/japa-audios", isAuthenticated, async (_req, res) => {
+    try {
+      const audios = await storage.getAllJapaAudios();
+      res.json(audios);
+    } catch (error) {
+      console.error("Error getting japa audios:", error);
+      res.status(500).json({ message: "Failed to fetch japa audios" });
+    }
+  });
+
+  app.post("/api/admin/japa-audios", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const validatedData = insertJapaAudioSchema.parse(req.body);
+      const audio = await storage.createJapaAudio(validatedData);
+      res.json(audio);
+    } catch (error) {
+      console.error("Error creating japa audio:", error);
+      res.status(400).json({ message: "Invalid japa audio data" });
+    }
+  });
+
+  app.patch("/api/admin/japa-audios/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const audio = await storage.updateJapaAudio(req.params.id, req.body);
+      res.json(audio);
+    } catch (error) {
+      console.error("Error updating japa audio:", error);
+      res.status(500).json({ message: "Failed to update japa audio" });
+    }
+  });
+
+  app.delete("/api/admin/japa-audios/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const audio = await storage.getJapaAudioById(req.params.id);
+      if (audio) {
+        const { extractS3Key, deleteFromS3 } = await import("./s3-upload");
+        const key = extractS3Key(audio.url);
+        if (key) {
+          await deleteFromS3(key);
+        }
+      }
+      await storage.deleteJapaAudio(req.params.id);
+      res.json({ message: "Japa audio deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting japa audio:", error);
+      res.status(500).json({ message: "Failed to delete japa audio" });
+    }
+  });
+
+  // Admin routes - File upload for japa audios  
+  app.post("/api/admin/japa-audios/upload", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const multer = await import("multer");
+      const multerS3 = (await import("multer-s3")).default;
+      const { S3Client } = await import("@aws-sdk/client-s3");
+      const path = await import("path");
+      
+      const s3Client = new S3Client({
+        region: process.env.AWS_REGION!,
+        credentials: {
+          accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+          secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+        },
+      });
+
+      const bucketName = process.env.AWS_S3_BUCKET_NAME!;
+
+      const audioMimeTypes = ["audio/mpeg", "audio/mp3", "audio/wav", "audio/ogg", "audio/aac", "audio/m4a", "audio/flac"];
+      
+      const upload = multer.default({
+        storage: multerS3({
+          s3: s3Client,
+          bucket: bucketName,
+          metadata: (req: any, file: any, cb: any) => {
+            cb(null, { fieldName: file.fieldname });
+          },
+          key: (req: any, file: any, cb: any) => {
+            const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+            const ext = path.default.extname(file.originalname);
+            const basename = path.default.basename(file.originalname, ext);
+            cb(null, `japa-audios/${basename}-${uniqueSuffix}${ext}`);
+          },
+        }) as any,
+        limits: { fileSize: 10 * 1024 * 1024 },
+        fileFilter: (req: any, file: any, cb: any) => {
+          if (audioMimeTypes.includes(file.mimetype)) {
+            cb(null, true);
+          } else {
+            cb(new Error(`Invalid file type for japa audios: ${file.mimetype}. Only audio files are allowed.`));
+          }
+        },
+      });
+      
+      upload.single("file")(req, res, async (err: any) => {
+        if (err) {
+          return res.status(400).json({ message: err.message });
+        }
+        
+        if (!req.file) {
+          return res.status(400).json({ message: "No file uploaded" });
+        }
+
+        const fileData = {
+          url: (req.file as any).location || req.file.path,
+          filename: req.file.originalname,
+          mimeType: req.file.mimetype,
+          size: req.file.size,
+        };
+
+        if (!fileData.url || fileData.url.trim() === '') {
+          return res.status(400).json({ message: "Upload failed: No URL generated" });
+        }
+
+        res.json(fileData);
+      });
+    } catch (error) {
+      console.error("Error uploading japa audio:", error);
+      res.status(500).json({ message: "Failed to upload japa audio" });
+    }
+  });
+
+  // User routes - Japa settings
+  app.get("/api/japa-settings", isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user.id;
+      let settings = await storage.getJapaSettings(userId);
+      
+      if (!settings) {
+        settings = await storage.upsertJapaSettings({
+          userId,
+          hapticEnabled: false,
+          soundEnabled: true,
+          dailyGoal: 108,
+        });
+      }
+      
+      res.json(settings);
+    } catch (error) {
+      console.error("Error getting japa settings:", error);
+      res.status(500).json({ message: "Failed to fetch japa settings" });
+    }
+  });
+
+  app.patch("/api/japa-settings", isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const settings = await storage.upsertJapaSettings({
+        userId,
+        ...req.body,
+      });
+      res.json(settings);
+    } catch (error) {
+      console.error("Error updating japa settings:", error);
+      res.status(500).json({ message: "Failed to update japa settings" });
+    }
+  });
+
+  // User routes - Update japa count
+  app.post("/api/japa/increment", isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const today = new Date().toISOString().split('T')[0];
+      const { count = 1 } = req.body;
+      
+      let progress = await storage.getSadhanaProgress(userId, today);
+      
+      if (!progress) {
+        progress = await storage.upsertSadhanaProgress({
+          userId,
+          date: today,
+          japCount: count,
+          pratahCompleted: false,
+          madhyahnaCompleted: false,
+          sayamCompleted: false,
+          mahapuranCompleted: false,
+          japCompleted: false,
+        });
+      } else {
+        progress = await storage.upsertSadhanaProgress({
+          ...progress,
+          japCount: progress.japCount + count,
+        });
+      }
+      
+      res.json(progress);
+    } catch (error) {
+      console.error("Error incrementing japa count:", error);
+      res.status(500).json({ message: "Failed to increment japa count" });
     }
   });
 
