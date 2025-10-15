@@ -49,8 +49,10 @@ export function GlobalAudioPlayer() {
 
   const progressPercentage = duration > 0 ? (currentTime / duration) * 100 : 0;
 
-  const handleClose = () => {
+  const handleClose = (e: React.MouseEvent) => {
+    e.stopPropagation();
     pauseTrack();
+    // Note: Track remains in queue, just paused
   };
 
   if (isMinimized) {

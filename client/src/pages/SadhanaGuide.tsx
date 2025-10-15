@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { CheckCircle, Clock, Info } from "lucide-react";
+import { CheckCircle, Clock, Info, Book } from "lucide-react";
 import lotusImage from "@assets/stock_images/lotus_flower_sacred__88abbb01.jpg";
 
 export default function SadhanaGuide() {
