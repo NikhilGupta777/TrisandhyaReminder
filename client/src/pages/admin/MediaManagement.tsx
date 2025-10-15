@@ -107,9 +107,10 @@ export default function MediaManagement() {
       return;
     }
 
+    const categoryId = formData.get("categoryId") as string;
     const data = {
       title: formData.get("title"),
-      categoryId: formData.get("categoryId") || null,
+      categoryId: (!categoryId || categoryId === "none") ? null : categoryId,
       type: mediaType,
       artist: formData.get("artist"),
       url: url,

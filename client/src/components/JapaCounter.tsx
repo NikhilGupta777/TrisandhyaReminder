@@ -86,7 +86,9 @@ export default function JapaCounter() {
     
     if (settings?.soundEnabled && audio.src) {
       if (!isPlaying) {
-        audio.play();
+        audio.play().catch((error) => {
+          console.error("Auto-play audio error:", error);
+        });
         setIsPlaying(true);
       }
     }
@@ -98,13 +100,22 @@ export default function JapaCounter() {
     }
   };
 
-  const toggleAudio = () => {
+  const toggleAudio = async () => {
     if (isPlaying) {
       audio.pause();
       setIsPlaying(false);
     } else {
-      audio.play();
-      setIsPlaying(true);
+      try {
+        await audio.play();
+        setIsPlaying(true);
+      } catch (error) {
+        console.error("Audio playback error:", error);
+        toast({
+          title: "Playback Error",
+          description: "Failed to play audio. The file may not be accessible.",
+          variant: "destructive",
+        });
+      }
     }
   };
 
