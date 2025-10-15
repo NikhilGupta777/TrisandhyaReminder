@@ -180,7 +180,7 @@ export const insertMediaContentSchema = createInsertSchema(mediaContent).omit({
 export type InsertMediaContent = z.infer<typeof insertMediaContentSchema>;
 export type MediaContent = typeof mediaContent.$inferSelect;
 
-// Scripture content (for Mahapuran Path)
+// Scripture content (for Mahapuran Path) - legacy table, kept for backward compatibility
 export const scriptureContent = pgTable("scripture_content", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   chapterNumber: integer("chapter_number").notNull(),
@@ -199,6 +199,84 @@ export const insertScriptureContentSchema = createInsertSchema(scriptureContent)
 
 export type InsertScriptureContent = z.infer<typeof insertScriptureContentSchema>;
 export type ScriptureContent = typeof scriptureContent.$inferSelect;
+
+// Mahapuran titles (e.g., "Bhagwat Mahapuran - EN", "Bhagwat Mahapuran - HIN")
+export const mahapuranTitles = pgTable("mahapuran_titles", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  title: varchar("title", { length: 255 }).notNull(),
+  language: varchar("language", { length: 10 }).notNull(), // 'en', 'hin', etc.
+  description: text("description"),
+  totalSkandas: integer("total_skandas").default(12).notNull(),
+  orderIndex: integer("order_index").default(0).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertMahapuranTitleSchema = createInsertSchema(mahapuranTitles).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertMahapuranTitle = z.infer<typeof insertMahapuranTitleSchema>;
+export type MahapuranTitle = typeof mahapuranTitles.$inferSelect;
+
+// Mahapuran skandas (volumes/books within a Mahapuran)
+export const mahapuranSkandas = pgTable("mahapuran_skandas", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  mahapuranTitleId: varchar("mahapuran_title_id").references(() => mahapuranTitles.id, { onDelete: "cascade" }).notNull(),
+  skandaNumber: integer("skanda_number").notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertMahapuranSkandaSchema = createInsertSchema(mahapuranSkandas).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertMahapuranSkanda = z.infer<typeof insertMahapuranSkandaSchema>;
+export type MahapuranSkanda = typeof mahapuranSkandas.$inferSelect;
+
+// Mahapuran chapters (individual chapters within a skanda)
+export const mahapuranChapters = pgTable("mahapuran_chapters", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  skandaId: varchar("skanda_id").references(() => mahapuranSkandas.id, { onDelete: "cascade" }).notNull(),
+  chapterNumber: integer("chapter_number").notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  content: text("content").notNull(),
+  summary: text("summary"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertMahapuranChapterSchema = createInsertSchema(mahapuranChapters).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertMahapuranChapter = z.infer<typeof insertMahapuranChapterSchema>;
+export type MahapuranChapter = typeof mahapuranChapters.$inferSelect;
+
+// User favorites for media content
+export const userMediaFavorites = pgTable("user_media_favorites", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  mediaId: varchar("media_id").references(() => mediaContent.id, { onDelete: "cascade" }).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertUserMediaFavoriteSchema = createInsertSchema(userMediaFavorites).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertUserMediaFavorite = z.infer<typeof insertUserMediaFavoriteSchema>;
+export type UserMediaFavorite = typeof userMediaFavorites.$inferSelect;
 
 // Sadhana Guide content (mantras, prayers, instructions)
 export const sadhanaContent = pgTable("sadhana_content", {
