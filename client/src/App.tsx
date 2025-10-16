@@ -32,7 +32,6 @@ import UserManagement from "@/pages/admin/UserManagement";
 import MediaManagement from "@/pages/admin/MediaManagement";
 import MediaCategoriesManagement from "@/pages/admin/MediaCategoriesManagement";
 import ScripturesManagement from "@/pages/admin/ScripturesManagement";
-import ScriptureManagement from "@/pages/admin/ScriptureManagement";
 import SadhanaContentManagement from "@/pages/admin/SadhanaContentManagement";
 import AlarmSoundsManagement from "@/pages/admin/AlarmSoundsManagement";
 import JapaAudiosManagement from "@/pages/admin/JapaAudiosManagement";
