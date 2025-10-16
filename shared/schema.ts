@@ -252,6 +252,8 @@ export const mahapuranChapters = pgTable("mahapuran_chapters", {
   title: varchar("title", { length: 255 }).notNull(),
   content: text("content").notNull(),
   summary: text("summary"),
+  fileUrl: varchar("file_url", { length: 500 }),
+  fileType: varchar("file_type", { length: 50 }),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -355,7 +357,7 @@ export type JapaAudio = typeof japaAudios.$inferSelect;
 // Japa settings for each user
 export const japaSettings = pgTable("japa_settings", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }).notNull().unique(),
   japaAudioId: varchar("japa_audio_id").references(() => japaAudios.id),
   hapticEnabled: boolean("haptic_enabled").default(false).notNull(),
   soundEnabled: boolean("sound_enabled").default(true).notNull(),

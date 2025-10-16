@@ -31,7 +31,7 @@ import AdminDashboard from "@/pages/admin/AdminDashboard";
 import UserManagement from "@/pages/admin/UserManagement";
 import MediaManagement from "@/pages/admin/MediaManagement";
 import MediaCategoriesManagement from "@/pages/admin/MediaCategoriesManagement";
-import MahapuranManagement from "@/pages/admin/MahapuranManagement";
+import ScripturesManagement from "@/pages/admin/ScripturesManagement";
 import ScriptureManagement from "@/pages/admin/ScriptureManagement";
 import SadhanaContentManagement from "@/pages/admin/SadhanaContentManagement";
 import AlarmSoundsManagement from "@/pages/admin/AlarmSoundsManagement";
@@ -45,8 +45,7 @@ function AdminRouter() {
       <Route path="/admin/users" component={UserManagement} />
       <Route path="/admin/media" component={MediaManagement} />
       <Route path="/admin/media-categories" component={MediaCategoriesManagement} />
-      <Route path="/admin/mahapuran" component={MahapuranManagement} />
-      <Route path="/admin/scriptures" component={ScriptureManagement} />
+      <Route path="/admin/scriptures" component={ScripturesManagement} />
       <Route path="/admin/sadhana-content" component={SadhanaContentManagement} />
       <Route path="/admin/alarm-sounds" component={AlarmSoundsManagement} />
       <Route path="/admin/japa-audios" component={JapaAudiosManagement} />

@@ -1,5 +1,5 @@
 import { Card } from "@/components/ui/card";
-import { JapCounter } from "@/components/JapCounter";
+import { JapCounterConnected } from "@/components/JapCounterConnected";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -341,7 +341,7 @@ export default function SadhanaGuide() {
         </TabsContent>
 
         <TabsContent value="jap" className="space-y-4">
-          <JapCounter />
+          <JapCounterConnected />
           <Card className="p-4 bg-accent/50">
             <p className="text-sm text-center text-muted-foreground leading-relaxed">
               Regular chanting of "Mādhava Mādhava" purifies the mind and brings you closer to the divine presence. 

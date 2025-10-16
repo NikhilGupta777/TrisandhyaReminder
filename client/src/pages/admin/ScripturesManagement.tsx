@@ -7,12 +7,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Trash2, Plus, Pencil, Book, BookOpen, FileText } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Trash2, Plus, Pencil, Book, BookOpen, FileText, Upload } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { MahapuranTitle, MahapuranSkanda, MahapuranChapter } from "@shared/schema";
 
-export default function MahapuranManagement() {
+export default function ScripturesManagement() {
   const { toast } = useToast();
   const [selectedTitleId, setSelectedTitleId] = useState<string | null>(null);
   const [selectedSkandaId, setSelectedSkandaId] = useState<string | null>(null);
@@ -22,6 +23,8 @@ export default function MahapuranManagement() {
   const [editingTitle, setEditingTitle] = useState<MahapuranTitle | null>(null);
   const [editingSkanda, setEditingSkanda] = useState<MahapuranSkanda | null>(null);
   const [editingChapter, setEditingChapter] = useState<MahapuranChapter | null>(null);
+  const [uploadingChapterFile, setUploadingChapterFile] = useState(false);
+  const [chapterInputMode, setChapterInputMode] = useState<"manual" | "file">("manual");
 
   const { data: titles = [] } = useQuery<MahapuranTitle[]>({
     queryKey: ["/api/mahapuran-titles"],
@@ -30,11 +33,21 @@ export default function MahapuranManagement() {
   const { data: skandas = [] } = useQuery<MahapuranSkanda[]>({
     queryKey: ["/api/mahapuran-skandas", selectedTitleId],
     enabled: !!selectedTitleId,
+    queryFn: async () => {
+      const response = await fetch(`/api/mahapuran-skandas?mahapuranTitleId=${selectedTitleId}`);
+      if (!response.ok) throw new Error("Failed to fetch skandas");
+      return response.json();
+    },
   });
 
   const { data: chapters = [] } = useQuery<MahapuranChapter[]>({
     queryKey: ["/api/mahapuran-chapters", selectedSkandaId],
     enabled: !!selectedSkandaId,
+    queryFn: async () => {
+      const response = await fetch(`/api/mahapuran-chapters?skandaId=${selectedSkandaId}`);
+      if (!response.ok) throw new Error("Failed to fetch chapters");
+      return response.json();
+    },
   });
 
   const createTitleMutation = useMutation({
@@ -179,10 +192,61 @@ export default function MahapuranManagement() {
     }
   };
 
+  const handleChapterFileUpload = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const file = formData.get("file") as File;
+    
+    if (!file) {
+      toast({ 
+        title: "Error", 
+        description: "Please select a file to upload",
+        variant: "destructive" 
+      });
+      return;
+    }
+
+    setUploadingChapterFile(true);
+    const uploadFormData = new FormData();
+    uploadFormData.append("file", file);
+    uploadFormData.append("skandaId", selectedSkandaId!);
+    uploadFormData.append("chapterNumber", formData.get("chapterNumber") as string);
+    uploadFormData.append("title", formData.get("titleFile") as string);
+    uploadFormData.append("summary", formData.get("summaryFile") as string || "");
+
+    try {
+      const response = await fetch("/api/admin/mahapuran-chapters/upload", {
+        method: "POST",
+        body: uploadFormData,
+      });
+
+      if (!response.ok) {
+        throw new Error("Upload failed");
+      }
+
+      const result = await response.json();
+      queryClient.invalidateQueries({ queryKey: ["/api/mahapuran-chapters", selectedSkandaId] });
+      setIsChapterDialogOpen(false);
+      setUploadingChapterFile(false);
+      toast({ 
+        title: "Success", 
+        description: "Chapter uploaded and created successfully" 
+      });
+    } catch (error) {
+      console.error("Error uploading chapter file:", error);
+      toast({ 
+        title: "Error", 
+        description: "Failed to upload chapter file",
+        variant: "destructive" 
+      });
+      setUploadingChapterFile(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl sm:text-3xl font-bold">Mahapuran Management</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold">Scriptures Management</h1>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -191,7 +255,7 @@ export default function MahapuranManagement() {
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
             <CardTitle className="text-lg font-semibold flex items-center gap-2">
               <Book className="h-5 w-5" />
-              Mahapuran Titles
+              Scripture Titles
             </CardTitle>
             <Dialog open={isTitleDialogOpen} onOpenChange={setIsTitleDialogOpen}>
               <DialogTrigger asChild>
@@ -202,7 +266,7 @@ export default function MahapuranManagement() {
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>{editingTitle ? "Edit" : "Add"} Mahapuran Title</DialogTitle>
+                  <DialogTitle>{editingTitle ? "Edit" : "Add"} Scripture Title</DialogTitle>
                 </DialogHeader>
                 <form onSubmit={handleTitleSubmit} className="space-y-4">
                   <div>
@@ -326,7 +390,7 @@ export default function MahapuranManagement() {
               </div>
             ))}
             {titles.length === 0 && (
-              <p className="text-sm text-muted-foreground text-center py-8">No titles yet. Add your first Mahapuran!</p>
+              <p className="text-sm text-muted-foreground text-center py-8">No titles yet. Add your first Scripture!</p>
             )}
           </CardContent>
         </Card>
@@ -468,66 +532,192 @@ export default function MahapuranManagement() {
                     Add
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-2xl">
+                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle>{editingChapter ? "Edit" : "Add"} Chapter</DialogTitle>
                   </DialogHeader>
-                  <form onSubmit={handleChapterSubmit} className="space-y-4">
-                    <div>
-                      <Label htmlFor="chapterNumber">Chapter Number *</Label>
-                      <Input
-                        id="chapterNumber"
-                        name="chapterNumber"
-                        type="number"
-                        placeholder="1"
-                        defaultValue={editingChapter?.chapterNumber || ""}
-                        required
-                        data-testid="input-chapter-number"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="title">Title *</Label>
-                      <Input
-                        id="title"
-                        name="title"
-                        placeholder="e.g., The Questions of the Sages"
-                        defaultValue={editingChapter?.title || ""}
-                        required
-                        data-testid="input-chapter-title"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="summary">Summary</Label>
-                      <Textarea
-                        id="summary"
-                        name="summary"
-                        placeholder="Brief summary of the chapter"
-                        defaultValue={editingChapter?.summary || ""}
-                        rows={3}
-                        data-testid="textarea-chapter-summary"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="content">Content *</Label>
-                      <Textarea
-                        id="content"
-                        name="content"
-                        placeholder="Full chapter content"
-                        defaultValue={editingChapter?.content || ""}
-                        required
-                        rows={10}
-                        data-testid="textarea-chapter-content"
-                      />
-                    </div>
-                    <div className="flex justify-end gap-2">
-                      <Button type="button" variant="outline" onClick={() => setIsChapterDialogOpen(false)}>
-                        Cancel
-                      </Button>
-                      <Button type="submit" data-testid="button-submit-chapter">
-                        {editingChapter ? "Update" : "Create"}
-                      </Button>
-                    </div>
-                  </form>
+                  
+                  {editingChapter ? (
+                    <form onSubmit={handleChapterSubmit} className="space-y-4">
+                      <div>
+                        <Label htmlFor="chapterNumber">Chapter Number *</Label>
+                        <Input
+                          id="chapterNumber"
+                          name="chapterNumber"
+                          type="number"
+                          placeholder="1"
+                          defaultValue={editingChapter?.chapterNumber || ""}
+                          required
+                          data-testid="input-chapter-number"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="title">Title *</Label>
+                        <Input
+                          id="title"
+                          name="title"
+                          placeholder="e.g., The Questions of the Sages"
+                          defaultValue={editingChapter?.title || ""}
+                          required
+                          data-testid="input-chapter-title"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="summary">Summary</Label>
+                        <Textarea
+                          id="summary"
+                          name="summary"
+                          placeholder="Brief summary of the chapter"
+                          defaultValue={editingChapter?.summary || ""}
+                          rows={3}
+                          data-testid="textarea-chapter-summary"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="content">Content *</Label>
+                        <Textarea
+                          id="content"
+                          name="content"
+                          placeholder="Full chapter content"
+                          defaultValue={editingChapter?.content || ""}
+                          required
+                          rows={10}
+                          data-testid="textarea-chapter-content"
+                        />
+                      </div>
+                      <div className="flex justify-end gap-2">
+                        <Button type="button" variant="outline" onClick={() => setIsChapterDialogOpen(false)}>
+                          Cancel
+                        </Button>
+                        <Button type="submit" data-testid="button-submit-chapter">
+                          Update
+                        </Button>
+                      </div>
+                    </form>
+                  ) : (
+                    <Tabs value={chapterInputMode} onValueChange={(v) => setChapterInputMode(v as "manual" | "file")} className="w-full">
+                      <TabsList className="grid w-full grid-cols-2">
+                        <TabsTrigger value="manual">Manual Entry</TabsTrigger>
+                        <TabsTrigger value="file">Upload File</TabsTrigger>
+                      </TabsList>
+                      
+                      <TabsContent value="manual" className="space-y-4 mt-4">
+                        <form onSubmit={handleChapterSubmit} className="space-y-4">
+                          <div>
+                            <Label htmlFor="chapterNumber">Chapter Number *</Label>
+                            <Input
+                              id="chapterNumber"
+                              name="chapterNumber"
+                              type="number"
+                              placeholder="1"
+                              required
+                              data-testid="input-chapter-number"
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="title">Title *</Label>
+                            <Input
+                              id="title"
+                              name="title"
+                              placeholder="e.g., The Questions of the Sages"
+                              required
+                              data-testid="input-chapter-title"
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="summary">Summary</Label>
+                            <Textarea
+                              id="summary"
+                              name="summary"
+                              placeholder="Brief summary of the chapter"
+                              rows={3}
+                              data-testid="textarea-chapter-summary"
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="content">Content *</Label>
+                            <Textarea
+                              id="content"
+                              name="content"
+                              placeholder="Full chapter content"
+                              required
+                              rows={10}
+                              data-testid="textarea-chapter-content"
+                            />
+                          </div>
+                          <div className="flex justify-end gap-2">
+                            <Button type="button" variant="outline" onClick={() => setIsChapterDialogOpen(false)}>
+                              Cancel
+                            </Button>
+                            <Button type="submit" data-testid="button-submit-chapter">
+                              Create
+                            </Button>
+                          </div>
+                        </form>
+                      </TabsContent>
+                      
+                      <TabsContent value="file" className="space-y-4 mt-4">
+                        <form onSubmit={handleChapterFileUpload} className="space-y-4">
+                          <div>
+                            <Label htmlFor="chapterNumberFile">Chapter Number *</Label>
+                            <Input
+                              id="chapterNumberFile"
+                              name="chapterNumber"
+                              type="number"
+                              placeholder="1"
+                              required
+                              data-testid="input-chapter-number-file"
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="titleFile">Title *</Label>
+                            <Input
+                              id="titleFile"
+                              name="titleFile"
+                              placeholder="e.g., The Questions of the Sages"
+                              required
+                              data-testid="input-chapter-title-file"
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="summaryFile">Summary</Label>
+                            <Textarea
+                              id="summaryFile"
+                              name="summaryFile"
+                              placeholder="Brief summary of the chapter"
+                              rows={3}
+                              data-testid="textarea-chapter-summary-file"
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="file">Upload Chapter File *</Label>
+                            <div className="mt-2">
+                              <Input
+                                id="file"
+                                name="file"
+                                type="file"
+                                accept=".pdf,.txt,.doc,.docx"
+                                required
+                                data-testid="input-chapter-file"
+                              />
+                              <p className="text-xs text-muted-foreground mt-2">
+                                Supported formats: PDF, TXT, DOC, DOCX
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex justify-end gap-2">
+                            <Button type="button" variant="outline" onClick={() => setIsChapterDialogOpen(false)}>
+                              Cancel
+                            </Button>
+                            <Button type="submit" disabled={uploadingChapterFile} data-testid="button-upload-chapter">
+                              <Upload className="h-4 w-4 mr-2" />
+                              {uploadingChapterFile ? "Uploading..." : "Upload & Create"}
+                            </Button>
+                          </div>
+                        </form>
+                      </TabsContent>
+                    </Tabs>
+                  )}
                 </DialogContent>
               </Dialog>
             )}

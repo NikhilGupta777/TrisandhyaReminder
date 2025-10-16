@@ -26,6 +26,7 @@ interface AudioPlayerContextType {
   toggleShuffle: () => void;
   toggleRepeat: () => void;
   setQueue: (tracks: MediaContent[]) => void;
+  stopPlayer: () => void;
 }
 
 const AudioPlayerContext = createContext<AudioPlayerContextType | undefined>(undefined);
@@ -102,16 +103,35 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
   };
 
   const playTrack = async (track: MediaContent) => {
-    if (track.type !== "audio") return;
+    if (track.type !== "audio") {
+      console.log("Track type is not audio:", track.type);
+      return;
+    }
     
     setCurrentTrack(track);
+    setIsPlaying(false);
+    
     if (audioRef.current) {
-      audioRef.current.src = track.url;
       try {
-        await audioRef.current.play();
-        setIsPlaying(true);
-      } catch (error) {
+        audioRef.current.pause();
+        audioRef.current.src = track.url;
+        audioRef.current.load();
+        
+        const playPromise = audioRef.current.play();
+        if (playPromise !== undefined) {
+          await playPromise;
+          setIsPlaying(true);
+        }
+      } catch (error: any) {
         console.error("Failed to play track:", error);
+        console.error("Track URL:", track.url);
+        console.error("Error name:", error?.name);
+        
+        if (error?.name === 'NotAllowedError') {
+          console.log("Playback blocked by browser - user interaction required");
+        } else if (error?.name === 'NotSupportedError') {
+          console.log("Audio format not supported");
+        }
         setIsPlaying(false);
       }
     }
@@ -125,12 +145,22 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
   };
 
   const resumeTrack = async () => {
-    if (audioRef.current) {
+    if (audioRef.current && currentTrack) {
+      if (!audioRef.current.src || audioRef.current.src === '') {
+        audioRef.current.src = currentTrack.url;
+        audioRef.current.load();
+      }
       try {
-        await audioRef.current.play();
-        setIsPlaying(true);
-      } catch (error) {
+        const playPromise = audioRef.current.play();
+        if (playPromise !== undefined) {
+          await playPromise;
+          setIsPlaying(true);
+        }
+      } catch (error: any) {
         console.error("Failed to resume track:", error);
+        console.error("Current track URL:", currentTrack.url);
+        console.error("Error name:", error?.name);
+        setIsPlaying(false);
       }
     }
   };
@@ -237,6 +267,20 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
     });
   };
 
+  const stopPlayer = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.src = "";
+      audioRef.current.load();
+    }
+    setCurrentTrack(null);
+    setIsPlaying(false);
+    setCurrentTime(0);
+    setDuration(0);
+    setQueue([]);
+    setQueueIndex(-1);
+  };
+
   const value: AudioPlayerContextType = {
     currentTrack,
     isPlaying,
@@ -262,15 +306,15 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
     toggleShuffle,
     toggleRepeat,
     setQueue,
+    stopPlayer,
   };
 
   return (
     <AudioPlayerContext.Provider value={value}>
       <audio 
         ref={audioRef}
-        preload="metadata"
+        preload="auto"
         playsInline
-        crossOrigin="anonymous"
       />
       {children}
     </AudioPlayerContext.Provider>

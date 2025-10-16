@@ -361,7 +361,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes
   app.get("/api/auth/user", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = (req.user as any).id;
       const user = await storage.getUser(userId);
       res.json(user);
     } catch (error) {
@@ -373,7 +373,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Alarm settings routes
   app.get("/api/alarm-settings", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = (req.user as any).id;
       let settings = await storage.getAlarmSettings(userId);
       
       if (!settings) {
@@ -395,7 +395,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/alarm-settings", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = (req.user as any).id;
       const validatedData = insertAlarmSettingsSchema.parse({
         ...req.body,
         userId,
@@ -412,7 +412,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Sadhana progress routes
   app.get("/api/sadhana-progress/today", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = (req.user as any).id;
       const today = new Date().toISOString().split("T")[0];
       
       let progress = await storage.getSadhanaProgress(userId, today);
@@ -439,7 +439,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/sadhana-progress", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = (req.user as any).id;
       const validatedData = insertSadhanaProgressSchema.parse({
         ...req.body,
         userId,
@@ -455,7 +455,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/sadhana-progress/stats", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = (req.user as any).id;
       const stats = await storage.getUserStats(userId);
       res.json(stats);
     } catch (error) {
@@ -466,7 +466,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/sadhana-progress/range", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = (req.user as any).id;
       const { startDate, endDate } = req.query;
       
       const progress = await storage.getSadhanaProgressByDateRange(
@@ -921,7 +921,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // User routes - Japa settings
   app.get("/api/japa-settings", isAuthenticated, async (req, res) => {
     try {
-      const userId = req.user.id;
+      const userId = (req.user as any).id;
       let settings = await storage.getJapaSettings(userId);
       
       if (!settings) {
@@ -942,7 +942,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/japa-settings", isAuthenticated, async (req, res) => {
     try {
-      const userId = req.user.id;
+      const userId = (req.user as any).id;
       const settings = await storage.upsertJapaSettings({
         userId,
         ...req.body,
@@ -957,7 +957,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // User routes - Update japa count
   app.post("/api/japa/increment", isAuthenticated, async (req, res) => {
     try {
-      const userId = req.user.id;
+      const userId = (req.user as any).id;
       const today = new Date().toISOString().split('T')[0];
       const { count = 1 } = req.body;
       
@@ -1288,10 +1288,109 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin routes - File upload for mahapuran chapters
+  app.post("/api/admin/mahapuran-chapters/upload", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const multer = await import("multer");
+      const multerS3 = (await import("multer-s3")).default;
+      const { S3Client } = await import("@aws-sdk/client-s3");
+      
+      const s3Client = new S3Client({
+        region: process.env.AWS_REGION || "us-east-1",
+        credentials: {
+          accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+          secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+        },
+      });
+
+      const upload = multer.default({
+        storage: multerS3({
+          s3: s3Client,
+          bucket: process.env.AWS_S3_BUCKET_NAME!,
+          contentType: multerS3.AUTO_CONTENT_TYPE,
+          key: (req: any, file: any, cb: any) => {
+            const fileName = `mahapuran-chapters/${file.originalname}-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+            cb(null, fileName);
+          },
+        }),
+        limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+      });
+
+      upload.single("file")(req, res, async (err: any) => {
+        if (err) {
+          return res.status(400).json({ message: err.message });
+        }
+
+        if (!req.file) {
+          return res.status(400).json({ message: "No file uploaded" });
+        }
+
+        try {
+          const { skandaId, chapterNumber, title, summary } = req.body;
+          const fileUrl = (req.file as any).location;
+          const fileType = req.file.mimetype;
+          let content = "";
+
+          // Try to extract text for display, but always keep the file URL
+          const fileName = req.file.originalname.toLowerCase();
+
+          if (fileType === "text/plain" || fileName.endsWith(".txt")) {
+            // For text files, download and extract content
+            const { GetObjectCommand } = await import("@aws-sdk/client-s3");
+            const command = new GetObjectCommand({
+              Bucket: process.env.AWS_S3_BUCKET_NAME!,
+              Key: (req.file as any).key,
+            });
+            const response = await s3Client.send(command);
+            const bodyContents = await response.Body?.transformToString();
+            content = bodyContents || "Content could not be extracted";
+          } else if (fileType === "application/pdf" || fileName.endsWith(".pdf")) {
+            content = "PDF file uploaded. Click 'View File' to open the PDF document.";
+          } else if (
+            fileType === "application/msword" || 
+            fileType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+            fileName.endsWith(".doc") ||
+            fileName.endsWith(".docx")
+          ) {
+            content = "Word document uploaded. Click 'View File' to open the document.";
+          } else {
+            content = "File uploaded. Click 'View File' to open.";
+          }
+
+          // Create the chapter with file URL and content
+          const { insertMahapuranChapterSchema } = await import("@shared/schema");
+          const chapterData = {
+            skandaId,
+            chapterNumber: parseInt(chapterNumber),
+            title,
+            summary: summary || null,
+            content: content.trim(),
+            fileUrl,
+            fileType,
+          };
+
+          const validatedData = insertMahapuranChapterSchema.parse(chapterData);
+          const chapter = await storage.createMahapuranChapter(validatedData);
+
+          res.json({ 
+            message: "Chapter uploaded and created successfully",
+            chapter 
+          });
+        } catch (error) {
+          console.error("Error processing chapter file:", error);
+          res.status(500).json({ message: "Failed to process chapter file" });
+        }
+      });
+    } catch (error) {
+      console.error("Error uploading chapter file:", error);
+      res.status(500).json({ message: "Failed to upload chapter file" });
+    }
+  });
+
   // User media favorites routes
   app.get("/api/media-favorites", isAuthenticated, async (req, res) => {
     try {
-      const userId = req.user.id;
+      const userId = (req.user as any).id;
       const favorites = await storage.getUserMediaFavorites(userId);
       res.json(favorites);
     } catch (error) {
@@ -1304,7 +1403,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { insertUserMediaFavoriteSchema } = await import("@shared/schema");
       const validatedData = insertUserMediaFavoriteSchema.parse({
-        userId: req.user.id,
+        userId: (req.user as any).id,
         mediaId: req.body.mediaId,
       });
       const favorite = await storage.addMediaFavorite(validatedData);
@@ -1317,7 +1416,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/media-favorites/:mediaId", isAuthenticated, async (req, res) => {
     try {
-      const userId = req.user.id;
+      const userId = (req.user as any).id;
       await storage.removeMediaFavorite(userId, req.params.mediaId);
       res.json({ message: "Media favorite removed successfully" });
     } catch (error) {
@@ -1328,7 +1427,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/media-favorites/:mediaId/check", isAuthenticated, async (req, res) => {
     try {
-      const userId = req.user.id;
+      const userId = (req.user as any).id;
       const isFavorited = await storage.isMediaFavorited(userId, req.params.mediaId);
       res.json({ isFavorited });
     } catch (error) {

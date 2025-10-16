@@ -11,7 +11,9 @@ import {
   Repeat,
   Repeat1,
   Shuffle,
-  X
+  X,
+  ChevronDown,
+  ChevronUp
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -32,7 +34,7 @@ export function GlobalAudioPlayer() {
     setVolumeLevel,
     toggleShuffle,
     toggleRepeat,
-    pauseTrack,
+    stopPlayer,
   } = useAudioPlayer();
 
   const [showVolumeSlider, setShowVolumeSlider] = useState(false);
@@ -51,21 +53,61 @@ export function GlobalAudioPlayer() {
 
   const handleClose = (e: React.MouseEvent) => {
     e.stopPropagation();
-    pauseTrack();
-    // Note: Track remains in queue, just paused
+    stopPlayer();
   };
 
   if (isMinimized) {
     return (
-      <div className="fixed bottom-4 right-4 z-50">
-        <Button
-          size="lg"
-          className="rounded-full shadow-lg"
-          onClick={() => setIsMinimized(false)}
-          data-testid="button-expand-player"
-        >
-          {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
-        </Button>
+      <div className="fixed bottom-4 right-4 z-50 bg-card border rounded-lg shadow-lg p-3 max-w-sm">
+        <div className="flex items-center gap-3">
+          {currentTrack.thumbnailUrl && (
+            <img 
+              src={currentTrack.thumbnailUrl} 
+              alt={currentTrack.title}
+              className="w-12 h-12 rounded object-cover flex-shrink-0"
+            />
+          )}
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold text-sm truncate">{currentTrack.title}</p>
+            {currentTrack.artist && (
+              <p className="text-xs text-muted-foreground truncate">{currentTrack.artist}</p>
+            )}
+          </div>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={togglePlayPause}
+              data-testid="button-minimized-play-pause"
+            >
+              {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsMinimized(false)}
+              data-testid="button-expand"
+            >
+              <ChevronUp className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleClose}
+              data-testid="button-minimized-close"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+        <div className="mt-2">
+          <div className="relative h-1 bg-muted rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-primary transition-all duration-100"
+              style={{ width: `${progressPercentage}%` }}
+            />
+          </div>
+        </div>
       </div>
     );
   }
@@ -211,17 +253,15 @@ export function GlobalAudioPlayer() {
               )}
             </div>
 
-            {/* Minimize/Close Buttons */}
+            {/* Minimize and Close Buttons */}
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setIsMinimized(true)}
-              className="hidden lg:flex"
               data-testid="button-minimize-player"
             >
-              <X className="h-4 w-4" />
+              <ChevronDown className="h-4 w-4" />
             </Button>
-            
             <Button
               variant="ghost"
               size="sm"
