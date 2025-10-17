@@ -1436,6 +1436,247 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Mahapuran PDF routes
+  app.get("/api/mahapuran-pdfs", async (req, res) => {
+    try {
+      const pdfs = await storage.getAllMahapuranPdfs();
+      res.json(pdfs);
+    } catch (error) {
+      console.error("Error fetching Mahapuran PDFs:", error);
+      res.status(500).json({ message: "Failed to fetch Mahapuran PDFs" });
+    }
+  });
+
+  app.get("/api/mahapuran-pdfs/:id", async (req, res) => {
+    try {
+      const pdf = await storage.getMahapuranPdfById(req.params.id);
+      if (!pdf) {
+        return res.status(404).json({ message: "Mahapuran PDF not found" });
+      }
+      res.json(pdf);
+    } catch (error) {
+      console.error("Error fetching Mahapuran PDF:", error);
+      res.status(500).json({ message: "Failed to fetch Mahapuran PDF" });
+    }
+  });
+
+  app.get("/api/mahapuran-pdfs/language/:languageCode", async (req, res) => {
+    try {
+      const pdf = await storage.getMahapuranPdfByLanguage(req.params.languageCode);
+      if (!pdf) {
+        return res.status(404).json({ message: "Mahapuran PDF not found for this language" });
+      }
+      res.json(pdf);
+    } catch (error) {
+      console.error("Error fetching Mahapuran PDF by language:", error);
+      res.status(500).json({ message: "Failed to fetch Mahapuran PDF" });
+    }
+  });
+
+  app.post("/api/mahapuran-pdfs", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { insertMahapuranPdfSchema } = await import("@shared/schema");
+      const validatedData = insertMahapuranPdfSchema.parse(req.body);
+      const pdf = await storage.createMahapuranPdf(validatedData);
+      res.json(pdf);
+    } catch (error) {
+      console.error("Error creating Mahapuran PDF:", error);
+      res.status(400).json({ message: "Failed to create Mahapuran PDF" });
+    }
+  });
+
+  app.patch("/api/mahapuran-pdfs/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const pdf = await storage.updateMahapuranPdf(req.params.id, req.body);
+      res.json(pdf);
+    } catch (error) {
+      console.error("Error updating Mahapuran PDF:", error);
+      res.status(400).json({ message: "Failed to update Mahapuran PDF" });
+    }
+  });
+
+  app.delete("/api/mahapuran-pdfs/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      await storage.deleteMahapuranPdf(req.params.id);
+      res.json({ message: "Mahapuran PDF deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting Mahapuran PDF:", error);
+      res.status(500).json({ message: "Failed to delete Mahapuran PDF" });
+    }
+  });
+
+  // Notification routes
+  app.get("/api/notifications", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const notifications = await storage.getUserNotifications(userId, 50);
+      res.json(notifications);
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+      res.status(500).json({ message: "Failed to fetch notifications" });
+    }
+  });
+
+  app.get("/api/notifications/unread-count", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const count = await storage.getUnreadNotificationCount(userId);
+      res.json({ count });
+    } catch (error) {
+      console.error("Error fetching unread count:", error);
+      res.status(500).json({ message: "Failed to fetch unread count" });
+    }
+  });
+
+  app.post("/api/notifications/:id/read", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      await storage.markNotificationAsRead(userId, req.params.id);
+      res.json({ message: "Notification marked as read" });
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
+      res.status(500).json({ message: "Failed to mark notification as read" });
+    }
+  });
+
+  app.post("/api/notifications/read-all", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      await storage.markAllNotificationsAsRead(userId);
+      res.json({ message: "All notifications marked as read" });
+    } catch (error) {
+      console.error("Error marking all notifications as read:", error);
+      res.status(500).json({ message: "Failed to mark all notifications as read" });
+    }
+  });
+
+  // Admin notification routes
+  app.get("/api/admin/notifications", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const notifications = await storage.getAllNotifications();
+      res.json(notifications);
+    } catch (error) {
+      console.error("Error fetching all notifications:", error);
+      res.status(500).json({ message: "Failed to fetch notifications" });
+    }
+  });
+
+  app.post("/api/admin/notifications", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { insertNotificationSchema } = await import("@shared/schema");
+      const validatedData = insertNotificationSchema.parse(req.body);
+      const notification = await storage.createNotification(validatedData);
+      
+      if (validatedData.sendToAll) {
+        const users = await storage.getAllUsers();
+        for (const user of users) {
+          await storage.createNotificationReceipt({
+            notificationId: notification.id,
+            userId: user.id,
+          });
+        }
+      }
+      
+      res.json(notification);
+    } catch (error) {
+      console.error("Error creating notification:", error);
+      res.status(400).json({ message: "Failed to create notification" });
+    }
+  });
+
+  app.delete("/api/admin/notifications/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      await storage.deleteNotification(req.params.id);
+      res.json({ message: "Notification deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting notification:", error);
+      res.status(500).json({ message: "Failed to delete notification" });
+    }
+  });
+
+  // Notification preferences routes
+  app.get("/api/notification-preferences", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      let prefs = await storage.getNotificationPreferences(userId);
+      
+      if (!prefs) {
+        prefs = await storage.createNotificationPreferences({
+          userId,
+          pushEnabled: true,
+          inAppEnabled: true,
+          emailEnabled: false,
+        });
+      }
+      
+      res.json(prefs);
+    } catch (error) {
+      console.error("Error fetching notification preferences:", error);
+      res.status(500).json({ message: "Failed to fetch notification preferences" });
+    }
+  });
+
+  app.patch("/api/notification-preferences", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const prefs = await storage.updateNotificationPreferences(userId, req.body);
+      res.json(prefs);
+    } catch (error) {
+      console.error("Error updating notification preferences:", error);
+      res.status(400).json({ message: "Failed to update notification preferences" });
+    }
+  });
+
+  // Push subscription routes
+  app.post("/api/push-subscriptions", isAuthenticated, async (req, res) => {
+    try {
+      const { insertPushSubscriptionSchema } = await import("@shared/schema");
+      const validatedData = insertPushSubscriptionSchema.parse({
+        userId: (req.user as any).id,
+        ...req.body,
+      });
+      const subscription = await storage.createPushSubscription(validatedData);
+      res.json(subscription);
+    } catch (error) {
+      console.error("Error creating push subscription:", error);
+      res.status(400).json({ message: "Failed to create push subscription" });
+    }
+  });
+
+  app.delete("/api/push-subscriptions", isAuthenticated, async (req, res) => {
+    try {
+      const { endpoint } = req.body;
+      await storage.deletePushSubscription(endpoint);
+      res.json({ message: "Push subscription deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting push subscription:", error);
+      res.status(500).json({ message: "Failed to delete push subscription" });
+    }
+  });
+
+  // Notification sounds routes
+  app.get("/api/notification-sounds", async (req, res) => {
+    try {
+      const sounds = await storage.getAllNotificationSounds();
+      res.json(sounds);
+    } catch (error) {
+      console.error("Error fetching notification sounds:", error);
+      res.status(500).json({ message: "Failed to fetch notification sounds" });
+    }
+  });
+
+  app.post("/api/notification-sounds", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { insertNotificationSoundSchema } = await import("@shared/schema");
+      const validatedData = insertNotificationSoundSchema.parse(req.body);
+      const sound = await storage.createNotificationSound(validatedData);
+      res.json(sound);
+    } catch (error) {
+      console.error("Error creating notification sound:", error);
+      res.status(400).json({ message: "Failed to create notification sound" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
