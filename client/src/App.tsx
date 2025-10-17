@@ -8,6 +8,7 @@ import { AppSidebar } from "@/components/AppSidebar";
 import { AdminSidebar } from "@/components/AdminSidebar";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { NotificationBell } from "@/components/NotificationBell";
 import { AudioPlayerProvider } from "@/contexts/AudioPlayerContext";
 import { GlobalAudioPlayer } from "@/components/GlobalAudioPlayer";
 import { AlarmDialog } from "@/components/AlarmDialog";
@@ -23,7 +24,7 @@ import MediaLibraryConnected from "@/pages/MediaLibraryConnected";
 import ProgressConnected from "@/pages/ProgressConnected";
 import AlarmsConnected from "@/pages/AlarmsConnected";
 import SettingsConnected from "@/pages/SettingsConnected";
-import MahapuranBrowse from "@/pages/MahapuranBrowse";
+import MahapuranLibrary from "@/pages/MahapuranLibrary";
 import MahapuranSkandas from "@/pages/MahapuranSkandas";
 import MahapuranChapters from "@/pages/MahapuranChapters";
 import MahapuranChapterRead from "@/pages/MahapuranChapterRead";
@@ -35,6 +36,8 @@ import ScripturesManagement from "@/pages/admin/ScripturesManagement";
 import SadhanaContentManagement from "@/pages/admin/SadhanaContentManagement";
 import AlarmSoundsManagement from "@/pages/admin/AlarmSoundsManagement";
 import JapaAudiosManagement from "@/pages/admin/JapaAudiosManagement";
+import MahapuranPdfsManagement from "@/pages/admin/MahapuranPdfsManagement";
+import NotificationsManagement from "@/pages/admin/NotificationsManagement";
 import NotFound from "@/pages/not-found";
 
 function AdminRouter() {
@@ -48,6 +51,8 @@ function AdminRouter() {
       <Route path="/admin/sadhana-content" component={SadhanaContentManagement} />
       <Route path="/admin/alarm-sounds" component={AlarmSoundsManagement} />
       <Route path="/admin/japa-audios" component={JapaAudiosManagement} />
+      <Route path="/admin/mahapuran-pdfs" component={MahapuranPdfsManagement} />
+      <Route path="/admin/notifications" component={NotificationsManagement} />
       <Route component={NotFound} />
     </Switch>
   );
@@ -59,7 +64,7 @@ function UserRouter() {
       <Route path="/" component={DashboardConnected} />
       <Route path="/guide" component={SadhanaGuide} />
       <Route path="/media" component={MediaLibraryConnected} />
-      <Route path="/mahapuran" component={MahapuranBrowse} />
+      <Route path="/mahapuran" component={MahapuranLibrary} />
       <Route path="/mahapuran/:titleId" component={MahapuranSkandas} />
       <Route path="/mahapuran/:titleId/skanda/:skandaId" component={MahapuranChapters} />
       <Route path="/mahapuran/:titleId/skanda/:skandaId/chapter/:chapterId" component={MahapuranChapterRead} />
@@ -101,7 +106,8 @@ function AuthenticatedApp() {
                 </Button>
               )}
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              {!isAdminRoute && <NotificationBell />}
               <Button
                 variant="ghost"
                 size="sm"

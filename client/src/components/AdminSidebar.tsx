@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, Music, BookOpen, ArrowLeft, Book, Bell, Folders, Headphones } from "lucide-react";
+import { LayoutDashboard, Users, Music, BookOpen, ArrowLeft, Book, Bell, Folders, Headphones, FileText, BellRing } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -20,6 +20,8 @@ const menuItems = [
   { title: "Daily Sadhna", url: "/admin/sadhana-content", icon: Book },
   { title: "Alarm Sounds", url: "/admin/alarm-sounds", icon: Bell },
   { title: "Japa Audios", url: "/admin/japa-audios", icon: Headphones },
+  { title: "Mahapuran PDFs", url: "/admin/mahapuran-pdfs", icon: FileText },
+  { title: "Notifications", url: "/admin/notifications", icon: BellRing },
 ];
 
 export function AdminSidebar() {

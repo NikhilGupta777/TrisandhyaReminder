@@ -48,6 +48,10 @@ export const uploadToS3 = multer({
       "image/jpeg",
       "image/png",
       "image/webp",
+      "application/pdf",
+      "text/plain",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     ];
     
     if (allowedMimeTypes.includes(file.mimetype)) {

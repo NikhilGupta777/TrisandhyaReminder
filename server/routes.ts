@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { setupAuth, isAuthenticated, isAdmin } from "./googleAuth";
 import passport from "passport";
 import { sendVerificationEmail, sendVerificationCodeEmail, sendPasswordResetEmail, sendWelcomeEmail } from "./sendgrid";
+import { uploadToS3, deleteFromS3 } from "./s3-upload";
 import {
   insertAlarmSettingsSchema,
   insertSadhanaProgressSchema,
@@ -1497,12 +1498,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/mahapuran-pdfs/:id", isAuthenticated, isAdmin, async (req, res) => {
     try {
+      const pdf = await storage.getMahapuranPdfById(req.params.id);
+      if (pdf && pdf.pdfKey) {
+        await deleteFromS3(pdf.pdfKey);
+      }
       await storage.deleteMahapuranPdf(req.params.id);
       res.json({ message: "Mahapuran PDF deleted successfully" });
     } catch (error) {
       console.error("Error deleting Mahapuran PDF:", error);
       res.status(500).json({ message: "Failed to delete Mahapuran PDF" });
     }
+  });
+
+  app.post("/api/mahapuran-pdfs/upload", isAuthenticated, isAdmin, (req: any, res) => {
+    req.uploadFolder = "mahapuran-pdfs";
+    
+    uploadToS3.single("pdf")(req, res, async (err: any) => {
+      if (err) {
+        console.error("Error uploading PDF:", err);
+        return res.status(400).json({ message: err.message || "Failed to upload PDF" });
+      }
+
+      try {
+        if (!req.file) {
+          return res.status(400).json({ message: "No file uploaded" });
+        }
+
+        const file = req.file as any;
+        const pdfUrl = file.location;
+        const pdfKey = file.key;
+        const fileSize = file.size;
+
+        res.json({
+          message: "PDF uploaded successfully",
+          pdfUrl,
+          pdfKey,
+          fileSize,
+        });
+      } catch (error) {
+        console.error("Error processing PDF upload:", error);
+        res.status(500).json({ message: "Failed to process PDF upload" });
+      }
+    });
   });
 
   // Notification routes
@@ -1574,13 +1611,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
             notificationId: notification.id,
             userId: user.id,
           });
+          
+          // Broadcast notification via WebSocket for real-time delivery
+          if ((app as any).broadcastNotification) {
+            (app as any).broadcastNotification(user.id, {
+              notification,
+              receipt: {
+                notificationId: notification.id,
+                userId: user.id,
+                isRead: false,
+              },
+            });
+          }
         }
       }
       
       res.json(notification);
     } catch (error) {
       console.error("Error creating notification:", error);
-      res.status(400).json({ message: "Failed to create notification" });
+      if (error instanceof Error) {
+        res.status(400).json({ message: error.message });
+      } else {
+        res.status(400).json({ message: "Failed to create notification" });
+      }
     }
   });
 
@@ -1678,5 +1731,71 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   const httpServer = createServer(app);
+  
+  // WebSocket server for real-time notifications
+  const { WebSocketServer } = await import("ws");
+  const wss = new WebSocketServer({ server: httpServer, path: "/ws/notifications" });
+  
+  // Store connected clients with their user IDs
+  const notificationClients = new Map<string, Set<any>>();
+  
+  wss.on("connection", (ws, req) => {
+    let userId: string | null = null;
+    
+    ws.on("message", async (message) => {
+      try {
+        const data = JSON.parse(message.toString());
+        
+        if (data.type === "authenticate" && data.userId) {
+          userId = data.userId;
+          
+          // Add client to user's connection set
+          if (!notificationClients.has(userId)) {
+            notificationClients.set(userId, new Set());
+          }
+          notificationClients.get(userId)!.add(ws);
+          
+          console.log(`[WS] User ${userId} connected for notifications`);
+          
+          // Send confirmation
+          ws.send(JSON.stringify({ type: "authenticated", userId }));
+        }
+      } catch (error) {
+        console.error("[WS] Error processing message:", error);
+      }
+    });
+    
+    ws.on("close", () => {
+      if (userId && notificationClients.has(userId)) {
+        notificationClients.get(userId)!.delete(ws);
+        if (notificationClients.get(userId)!.size === 0) {
+          notificationClients.delete(userId);
+        }
+        console.log(`[WS] User ${userId} disconnected from notifications`);
+      }
+    });
+    
+    ws.on("error", (error) => {
+      console.error("[WS] WebSocket error:", error);
+    });
+  });
+  
+  // Export function to broadcast notifications to users
+  (app as any).broadcastNotification = (userId: string, notification: any) => {
+    if (notificationClients.has(userId)) {
+      const clients = notificationClients.get(userId)!;
+      const message = JSON.stringify({
+        type: "new_notification",
+        notification,
+      });
+      
+      clients.forEach((client) => {
+        if (client.readyState === 1) { // OPEN
+          client.send(message);
+        }
+      });
+    }
+  };
+  
   return httpServer;
 }

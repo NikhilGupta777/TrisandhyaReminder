@@ -156,6 +156,71 @@ self.addEventListener('message', (event) => {
   }
 });
 
+// Push notification event handler
+self.addEventListener('push', (event) => {
+  console.log('[SW] Push notification received');
+  
+  let notification = {
+    title: 'Trisandhya Sadhana',
+    body: 'You have a new notification',
+    icon: '/icon-192.png',
+    badge: '/badge-72.png',
+    tag: 'default',
+    data: {}
+  };
+
+  if (event.data) {
+    try {
+      const data = event.data.json();
+      notification = {
+        title: data.title || notification.title,
+        body: data.message || data.body || notification.body,
+        icon: data.icon || data.imageUrl || notification.icon,
+        badge: notification.badge,
+        tag: data.id || data.tag || notification.tag,
+        data: data,
+        requireInteraction: data.priority === 'high',
+        vibrate: data.priority === 'high' ? [200, 100, 200] : [100],
+      };
+    } catch (error) {
+      console.error('[SW] Error parsing push data:', error);
+    }
+  }
+
+  event.waitUntil(
+    self.registration.showNotification(notification.title, notification)
+  );
+});
+
+// Notification click event handler
+self.addEventListener('notificationclick', (event) => {
+  console.log('[SW] Notification clicked:', event.notification.tag);
+  event.notification.close();
+
+  const urlToOpen = event.notification.data?.targetUrl || '/';
+  
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      // Check if there's already a window open
+      for (const client of clientList) {
+        if (client.url === urlToOpen && 'focus' in client) {
+          return client.focus();
+        }
+      }
+      // If no window is open, open a new one
+      if (clients.openWindow) {
+        return clients.openWindow(urlToOpen);
+      }
+    })
+  );
+});
+
+// Notification close event handler
+self.addEventListener('notificationclose', (event) => {
+  console.log('[SW] Notification closed:', event.notification.tag);
+  // Could track notification dismissal here
+});
+
 // Background sync for offline audio queueing (if supported)
 if ('sync' in self.registration) {
   self.addEventListener('sync', (event) => {
@@ -169,4 +234,4 @@ if ('sync' in self.registration) {
   });
 }
 
-console.log('[SW] Service Worker loaded successfully');
+console.log('[SW] Service Worker loaded successfully with push notification support');
