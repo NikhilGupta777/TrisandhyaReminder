@@ -2,10 +2,22 @@ import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Book, Download, FileText, Loader2, BookOpen } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Book, Download, FileText, Loader2, BookOpen, X, Maximize2, Minimize2 } from "lucide-react";
 import type { MahapuranPdf } from "@shared/schema";
+import { useState } from "react";
+import PdfViewer from "@/components/PdfViewer";
 
 export default function MahapuranLibrary() {
+  const [selectedPdf, setSelectedPdf] = useState<MahapuranPdf | null>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  
   const { data: pdfs, isLoading } = useQuery<MahapuranPdf[]>({
     queryKey: ["/api/mahapuran-pdfs"],
   });
@@ -19,8 +31,8 @@ export default function MahapuranLibrary() {
     document.body.removeChild(link);
   };
 
-  const handleRead = (pdfUrl: string) => {
-    window.open(pdfUrl, '_blank');
+  const handleRead = (pdf: MahapuranPdf) => {
+    setSelectedPdf(pdf);
   };
 
   if (isLoading) {
@@ -110,7 +122,7 @@ export default function MahapuranLibrary() {
                   {pdf.pdfUrl && (
                     <>
                       <Button
-                        onClick={() => handleRead(pdf.pdfUrl!)}
+                        onClick={() => handleRead(pdf)}
                         className="w-full"
                         variant="default"
                         data-testid={`button-read-${pdf.id}`}
@@ -162,6 +174,76 @@ export default function MahapuranLibrary() {
           </li>
         </ul>
       </div>
+
+      <Dialog open={!!selectedPdf} onOpenChange={(open) => { if (!open) { setSelectedPdf(null); setIsFullscreen(false); } }}>
+        <DialogContent className={isFullscreen ? "max-w-full w-screen h-screen p-0 m-0" : "max-w-6xl w-[95vw] h-[90vh] p-0"} data-testid="dialog-pdf-viewer">
+          {selectedPdf && (
+            <div className="flex flex-col h-full">
+              <DialogHeader className="px-4 md:px-6 py-3 md:py-4 border-b flex-shrink-0">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <DialogTitle className="text-lg md:text-xl truncate">{selectedPdf.title}</DialogTitle>
+                    <DialogDescription className="flex items-center gap-2 mt-1 flex-wrap">
+                      <Badge variant="secondary" className="text-xs">{selectedPdf.languageName}</Badge>
+                      {selectedPdf.totalChapters && (
+                        <span className="text-xs text-muted-foreground">
+                          {selectedPdf.totalChapters} Chapters
+                        </span>
+                      )}
+                    </DialogDescription>
+                  </div>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsFullscreen(!isFullscreen)}
+                      data-testid="button-toggle-fullscreen"
+                      className="text-xs"
+                    >
+                      {isFullscreen ? (
+                        <>
+                          <Minimize2 className="h-3 w-3 md:h-4 md:w-4 md:mr-2" />
+                          <span className="hidden md:inline">Exit</span>
+                        </>
+                      ) : (
+                        <>
+                          <Maximize2 className="h-3 w-3 md:h-4 md:w-4 md:mr-2" />
+                          <span className="hidden md:inline">Fullscreen</span>
+                        </>
+                      )}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDownload(selectedPdf.pdfUrl!, selectedPdf.languageName)}
+                      data-testid="button-download-pdf-viewer"
+                      className="text-xs"
+                    >
+                      <Download className="h-3 w-3 md:h-4 md:w-4 md:mr-2" />
+                      <span className="hidden md:inline">Download</span>
+                    </Button>
+                  </div>
+                </div>
+              </DialogHeader>
+              
+              <div className="flex-1 overflow-hidden relative">
+                {selectedPdf.pdfUrl && (
+                  <PdfViewer
+                    url={selectedPdf.pdfUrl}
+                    title={`${selectedPdf.title} - ${selectedPdf.languageName}`}
+                  />
+                )}
+              </div>
+
+              {selectedPdf.description && !isFullscreen && (
+                <div className="px-4 md:px-6 py-2 md:py-3 border-t bg-muted/30 flex-shrink-0">
+                  <p className="text-xs md:text-sm text-muted-foreground line-clamp-2">{selectedPdf.description}</p>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

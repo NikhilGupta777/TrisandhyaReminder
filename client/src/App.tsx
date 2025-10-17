@@ -28,6 +28,10 @@ import MahapuranLibrary from "@/pages/MahapuranLibrary";
 import MahapuranSkandas from "@/pages/MahapuranSkandas";
 import MahapuranChapters from "@/pages/MahapuranChapters";
 import MahapuranChapterRead from "@/pages/MahapuranChapterRead";
+import Scriptures from "@/pages/Scriptures";
+import About from "@/pages/About";
+import Contact from "@/pages/Contact";
+import Legal from "@/pages/Legal";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
 import UserManagement from "@/pages/admin/UserManagement";
 import MediaManagement from "@/pages/admin/MediaManagement";
@@ -47,6 +51,8 @@ function AdminRouter() {
       <Route path="/admin/users" component={UserManagement} />
       <Route path="/admin/media" component={MediaManagement} />
       <Route path="/admin/media-categories" component={MediaCategoriesManagement} />
+      <Route path="/admin/scriptures/:titleId/skanda/:skandaId" component={MahapuranChapters} />
+      <Route path="/admin/scriptures/:titleId" component={MahapuranSkandas} />
       <Route path="/admin/scriptures" component={ScripturesManagement} />
       <Route path="/admin/sadhana-content" component={SadhanaContentManagement} />
       <Route path="/admin/alarm-sounds" component={AlarmSoundsManagement} />
@@ -68,9 +74,16 @@ function UserRouter() {
       <Route path="/mahapuran/:titleId" component={MahapuranSkandas} />
       <Route path="/mahapuran/:titleId/skanda/:skandaId" component={MahapuranChapters} />
       <Route path="/mahapuran/:titleId/skanda/:skandaId/chapter/:chapterId" component={MahapuranChapterRead} />
+      <Route path="/scriptures" component={Scriptures} />
+      <Route path="/scriptures/:titleId" component={MahapuranSkandas} />
+      <Route path="/scriptures/:titleId/skanda/:skandaId" component={MahapuranChapters} />
+      <Route path="/scriptures/:titleId/skanda/:skandaId/chapter/:chapterId" component={MahapuranChapterRead} />
       <Route path="/progress" component={ProgressConnected} />
       <Route path="/alarms" component={AlarmsConnected} />
       <Route path="/settings" component={SettingsConnected} />
+      <Route path="/about" component={About} />
+      <Route path="/contact" component={Contact} />
+      <Route path="/legal" component={Legal} />
       <Route component={NotFound} />
     </Switch>
   );

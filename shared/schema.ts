@@ -413,6 +413,31 @@ export const insertMahapuranPdfSchema = createInsertSchema(mahapuranPdfs).omit({
 export type InsertMahapuranPdf = z.infer<typeof insertMahapuranPdfSchema>;
 export type MahapuranPdf = typeof mahapuranPdfs.$inferSelect;
 
+// Trisandhya Path PDFs for different languages
+export const trisandhyaPdfs = pgTable("trisandhya_pdfs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  languageCode: varchar("language_code", { length: 10 }).notNull(), // 'en', 'hin', 'ori', etc.
+  languageName: varchar("language_name", { length: 100 }).notNull(), // 'English', 'Hindi', 'Odia'
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  pdfUrl: text("pdf_url"), // S3 URL for the PDF
+  pdfKey: varchar("pdf_key", { length: 500 }), // S3 key for deletion
+  fileSize: integer("file_size"), // in bytes
+  orderIndex: integer("order_index").default(0).notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertTrisandhyaPdfSchema = createInsertSchema(trisandhyaPdfs).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertTrisandhyaPdf = z.infer<typeof insertTrisandhyaPdfSchema>;
+export type TrisandhyaPdf = typeof trisandhyaPdfs.$inferSelect;
+
 // Notification sounds library
 export const notificationSounds = pgTable("notification_sounds", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),

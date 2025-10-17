@@ -6,11 +6,18 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { Bell, Check, CheckCheck, Loader2, BellRing } from "lucide-react";
+import { Bell, Check, CheckCheck, Loader2, BellRing, ExternalLink } from "lucide-react";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, format } from "date-fns";
 import { useNotifications, useNotificationSound } from "@/hooks/use-notifications";
 
 interface NotificationData {
@@ -36,6 +43,7 @@ interface NotificationBellProps {
 
 export function NotificationBell({ userId }: NotificationBellProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [selectedNotification, setSelectedNotification] = useState<NotificationData | null>(null);
   const { permission, requestPermission } = useNotifications(userId);
   const { playNotificationSound } = useNotificationSound();
 
@@ -72,6 +80,7 @@ export function NotificationBell({ userId }: NotificationBellProps) {
   const hasUnread = unread > 0;
 
   return (
+    <>
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
         <Button
@@ -103,7 +112,7 @@ export function NotificationBell({ userId }: NotificationBellProps) {
                 </p>
                 <Button
                   size="sm"
-                  variant="link"
+                  variant="ghost"
                   className="h-auto p-0 text-blue-600 dark:text-blue-400"
                   onClick={requestPermission}
                   data-testid="button-enable-notifications"
@@ -154,9 +163,7 @@ export function NotificationBell({ userId }: NotificationBellProps) {
                     if (!receipt.isRead) {
                       markAsReadMutation.mutate(notification.id);
                     }
-                    if (notification.targetUrl) {
-                      window.location.href = notification.targetUrl;
-                    }
+                    setSelectedNotification({ notification, receipt });
                   }}
                   data-testid={`notification-${notification.id}`}
                 >
@@ -206,5 +213,56 @@ export function NotificationBell({ userId }: NotificationBellProps) {
         </ScrollArea>
       </PopoverContent>
     </Popover>
+
+    <Dialog open={!!selectedNotification} onOpenChange={(open) => !open && setSelectedNotification(null)}>
+      <DialogContent className="max-w-2xl" data-testid="dialog-notification-preview">
+        {selectedNotification && (
+          <>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                {selectedNotification.notification.title}
+                {!selectedNotification.receipt.isRead && (
+                  <Badge variant="default" className="ml-auto">New</Badge>
+                )}
+              </DialogTitle>
+              <DialogDescription>
+                {format(new Date(selectedNotification.notification.createdAt), "PPpp")}
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="space-y-4">
+              <div className="prose prose-sm dark:prose-invert max-w-none">
+                <p className="text-foreground whitespace-pre-wrap">
+                  {selectedNotification.notification.message}
+                </p>
+              </div>
+
+              {selectedNotification.notification.targetUrl && (
+                <div className="pt-4 border-t">
+                  <Button
+                    onClick={() => {
+                      window.location.href = selectedNotification.notification.targetUrl!;
+                    }}
+                    className="w-full"
+                    data-testid="button-notification-link"
+                  >
+                    <ExternalLink className="h-4 w-4 mr-2" />
+                    Go to Related Page
+                  </Button>
+                </div>
+              )}
+
+              <div className="flex items-center justify-between pt-2 text-xs text-muted-foreground border-t">
+                <span>Type: {selectedNotification.notification.type}</span>
+                {selectedNotification.receipt.readAt && (
+                  <span>Read: {formatDistanceToNow(new Date(selectedNotification.receipt.readAt), { addSuffix: true })}</span>
+                )}
+              </div>
+            </div>
+          </>
+        )}
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }
