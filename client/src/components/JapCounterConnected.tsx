@@ -88,10 +88,6 @@ export function JapCounterConnected() {
     if (settings?.hapticEnabled && navigator.vibrate) {
       navigator.vibrate(50);
     }
-    if (settings?.soundEnabled && audioRef.current && !isPlaying) {
-      audioRef.current.currentTime = 0;
-      audioRef.current.play().catch(() => {});
-    }
   };
 
   const handleReset = () => {

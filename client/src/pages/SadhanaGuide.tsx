@@ -11,7 +11,7 @@ export default function SadhanaGuide() {
   return (
     <div className="space-y-4 sm:space-y-6 pb-8">
       <div className="space-y-2">
-        <h1 className="text-2xl sm:text-3xl font-bold font-serif">Sadhana Guide</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold font-serif">Daily Sadhna</h1>
         <p className="text-sm sm:text-base text-muted-foreground">Complete Trisandhya Path from Bhavishya Malika</p>
       </div>
 

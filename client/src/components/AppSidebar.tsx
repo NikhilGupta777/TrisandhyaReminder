@@ -13,7 +13,7 @@ import { Link, useLocation } from "wouter";
 
 const menuItems = [
   { title: "Dashboard", url: "/", icon: Home },
-  { title: "Sadhana Guide", url: "/guide", icon: BookOpen },
+  { title: "Daily Sadhna", url: "/guide", icon: BookOpen },
   { title: "Mahapuran", url: "/mahapuran", icon: Book },
   { title: "Media Library", url: "/media", icon: Music },
   { title: "Progress", url: "/progress", icon: BarChart3 },

@@ -14,6 +14,12 @@ import {
   mahapuranSkandas,
   mahapuranChapters,
   userMediaFavorites,
+  mahapuranPdfs,
+  notificationSounds,
+  notifications,
+  notificationReceipts,
+  notificationPreferences,
+  pushSubscriptions,
   type User,
   type UpsertUser,
   type AlarmSettings,
@@ -43,9 +49,21 @@ import {
   type InsertMahapuranChapter,
   type UserMediaFavorite,
   type InsertUserMediaFavorite,
+  type MahapuranPdf,
+  type InsertMahapuranPdf,
+  type NotificationSound,
+  type InsertNotificationSound,
+  type Notification,
+  type InsertNotification,
+  type NotificationReceipt,
+  type InsertNotificationReceipt,
+  type NotificationPreferences,
+  type InsertNotificationPreferences,
+  type PushSubscription,
+  type InsertPushSubscription,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, desc, gte, lte } from "drizzle-orm";
+import { eq, and, desc, gte, lte, or, isNull, sql } from "drizzle-orm";
 
 export interface IStorage {
   // User operations (required for Replit Auth)
@@ -847,6 +865,225 @@ export class DatabaseStorage implements IStorage {
         )
       );
     return !!favorite;
+  }
+
+  // Mahapuran PDFs operations
+  async getAllMahapuranPdfs(): Promise<MahapuranPdf[]> {
+    return await db.select().from(mahapuranPdfs).where(eq(mahapuranPdfs.isActive, true)).orderBy(mahapuranPdfs.orderIndex, mahapuranPdfs.languageName);
+  }
+
+  async getMahapuranPdfById(id: string): Promise<MahapuranPdf | undefined> {
+    const [pdf] = await db.select().from(mahapuranPdfs).where(eq(mahapuranPdfs.id, id));
+    return pdf;
+  }
+
+  async getMahapuranPdfByLanguage(languageCode: string): Promise<MahapuranPdf | undefined> {
+    const [pdf] = await db.select().from(mahapuranPdfs).where(eq(mahapuranPdfs.languageCode, languageCode));
+    return pdf;
+  }
+
+  async createMahapuranPdf(pdfData: InsertMahapuranPdf): Promise<MahapuranPdf> {
+    const [pdf] = await db.insert(mahapuranPdfs).values(pdfData).returning();
+    return pdf;
+  }
+
+  async updateMahapuranPdf(id: string, pdfData: Partial<InsertMahapuranPdf>): Promise<MahapuranPdf> {
+    const [updated] = await db
+      .update(mahapuranPdfs)
+      .set({ ...pdfData, updatedAt: new Date() })
+      .where(eq(mahapuranPdfs.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteMahapuranPdf(id: string): Promise<void> {
+    await db.delete(mahapuranPdfs).where(eq(mahapuranPdfs.id, id));
+  }
+
+  // Notification sounds operations
+  async getAllNotificationSounds(): Promise<NotificationSound[]> {
+    return await db.select().from(notificationSounds).orderBy(notificationSounds.name);
+  }
+
+  async getNotificationSoundById(id: string): Promise<NotificationSound | undefined> {
+    const [sound] = await db.select().from(notificationSounds).where(eq(notificationSounds.id, id));
+    return sound;
+  }
+
+  async createNotificationSound(soundData: InsertNotificationSound): Promise<NotificationSound> {
+    const [sound] = await db.insert(notificationSounds).values(soundData).returning();
+    return sound;
+  }
+
+  async updateNotificationSound(id: string, soundData: Partial<InsertNotificationSound>): Promise<NotificationSound> {
+    const [updated] = await db
+      .update(notificationSounds)
+      .set({ ...soundData, updatedAt: new Date() })
+      .where(eq(notificationSounds.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteNotificationSound(id: string): Promise<void> {
+    await db.delete(notificationSounds).where(eq(notificationSounds.id, id));
+  }
+
+  // Notifications operations
+  async getAllNotifications(limit?: number): Promise<Notification[]> {
+    const query = db.select().from(notifications).orderBy(desc(notifications.createdAt));
+    if (limit) {
+      return await query.limit(limit);
+    }
+    return await query;
+  }
+
+  async getNotificationById(id: string): Promise<Notification | undefined> {
+    const [notification] = await db.select().from(notifications).where(eq(notifications.id, id));
+    return notification;
+  }
+
+  async getActiveNotifications(): Promise<Notification[]> {
+    const now = new Date();
+    return await db
+      .select()
+      .from(notifications)
+      .where(
+        and(
+          eq(notifications.sendToAll, true),
+          or(
+            isNull(notifications.expiresAt),
+            sql`${notifications.expiresAt} > ${now}`
+          )
+        )
+      )
+      .orderBy(desc(notifications.createdAt));
+  }
+
+  async createNotification(notificationData: InsertNotification): Promise<Notification> {
+    const [notification] = await db.insert(notifications).values(notificationData).returning();
+    return notification;
+  }
+
+  async updateNotification(id: string, notificationData: Partial<InsertNotification>): Promise<Notification> {
+    const [updated] = await db
+      .update(notifications)
+      .set(notificationData)
+      .where(eq(notifications.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteNotification(id: string): Promise<void> {
+    await db.delete(notifications).where(eq(notifications.id, id));
+  }
+
+  // Notification receipts operations
+  async getUserNotifications(userId: string, limit?: number): Promise<any[]> {
+    const query = db
+      .select({
+        notification: notifications,
+        receipt: notificationReceipts,
+      })
+      .from(notificationReceipts)
+      .innerJoin(notifications, eq(notificationReceipts.notificationId, notifications.id))
+      .where(eq(notificationReceipts.userId, userId))
+      .orderBy(desc(notificationReceipts.deliveredAt));
+    
+    if (limit) {
+      return await query.limit(limit);
+    }
+    return await query;
+  }
+
+  async getUnreadNotificationCount(userId: string): Promise<number> {
+    const result = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(notificationReceipts)
+      .where(
+        and(
+          eq(notificationReceipts.userId, userId),
+          eq(notificationReceipts.isRead, false)
+        )
+      );
+    return Number(result[0]?.count || 0);
+  }
+
+  async createNotificationReceipt(receiptData: InsertNotificationReceipt): Promise<NotificationReceipt> {
+    const [receipt] = await db.insert(notificationReceipts).values(receiptData).returning();
+    return receipt;
+  }
+
+  async markNotificationAsRead(userId: string, notificationId: string): Promise<void> {
+    await db
+      .update(notificationReceipts)
+      .set({ isRead: true, readAt: new Date() })
+      .where(
+        and(
+          eq(notificationReceipts.userId, userId),
+          eq(notificationReceipts.notificationId, notificationId)
+        )
+      );
+  }
+
+  async markAllNotificationsAsRead(userId: string): Promise<void> {
+    await db
+      .update(notificationReceipts)
+      .set({ isRead: true, readAt: new Date() })
+      .where(eq(notificationReceipts.userId, userId));
+  }
+
+  // Notification preferences operations
+  async getNotificationPreferences(userId: string): Promise<NotificationPreferences | undefined> {
+    const [prefs] = await db.select().from(notificationPreferences).where(eq(notificationPreferences.userId, userId));
+    return prefs;
+  }
+
+  async createNotificationPreferences(prefsData: InsertNotificationPreferences): Promise<NotificationPreferences> {
+    const [prefs] = await db.insert(notificationPreferences).values(prefsData).returning();
+    return prefs;
+  }
+
+  async updateNotificationPreferences(userId: string, prefsData: Partial<InsertNotificationPreferences>): Promise<NotificationPreferences> {
+    const [updated] = await db
+      .update(notificationPreferences)
+      .set({ ...prefsData, updatedAt: new Date() })
+      .where(eq(notificationPreferences.userId, userId))
+      .returning();
+    return updated;
+  }
+
+  // Push subscriptions operations
+  async getPushSubscription(userId: string, endpoint: string): Promise<PushSubscription | undefined> {
+    const [sub] = await db
+      .select()
+      .from(pushSubscriptions)
+      .where(
+        and(
+          eq(pushSubscriptions.userId, userId),
+          eq(pushSubscriptions.endpoint, endpoint)
+        )
+      );
+    return sub;
+  }
+
+  async getAllPushSubscriptions(userId: string): Promise<PushSubscription[]> {
+    return await db.select().from(pushSubscriptions).where(eq(pushSubscriptions.userId, userId));
+  }
+
+  async createPushSubscription(subData: InsertPushSubscription): Promise<PushSubscription> {
+    const [sub] = await db.insert(pushSubscriptions).values(subData).returning();
+    return sub;
+  }
+
+  async deletePushSubscription(endpoint: string): Promise<void> {
+    await db.delete(pushSubscriptions).where(eq(pushSubscriptions.endpoint, endpoint));
+  }
+
+  async updatePushSubscriptionLastUsed(endpoint: string): Promise<void> {
+    await db
+      .update(pushSubscriptions)
+      .set({ lastUsedAt: new Date() })
+      .where(eq(pushSubscriptions.endpoint, endpoint));
   }
 }
 

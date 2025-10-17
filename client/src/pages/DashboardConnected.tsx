@@ -102,7 +102,7 @@ export default function DashboardConnected() {
         <Link href="/guide">
           <Card className="p-6 text-center space-y-3 cursor-pointer hover-elevate active-elevate-2" data-testid="card-guide">
             <BookOpen className="h-12 w-12 mx-auto text-primary" />
-            <h3 className="font-semibold">Sadhana Guide</h3>
+            <h3 className="font-semibold">Daily Sadhna</h3>
             <p className="text-sm text-muted-foreground">Learn about Trisandhya practices</p>
           </Card>
         </Link>

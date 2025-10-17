@@ -384,3 +384,147 @@ export const registrationAttempts = pgTable("registration_attempts", {
 });
 
 export type RegistrationAttempt = typeof registrationAttempts.$inferSelect;
+
+// Mahapuran PDFs for downloading full Mahapuran by language
+export const mahapuranPdfs = pgTable("mahapuran_pdfs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  languageCode: varchar("language_code", { length: 10 }).notNull(), // 'en', 'hin', 'ben', etc.
+  languageName: varchar("language_name", { length: 100 }).notNull(), // 'English', 'Hindi', 'Bengali'
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  heroImageUrl: text("hero_image_url"),
+  pdfUrl: text("pdf_url"), // S3 URL for the PDF
+  pdfKey: varchar("pdf_key", { length: 500 }), // S3 key for deletion
+  fileSize: integer("file_size"), // in bytes
+  totalSkandas: integer("total_skandas").default(12).notNull(),
+  totalChapters: integer("total_chapters"),
+  orderIndex: integer("order_index").default(0).notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertMahapuranPdfSchema = createInsertSchema(mahapuranPdfs).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertMahapuranPdf = z.infer<typeof insertMahapuranPdfSchema>;
+export type MahapuranPdf = typeof mahapuranPdfs.$inferSelect;
+
+// Notification sounds library
+export const notificationSounds = pgTable("notification_sounds", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: varchar("name", { length: 255 }).notNull(),
+  url: text("url").notNull(),
+  duration: integer("duration"),
+  description: text("description"),
+  isDefault: boolean("is_default").default(false).notNull(),
+  fileSize: integer("file_size"),
+  mimeType: varchar("mime_type", { length: 100 }),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertNotificationSoundSchema = createInsertSchema(notificationSounds).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertNotificationSound = z.infer<typeof insertNotificationSoundSchema>;
+export type NotificationSound = typeof notificationSounds.$inferSelect;
+
+// Notifications table for in-app and push notifications
+export const notifications = pgTable("notifications", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  title: varchar("title", { length: 255 }).notNull(),
+  message: text("message").notNull(),
+  type: varchar("type", { length: 50 }).notNull(), // 'content_update', 'announcement', 'feature', 'media_added', etc.
+  category: varchar("category", { length: 100 }), // 'media', 'scripture', 'sadhana', 'general'
+  targetUrl: varchar("target_url", { length: 500 }), // URL to navigate when notification is clicked
+  imageUrl: text("image_url"), // Optional image for rich notifications
+  soundId: varchar("sound_id").references(() => notificationSounds.id),
+  priority: varchar("priority", { length: 20 }).default("normal").notNull(), // 'low', 'normal', 'high'
+  sendToAll: boolean("send_to_all").default(false).notNull(), // If true, send to all users
+  scheduledFor: timestamp("scheduled_for"), // For scheduled notifications
+  sentAt: timestamp("sent_at"),
+  createdBy: varchar("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  expiresAt: timestamp("expires_at"), // When notification should no longer be shown
+});
+
+export const insertNotificationSchema = createInsertSchema(notifications).omit({
+  id: true,
+  createdAt: true,
+  sentAt: true,
+});
+
+export type InsertNotification = z.infer<typeof insertNotificationSchema>;
+export type Notification = typeof notifications.$inferSelect;
+
+// Notification receipts - tracks which users have seen which notifications
+export const notificationReceipts = pgTable("notification_receipts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  notificationId: varchar("notification_id").references(() => notifications.id, { onDelete: "cascade" }).notNull(),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  isRead: boolean("is_read").default(false).notNull(),
+  readAt: timestamp("read_at"),
+  deliveredAt: timestamp("delivered_at").defaultNow(),
+  clicked: boolean("clicked").default(false).notNull(),
+  clickedAt: timestamp("clicked_at"),
+});
+
+export const insertNotificationReceiptSchema = createInsertSchema(notificationReceipts).omit({
+  id: true,
+  deliveredAt: true,
+});
+
+export type InsertNotificationReceipt = z.infer<typeof insertNotificationReceiptSchema>;
+export type NotificationReceipt = typeof notificationReceipts.$inferSelect;
+
+// User notification preferences
+export const notificationPreferences = pgTable("notification_preferences", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }).notNull().unique(),
+  inAppEnabled: boolean("in_app_enabled").default(true).notNull(),
+  pushEnabled: boolean("push_enabled").default(true).notNull(),
+  emailEnabled: boolean("email_enabled").default(false).notNull(),
+  contentUpdates: boolean("content_updates").default(true).notNull(),
+  announcements: boolean("announcements").default(true).notNull(),
+  mediaAdditions: boolean("media_additions").default(true).notNull(),
+  scriptureUpdates: boolean("scripture_updates").default(true).notNull(),
+  soundEnabled: boolean("sound_enabled").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertNotificationPreferencesSchema = createInsertSchema(notificationPreferences).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertNotificationPreferences = z.infer<typeof insertNotificationPreferencesSchema>;
+export type NotificationPreferences = typeof notificationPreferences.$inferSelect;
+
+// Push notification subscriptions for web push
+export const pushSubscriptions = pgTable("push_subscriptions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  endpoint: text("endpoint").notNull().unique(),
+  keys: jsonb("keys").notNull(), // Contains p256dh and auth keys
+  userAgent: varchar("user_agent", { length: 500 }),
+  createdAt: timestamp("created_at").defaultNow(),
+  lastUsedAt: timestamp("last_used_at").defaultNow(),
+});
+
+export const insertPushSubscriptionSchema = createInsertSchema(pushSubscriptions).omit({
+  id: true,
+  createdAt: true,
+  lastUsedAt: true,
+});
+
+export type InsertPushSubscription = z.infer<typeof insertPushSubscriptionSchema>;
+export type PushSubscription = typeof pushSubscriptions.$inferSelect;
