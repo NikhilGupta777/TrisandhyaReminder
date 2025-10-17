@@ -41,6 +41,7 @@ import SadhanaContentManagement from "@/pages/admin/SadhanaContentManagement";
 import AlarmSoundsManagement from "@/pages/admin/AlarmSoundsManagement";
 import JapaAudiosManagement from "@/pages/admin/JapaAudiosManagement";
 import MahapuranPdfsManagement from "@/pages/admin/MahapuranPdfsManagement";
+import TrisandhyaPdfsManagement from "@/pages/admin/TrisandhyaPdfsManagement";
 import NotificationsManagement from "@/pages/admin/NotificationsManagement";
 import NotFound from "@/pages/not-found";
 
@@ -58,6 +59,7 @@ function AdminRouter() {
       <Route path="/admin/alarm-sounds" component={AlarmSoundsManagement} />
       <Route path="/admin/japa-audios" component={JapaAudiosManagement} />
       <Route path="/admin/mahapuran-pdfs" component={MahapuranPdfsManagement} />
+      <Route path="/admin/trisandhya-pdfs" component={TrisandhyaPdfsManagement} />
       <Route path="/admin/notifications" component={NotificationsManagement} />
       <Route component={NotFound} />
     </Switch>

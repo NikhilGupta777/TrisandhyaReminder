@@ -208,8 +208,11 @@ export const mahapuranTitles = pgTable("mahapuran_titles", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   title: varchar("title", { length: 255 }).notNull(),
   language: varchar("language", { length: 10 }).notNull(), // 'en', 'hin', etc.
+  languageName: varchar("language_name", { length: 100 }), // 'English', 'Hindi', etc.
   description: text("description"),
+  collectionType: varchar("collection_type", { length: 20 }).default("mahapuran").notNull(), // 'mahapuran' | 'other'
   totalSkandas: integer("total_skandas").default(12).notNull(),
+  totalChapters: integer("total_chapters"),
   orderIndex: integer("order_index").default(0).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),

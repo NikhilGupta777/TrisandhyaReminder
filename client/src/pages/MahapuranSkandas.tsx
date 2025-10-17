@@ -7,7 +7,9 @@ import type { MahapuranTitle, MahapuranSkanda } from "@shared/schema";
 
 export default function MahapuranSkandas() {
   const params = useParams() as { titleId: string };
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
+  
+  const isScripturePath = location.startsWith('/scriptures');
 
   const { data: title } = useQuery<MahapuranTitle>({
     queryKey: ["/api/mahapuran-titles", params.titleId],
@@ -31,12 +33,12 @@ export default function MahapuranSkandas() {
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => setLocation("/mahapuran")}
+          onClick={() => setLocation(isScripturePath ? "/scriptures" : "/mahapuran")}
           className="mb-4"
           data-testid="button-back-to-titles"
         >
           <ChevronLeft className="h-4 w-4 mr-1" />
-          Back to Mahapurans
+          {isScripturePath ? "Back to Scriptures" : "Back to Mahapurans"}
         </Button>
         
         <h1 className="text-3xl font-bold font-serif">{title?.title}</h1>

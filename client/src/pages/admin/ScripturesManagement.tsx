@@ -198,9 +198,9 @@ export default function ScripturesManagementSimple() {
     }
 
     if (editingTitle) {
-      updateMutation.mutate({ id: editingTitle.id, data: formData });
+      updateMutation.mutate({ id: editingTitle.id, data: { ...formData, collectionType: 'other' } });
     } else {
-      createMutation.mutate(formData);
+      createMutation.mutate({ ...formData, collectionType: 'other' });
     }
   };
 

@@ -8,7 +8,7 @@ import type { MahapuranTitle } from "@shared/schema";
 
 export default function Scriptures() {
   const { data: scriptures, isLoading } = useQuery<MahapuranTitle[]>({
-    queryKey: ["/api/mahapuran-titles"],
+    queryKey: ["/api/scripture-titles"],
   });
 
   if (isLoading) {
@@ -65,8 +65,8 @@ export default function Scriptures() {
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
-                      <Book className="h-5 w-5 text-primary" />
-                      <h3 className="text-xl font-semibold text-foreground dark:text-foreground line-clamp-2">
+                      <Book className="h-5 w-5 text-primary flex-shrink-0" />
+                      <h3 className="text-xl font-semibold text-foreground dark:text-foreground break-words">
                         {scripture.title}
                       </h3>
                     </div>

@@ -15,6 +15,7 @@ import {
   mahapuranChapters,
   userMediaFavorites,
   mahapuranPdfs,
+  trisandhyaPdfs,
   notificationSounds,
   notifications,
   notificationReceipts,
@@ -51,6 +52,8 @@ import {
   type InsertUserMediaFavorite,
   type MahapuranPdf,
   type InsertMahapuranPdf,
+  type TrisandhyaPdf,
+  type InsertTrisandhyaPdf,
   type NotificationSound,
   type InsertNotificationSound,
   type Notification,
@@ -150,7 +153,7 @@ export interface IStorage {
   cleanupOldAttempts(before: Date): Promise<void>;
   
   // Mahapuran titles
-  getAllMahapuranTitles(): Promise<MahapuranTitle[]>;
+  getAllMahapuranTitles(collectionType?: string): Promise<MahapuranTitle[]>;
   getMahapuranTitleById(id: string): Promise<MahapuranTitle | undefined>;
   createMahapuranTitle(title: InsertMahapuranTitle): Promise<MahapuranTitle>;
   updateMahapuranTitle(id: string, title: Partial<InsertMahapuranTitle>): Promise<MahapuranTitle>;
@@ -169,6 +172,13 @@ export interface IStorage {
   createMahapuranChapter(chapter: InsertMahapuranChapter): Promise<MahapuranChapter>;
   updateMahapuranChapter(id: string, chapter: Partial<InsertMahapuranChapter>): Promise<MahapuranChapter>;
   deleteMahapuranChapter(id: string): Promise<void>;
+  
+  // Trisandhya PDFs
+  getAllTrisandhyaPdfs(): Promise<TrisandhyaPdf[]>;
+  getTrisandhyaPdfById(id: string): Promise<TrisandhyaPdf | undefined>;
+  createTrisandhyaPdf(pdf: InsertTrisandhyaPdf): Promise<TrisandhyaPdf>;
+  updateTrisandhyaPdf(id: string, pdf: Partial<InsertTrisandhyaPdf>): Promise<TrisandhyaPdf>;
+  deleteTrisandhyaPdf(id: string): Promise<void>;
   
   // User media favorites
   getUserMediaFavorites(userId: string): Promise<MediaContent[]>;
@@ -737,7 +747,12 @@ export class DatabaseStorage implements IStorage {
   }
   
   // Mahapuran titles operations
-  async getAllMahapuranTitles(): Promise<MahapuranTitle[]> {
+  async getAllMahapuranTitles(collectionType?: string): Promise<MahapuranTitle[]> {
+    if (collectionType) {
+      return await db.select().from(mahapuranTitles)
+        .where(eq(mahapuranTitles.collectionType, collectionType))
+        .orderBy(mahapuranTitles.orderIndex, mahapuranTitles.title);
+    }
     return await db.select().from(mahapuranTitles).orderBy(mahapuranTitles.orderIndex, mahapuranTitles.title);
   }
 
@@ -898,6 +913,34 @@ export class DatabaseStorage implements IStorage {
 
   async deleteMahapuranPdf(id: string): Promise<void> {
     await db.delete(mahapuranPdfs).where(eq(mahapuranPdfs.id, id));
+  }
+
+  // Trisandhya PDFs operations
+  async getAllTrisandhyaPdfs(): Promise<TrisandhyaPdf[]> {
+    return await db.select().from(trisandhyaPdfs).where(eq(trisandhyaPdfs.isActive, true)).orderBy(trisandhyaPdfs.orderIndex, trisandhyaPdfs.languageName);
+  }
+
+  async getTrisandhyaPdfById(id: string): Promise<TrisandhyaPdf | undefined> {
+    const [pdf] = await db.select().from(trisandhyaPdfs).where(eq(trisandhyaPdfs.id, id));
+    return pdf;
+  }
+
+  async createTrisandhyaPdf(pdfData: InsertTrisandhyaPdf): Promise<TrisandhyaPdf> {
+    const [pdf] = await db.insert(trisandhyaPdfs).values(pdfData).returning();
+    return pdf;
+  }
+
+  async updateTrisandhyaPdf(id: string, pdfData: Partial<InsertTrisandhyaPdf>): Promise<TrisandhyaPdf> {
+    const [updated] = await db
+      .update(trisandhyaPdfs)
+      .set({ ...pdfData, updatedAt: new Date() })
+      .where(eq(trisandhyaPdfs.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteTrisandhyaPdf(id: string): Promise<void> {
+    await db.delete(trisandhyaPdfs).where(eq(trisandhyaPdfs.id, id));
   }
 
   // Notification sounds operations

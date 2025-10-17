@@ -24,28 +24,24 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Edit, Trash2, Upload, Loader2, BookOpen, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import type { MahapuranPdf } from "@shared/schema";
+import type { TrisandhyaPdf } from "@shared/schema";
 
-export default function MahapuranPdfsManagement() {
+export default function TrisandhyaPdfsManagement() {
   const { toast } = useToast();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [editingPdf, setEditingPdf] = useState<MahapuranPdf | null>(null);
+  const [editingPdf, setEditingPdf] = useState<TrisandhyaPdf | null>(null);
   const [uploadingFile, setUploadingFile] = useState<File | null>(null);
   const [formData, setFormData] = useState({
-    languageCode: "",
     languageName: "",
-    title: "Shreemad Bhagwat Mahapuran",
     description: "",
     pdfUrl: "",
     pdfKey: "",
     fileSize: null as number | null,
-    totalSkandas: 12,
-    totalChapters: null as number | null,
     orderIndex: 0,
   });
 
-  const { data: pdfs, isLoading } = useQuery<MahapuranPdf[]>({
-    queryKey: ["/api/mahapuran-pdfs"],
+  const { data: pdfs, isLoading } = useQuery<TrisandhyaPdf[]>({
+    queryKey: ["/api/trisandhya-pdfs"],
   });
 
   const uploadMutation = useMutation({
@@ -53,7 +49,7 @@ export default function MahapuranPdfsManagement() {
       const formData = new FormData();
       formData.append("pdf", file);
       
-      const response = await fetch("/api/mahapuran-pdfs/upload", {
+      const response = await fetch("/api/trisandhya-pdfs/upload", {
         method: "POST",
         credentials: "include",
         body: formData,
@@ -102,15 +98,15 @@ export default function MahapuranPdfsManagement() {
 
   const createMutation = useMutation({
     mutationFn: async (data: any) => {
-      return apiRequest("POST", "/api/mahapuran-pdfs", data);
+      return apiRequest("POST", "/api/trisandhya-pdfs", data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/mahapuran-pdfs"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/trisandhya-pdfs"] });
       setIsAddDialogOpen(false);
       resetForm();
       toast({
         title: "Success",
-        description: "Mahapuran PDF created successfully",
+        description: "Trisandhya PDF created successfully",
       });
     },
     onError: (error: Error) => {
@@ -124,15 +120,15 @@ export default function MahapuranPdfsManagement() {
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: any }) => {
-      return apiRequest("PATCH", `/api/mahapuran-pdfs/${id}`, data);
+      return apiRequest("PATCH", `/api/trisandhya-pdfs/${id}`, data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/mahapuran-pdfs"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/trisandhya-pdfs"] });
       setEditingPdf(null);
       resetForm();
       toast({
         title: "Success",
-        description: "Mahapuran PDF updated successfully",
+        description: "Trisandhya PDF updated successfully",
       });
     },
     onError: (error: Error) => {
@@ -146,13 +142,13 @@ export default function MahapuranPdfsManagement() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      return apiRequest("DELETE", `/api/mahapuran-pdfs/${id}`);
+      return apiRequest("DELETE", `/api/trisandhya-pdfs/${id}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/mahapuran-pdfs"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/trisandhya-pdfs"] });
       toast({
         title: "Success",
-        description: "Mahapuran PDF deleted successfully",
+        description: "Trisandhya PDF deleted successfully",
       });
     },
     onError: (error: Error) => {
@@ -166,15 +162,11 @@ export default function MahapuranPdfsManagement() {
 
   const resetForm = () => {
     setFormData({
-      languageCode: "",
       languageName: "",
-      title: "Shreemad Bhagwat Mahapuran",
       description: "",
       pdfUrl: "",
       pdfKey: "",
       fileSize: null,
-      totalSkandas: 12,
-      totalChapters: null,
       orderIndex: 0,
     });
     setUploadingFile(null);
@@ -207,18 +199,14 @@ export default function MahapuranPdfsManagement() {
     }
   };
 
-  const handleEdit = (pdf: MahapuranPdf) => {
+  const handleEdit = (pdf: TrisandhyaPdf) => {
     setEditingPdf(pdf);
     setFormData({
-      languageCode: pdf.languageCode,
       languageName: pdf.languageName,
-      title: pdf.title,
       description: pdf.description || "",
       pdfUrl: pdf.pdfUrl || "",
       pdfKey: pdf.pdfKey || "",
       fileSize: pdf.fileSize,
-      totalSkandas: pdf.totalSkandas,
-      totalChapters: pdf.totalChapters,
       orderIndex: pdf.orderIndex,
     });
   };
@@ -241,12 +229,12 @@ export default function MahapuranPdfsManagement() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">Mahapuran PDFs Management</h1>
+          <h1 className="text-3xl font-bold">Trisandhya Path PDFs Management</h1>
           <p className="text-muted-foreground mt-1">
-            Manage Shreemad Bhagwat Mahapuran PDFs in different languages
+            Manage Trisandhya Path PDFs in different languages
           </p>
         </div>
-        <Button onClick={() => setIsAddDialogOpen(true)} data-testid="button-add-pdf">
+        <Button onClick={() => setIsAddDialogOpen(true)} data-testid="button-add-trisandhya-pdf">
           <Plus className="h-4 w-4 mr-2" />
           Add PDF
         </Button>
@@ -257,34 +245,22 @@ export default function MahapuranPdfsManagement() {
           <TableHeader>
             <TableRow>
               <TableHead>Language</TableHead>
-              <TableHead>Code</TableHead>
-              <TableHead>Title</TableHead>
+              <TableHead>Description</TableHead>
               <TableHead>File Size</TableHead>
-              <TableHead>Chapters</TableHead>
-              <TableHead>Status</TableHead>
+              <TableHead>Order</TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {pdfs && pdfs.length > 0 ? (
               pdfs.map((pdf) => (
-                <TableRow key={pdf.id} data-testid={`row-pdf-${pdf.id}`}>
+                <TableRow key={pdf.id} data-testid={`row-trisandhya-pdf-${pdf.id}`}>
                   <TableCell className="font-medium">{pdf.languageName}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline">{pdf.languageCode.toUpperCase()}</Badge>
-                  </TableCell>
-                  <TableCell>{pdf.title}</TableCell>
+                  <TableCell className="max-w-xs truncate">{pdf.description || "—"}</TableCell>
                   <TableCell>
                     {pdf.fileSize ? `${(pdf.fileSize / (1024 * 1024)).toFixed(2)} MB` : "N/A"}
                   </TableCell>
-                  <TableCell>{pdf.totalChapters || "N/A"}</TableCell>
-                  <TableCell>
-                    {pdf.isActive ? (
-                      <Badge variant="default">Active</Badge>
-                    ) : (
-                      <Badge variant="secondary">Inactive</Badge>
-                    )}
-                  </TableCell>
+                  <TableCell>{pdf.orderIndex}</TableCell>
                   <TableCell>
                     <div className="flex gap-2">
                       {pdf.pdfUrl && (
@@ -292,7 +268,7 @@ export default function MahapuranPdfsManagement() {
                           variant="ghost"
                           size="sm"
                           onClick={() => window.open(pdf.pdfUrl!, "_blank")}
-                          data-testid={`button-view-${pdf.id}`}
+                          data-testid={`button-view-trisandhya-${pdf.id}`}
                         >
                           <BookOpen className="h-4 w-4" />
                         </Button>
@@ -301,7 +277,7 @@ export default function MahapuranPdfsManagement() {
                         variant="ghost"
                         size="sm"
                         onClick={() => handleEdit(pdf)}
-                        data-testid={`button-edit-${pdf.id}`}
+                        data-testid={`button-edit-trisandhya-${pdf.id}`}
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
@@ -309,7 +285,7 @@ export default function MahapuranPdfsManagement() {
                         variant="ghost"
                         size="sm"
                         onClick={() => handleDelete(pdf.id)}
-                        data-testid={`button-delete-${pdf.id}`}
+                        data-testid={`button-delete-trisandhya-${pdf.id}`}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -319,7 +295,7 @@ export default function MahapuranPdfsManagement() {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
                   No PDFs found. Add your first PDF to get started.
                 </TableCell>
               </TableRow>
@@ -335,7 +311,7 @@ export default function MahapuranPdfsManagement() {
             <div>
               <h2 className="text-2xl font-bold">Frontend Preview</h2>
               <p className="text-sm text-muted-foreground mt-1">
-                This is how the PDFs will appear to users on the Mahapuran Library page
+                This is how the PDFs will appear to users on the Daily Sadhna page
               </p>
             </div>
             
@@ -366,12 +342,6 @@ export default function MahapuranPdfsManagement() {
                             File size: {(pdf.fileSize / (1024 * 1024)).toFixed(2)} MB
                           </p>
                         )}
-                        
-                        {pdf.totalChapters && (
-                          <p className="text-xs text-muted-foreground">
-                            Chapters: {pdf.totalChapters}
-                          </p>
-                        )}
                       </div>
                     </div>
 
@@ -391,7 +361,7 @@ export default function MahapuranPdfsManagement() {
                             onClick={() => {
                               const link = document.createElement('a');
                               link.href = pdf.pdfUrl!;
-                              link.download = `${pdf.title}_${pdf.languageName}.pdf`;
+                              link.download = `Trisandhya_Path_${pdf.languageName}.pdf`;
                               document.body.appendChild(link);
                               link.click();
                               document.body.removeChild(link);
@@ -427,7 +397,7 @@ export default function MahapuranPdfsManagement() {
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>
-              {editingPdf ? "Edit Mahapuran PDF" : "Add New Mahapuran PDF"}
+              {editingPdf ? "Edit Trisandhya PDF" : "Add New Trisandhya PDF"}
             </DialogTitle>
           </DialogHeader>
 
@@ -442,7 +412,7 @@ export default function MahapuranPdfsManagement() {
                     accept=".pdf"
                     onChange={handleFileChange}
                     disabled={uploadMutation.isPending}
-                    data-testid="input-pdf-file"
+                    data-testid="input-trisandhya-pdf-file"
                   />
                   {uploadMutation.isPending && (
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -454,40 +424,15 @@ export default function MahapuranPdfsManagement() {
               </div>
             )}
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="language-code">Language Code *</Label>
-                <Input
-                  id="language-code"
-                  value={formData.languageCode}
-                  onChange={(e) => setFormData({ ...formData, languageCode: e.target.value })}
-                  placeholder="e.g., en, hin, guj"
-                  required
-                  data-testid="input-language-code"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="language-name">Language Name *</Label>
-                <Input
-                  id="language-name"
-                  value={formData.languageName}
-                  onChange={(e) => setFormData({ ...formData, languageName: e.target.value })}
-                  placeholder="e.g., English, Hindi, Gujarati"
-                  required
-                  data-testid="input-language-name"
-                />
-              </div>
-            </div>
-
             <div className="space-y-2">
-              <Label htmlFor="title">Title</Label>
+              <Label htmlFor="language-name">Language Name *</Label>
               <Input
-                id="title"
-                value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                placeholder="Shreemad Bhagwat Mahapuran"
-                data-testid="input-title"
+                id="language-name"
+                value={formData.languageName}
+                onChange={(e) => setFormData({ ...formData, languageName: e.target.value })}
+                placeholder="e.g., English, Hindi, Odia, Sanskrit"
+                required
+                data-testid="input-trisandhya-language-name"
               />
             </div>
 
@@ -497,46 +442,21 @@ export default function MahapuranPdfsManagement() {
                 id="description"
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                placeholder="Description of this PDF version..."
+                placeholder="Description of this Trisandhya Path PDF..."
                 rows={3}
-                data-testid="input-description"
+                data-testid="input-trisandhya-description"
               />
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="total-skandas">Total Skandas</Label>
-                <Input
-                  id="total-skandas"
-                  type="number"
-                  value={formData.totalSkandas}
-                  onChange={(e) => setFormData({ ...formData, totalSkandas: parseInt(e.target.value) })}
-                  data-testid="input-total-skandas"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="total-chapters">Total Chapters</Label>
-                <Input
-                  id="total-chapters"
-                  type="number"
-                  value={formData.totalChapters || ""}
-                  onChange={(e) => setFormData({ ...formData, totalChapters: e.target.value ? parseInt(e.target.value) : null })}
-                  placeholder="Optional"
-                  data-testid="input-total-chapters"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="order-index">Display Order</Label>
-                <Input
-                  id="order-index"
-                  type="number"
-                  value={formData.orderIndex}
-                  onChange={(e) => setFormData({ ...formData, orderIndex: parseInt(e.target.value) })}
-                  data-testid="input-order-index"
-                />
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="order-index">Display Order</Label>
+              <Input
+                id="order-index"
+                type="number"
+                value={formData.orderIndex}
+                onChange={(e) => setFormData({ ...formData, orderIndex: parseInt(e.target.value) })}
+                data-testid="input-trisandhya-order-index"
+              />
             </div>
 
             <DialogFooter>
@@ -548,14 +468,14 @@ export default function MahapuranPdfsManagement() {
                   setEditingPdf(null);
                   resetForm();
                 }}
-                data-testid="button-cancel"
+                data-testid="button-trisandhya-cancel"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
                 disabled={createMutation.isPending || updateMutation.isPending}
-                data-testid="button-submit"
+                data-testid="button-trisandhya-submit"
               >
                 {createMutation.isPending || updateMutation.isPending ? (
                   <>

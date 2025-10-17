@@ -179,52 +179,45 @@ export default function MahapuranLibrary() {
         <DialogContent className={isFullscreen ? "max-w-full w-screen h-screen p-0 m-0" : "max-w-6xl w-[95vw] h-[90vh] p-0"} data-testid="dialog-pdf-viewer">
           {selectedPdf && (
             <div className="flex flex-col h-full">
-              <DialogHeader className="px-4 md:px-6 py-3 md:py-4 border-b flex-shrink-0">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-                  <div className="flex-1 min-w-0">
-                    <DialogTitle className="text-lg md:text-xl truncate">{selectedPdf.title}</DialogTitle>
-                    <DialogDescription className="flex items-center gap-2 mt-1 flex-wrap">
-                      <Badge variant="secondary" className="text-xs">{selectedPdf.languageName}</Badge>
-                      {selectedPdf.totalChapters && (
-                        <span className="text-xs text-muted-foreground">
-                          {selectedPdf.totalChapters} Chapters
-                        </span>
-                      )}
-                    </DialogDescription>
+              {!isFullscreen && (
+                <DialogHeader className="px-4 md:px-6 py-3 md:py-4 border-b flex-shrink-0">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <DialogTitle className="text-lg md:text-xl truncate">{selectedPdf.title}</DialogTitle>
+                      <DialogDescription className="flex items-center gap-2 mt-1 flex-wrap">
+                        <Badge variant="secondary" className="text-xs">{selectedPdf.languageName}</Badge>
+                        {selectedPdf.totalChapters && (
+                          <span className="text-xs text-muted-foreground">
+                            {selectedPdf.totalChapters} Chapters
+                          </span>
+                        )}
+                      </DialogDescription>
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setIsFullscreen(!isFullscreen)}
+                        data-testid="button-toggle-fullscreen"
+                        className="text-xs"
+                      >
+                        <Maximize2 className="h-3 w-3 md:h-4 md:w-4 md:mr-2" />
+                        <span className="hidden md:inline">Fullscreen</span>
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDownload(selectedPdf.pdfUrl!, selectedPdf.languageName)}
+                        data-testid="button-download-pdf-viewer"
+                        className="text-xs"
+                      >
+                        <Download className="h-3 w-3 md:h-4 md:w-4 md:mr-2" />
+                        <span className="hidden md:inline">Download</span>
+                      </Button>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setIsFullscreen(!isFullscreen)}
-                      data-testid="button-toggle-fullscreen"
-                      className="text-xs"
-                    >
-                      {isFullscreen ? (
-                        <>
-                          <Minimize2 className="h-3 w-3 md:h-4 md:w-4 md:mr-2" />
-                          <span className="hidden md:inline">Exit</span>
-                        </>
-                      ) : (
-                        <>
-                          <Maximize2 className="h-3 w-3 md:h-4 md:w-4 md:mr-2" />
-                          <span className="hidden md:inline">Fullscreen</span>
-                        </>
-                      )}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDownload(selectedPdf.pdfUrl!, selectedPdf.languageName)}
-                      data-testid="button-download-pdf-viewer"
-                      className="text-xs"
-                    >
-                      <Download className="h-3 w-3 md:h-4 md:w-4 md:mr-2" />
-                      <span className="hidden md:inline">Download</span>
-                    </Button>
-                  </div>
-                </div>
-              </DialogHeader>
+                </DialogHeader>
+              )}
               
               <div className="flex-1 overflow-hidden relative">
                 {selectedPdf.pdfUrl && (
@@ -232,6 +225,31 @@ export default function MahapuranLibrary() {
                     url={selectedPdf.pdfUrl}
                     title={`${selectedPdf.title} - ${selectedPdf.languageName}`}
                   />
+                )}
+                
+                {isFullscreen && (
+                  <div className="absolute top-4 right-4 flex gap-2 z-50">
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => setIsFullscreen(false)}
+                      data-testid="button-exit-fullscreen"
+                      className="shadow-lg"
+                    >
+                      <Minimize2 className="h-4 w-4 mr-2" />
+                      Exit Fullscreen
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => handleDownload(selectedPdf.pdfUrl!, selectedPdf.languageName)}
+                      data-testid="button-download-fullscreen"
+                      className="shadow-lg"
+                    >
+                      <Download className="h-4 w-4 mr-2" />
+                      Download
+                    </Button>
+                  </div>
                 )}
               </div>
 
