@@ -16,6 +16,7 @@ import {
   userMediaFavorites,
   mahapuranPdfs,
   trisandhyaPdfs,
+  scripturePdfs,
   notificationSounds,
   notifications,
   notificationReceipts,
@@ -54,6 +55,8 @@ import {
   type InsertMahapuranPdf,
   type TrisandhyaPdf,
   type InsertTrisandhyaPdf,
+  type ScripturePdf,
+  type InsertScripturePdf,
   type NotificationSound,
   type InsertNotificationSound,
   type Notification,
@@ -179,6 +182,13 @@ export interface IStorage {
   createTrisandhyaPdf(pdf: InsertTrisandhyaPdf): Promise<TrisandhyaPdf>;
   updateTrisandhyaPdf(id: string, pdf: Partial<InsertTrisandhyaPdf>): Promise<TrisandhyaPdf>;
   deleteTrisandhyaPdf(id: string): Promise<void>;
+  
+  // Scripture PDFs
+  getAllScripturePdfs(): Promise<ScripturePdf[]>;
+  getScripturePdfById(id: string): Promise<ScripturePdf | undefined>;
+  createScripturePdf(pdf: InsertScripturePdf): Promise<ScripturePdf>;
+  updateScripturePdf(id: string, pdf: Partial<InsertScripturePdf>): Promise<ScripturePdf>;
+  deleteScripturePdf(id: string): Promise<void>;
   
   // User media favorites
   getUserMediaFavorites(userId: string): Promise<MediaContent[]>;
@@ -941,6 +951,34 @@ export class DatabaseStorage implements IStorage {
 
   async deleteTrisandhyaPdf(id: string): Promise<void> {
     await db.delete(trisandhyaPdfs).where(eq(trisandhyaPdfs.id, id));
+  }
+
+  // Scripture PDFs operations
+  async getAllScripturePdfs(): Promise<ScripturePdf[]> {
+    return await db.select().from(scripturePdfs).where(eq(scripturePdfs.isActive, true)).orderBy(scripturePdfs.orderIndex, scripturePdfs.languageName);
+  }
+
+  async getScripturePdfById(id: string): Promise<ScripturePdf | undefined> {
+    const [pdf] = await db.select().from(scripturePdfs).where(eq(scripturePdfs.id, id));
+    return pdf;
+  }
+
+  async createScripturePdf(pdfData: InsertScripturePdf): Promise<ScripturePdf> {
+    const [pdf] = await db.insert(scripturePdfs).values(pdfData).returning();
+    return pdf;
+  }
+
+  async updateScripturePdf(id: string, pdfData: Partial<InsertScripturePdf>): Promise<ScripturePdf> {
+    const [updated] = await db
+      .update(scripturePdfs)
+      .set({ ...pdfData, updatedAt: new Date() })
+      .where(eq(scripturePdfs.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteScripturePdf(id: string): Promise<void> {
+    await db.delete(scripturePdfs).where(eq(scripturePdfs.id, id));
   }
 
   // Notification sounds operations

@@ -17,10 +17,9 @@ const menuItems = [
   { title: "Media", url: "/admin/media", icon: Music },
   { title: "Media Categories", url: "/admin/media-categories", icon: Folders },
   { title: "Scriptures", url: "/admin/scriptures", icon: BookOpen },
-  { title: "Daily Sadhna", url: "/admin/sadhana-content", icon: Book },
   { title: "Alarm Sounds", url: "/admin/alarm-sounds", icon: Bell },
   { title: "Japa Audios", url: "/admin/japa-audios", icon: Headphones },
-  { title: "Mahapuran PDFs", url: "/admin/mahapuran-pdfs", icon: FileText },
+  { title: "Shreemad Bhagwat Mahapuran", url: "/admin/mahapuran-pdfs", icon: FileText },
   { title: "Trisandhya PDFs", url: "/admin/trisandhya-pdfs", icon: FileText },
   { title: "Notifications", url: "/admin/notifications", icon: BellRing },
 ];

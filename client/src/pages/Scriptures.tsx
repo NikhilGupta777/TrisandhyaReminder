@@ -1,15 +1,33 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Book, BookOpen, Loader2, FileText, ChevronRight } from "lucide-react";
-import { Link } from "wouter";
-import type { MahapuranTitle } from "@shared/schema";
+import { Dialog, DialogContent, DialogHeader } from "@/components/ui/dialog";
+import { Book, BookOpen, Loader2, FileText, Download, Maximize2, Minimize2, X } from "lucide-react";
+import type { ScripturePdf } from "@shared/schema";
+import PdfViewer from "@/components/PdfViewer";
 
 export default function Scriptures() {
-  const { data: scriptures, isLoading } = useQuery<MahapuranTitle[]>({
-    queryKey: ["/api/scripture-titles"],
+  const [selectedPdf, setSelectedPdf] = useState<ScripturePdf | null>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  
+  const { data: pdfs, isLoading } = useQuery<ScripturePdf[]>({
+    queryKey: ["/api/scripture-pdfs"],
   });
+
+  const handleDownload = (pdfUrl: string, languageName: string) => {
+    const link = document.createElement('a');
+    link.href = pdfUrl;
+    link.download = `Sacred_Scripture_${languageName}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleRead = (pdf: ScripturePdf) => {
+    setSelectedPdf(pdf);
+  };
 
   if (isLoading) {
     return (
@@ -43,7 +61,7 @@ export default function Scriptures() {
         </div>
       </div>
 
-      {!scriptures || scriptures.length === 0 ? (
+      {!pdfs || pdfs.length === 0 ? (
         <Card className="p-12 text-center bg-card dark:bg-card">
           <FileText className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
           <h3 className="text-xl font-semibold mb-2 text-foreground dark:text-foreground">
@@ -55,51 +73,75 @@ export default function Scriptures() {
         </Card>
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {scriptures.map((scripture) => (
+          {pdfs.map((pdf) => (
             <Card
-              key={scripture.id}
+              key={pdf.id}
               className="p-6 hover:shadow-xl transition-all duration-300 bg-card dark:bg-card border-border dark:border-border group"
-              data-testid={`card-scripture-${scripture.id}`}
+              data-testid={`card-scripture-${pdf.id}`}
             >
               <div className="space-y-4">
                 <div className="flex items-start justify-between">
-                  <div className="flex-1">
+                  <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-2">
                       <Book className="h-5 w-5 text-primary flex-shrink-0" />
-                      <h3 className="text-xl font-semibold text-foreground dark:text-foreground break-words">
-                        {scripture.title}
+                      <h3 
+                        className="text-xl font-semibold text-foreground dark:text-foreground truncate" 
+                        title={pdf.title}
+                        data-testid={`text-title-${pdf.id}`}
+                      >
+                        {pdf.title}
                       </h3>
                     </div>
                     
-                    <Badge variant="secondary" className="mb-3">
-                      {scripture.language.toUpperCase()}
+                    <Badge variant="secondary" className="mb-3" data-testid={`badge-language-${pdf.id}`}>
+                      {pdf.languageCode.toUpperCase()}
                     </Badge>
                     
-                    {scripture.description && (
-                      <p className="text-sm text-muted-foreground line-clamp-3 mb-3">
-                        {scripture.description}
+                    {pdf.description && (
+                      <p className="text-sm text-muted-foreground line-clamp-3 mb-3" data-testid={`text-description-${pdf.id}`}>
+                        {pdf.description}
                       </p>
                     )}
                     
-                    <p className="text-xs text-muted-foreground flex items-center gap-1">
-                      <FileText className="h-3 w-3" />
-                      {scripture.totalSkandas} Books (Skandas)
-                    </p>
+                    <div className="space-y-1 text-xs text-muted-foreground">
+                      {pdf.fileSize && (
+                        <p className="flex items-center gap-1" data-testid={`text-filesize-${pdf.id}`}>
+                          File size: {(pdf.fileSize / (1024 * 1024)).toFixed(2)} MB
+                        </p>
+                      )}
+                      {pdf.totalChapters && (
+                        <p className="flex items-center gap-1" data-testid={`text-chapters-${pdf.id}`}>
+                          <FileText className="h-3 w-3" />
+                          Chapters: {pdf.totalChapters}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </div>
 
-                <div className="pt-4 border-t border-border dark:border-border">
-                  <Link href={`/scriptures/${scripture.id}`}>
-                    <Button
-                      className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
-                      variant="default"
-                      data-testid={`button-read-scripture-${scripture.id}`}
-                    >
-                      <BookOpen className="h-4 w-4 mr-2" />
-                      Begin Reading
-                      <ChevronRight className="h-4 w-4 ml-auto" />
-                    </Button>
-                  </Link>
+                <div className="space-y-2 pt-4 border-t border-border dark:border-border">
+                  {pdf.pdfUrl && (
+                    <>
+                      <Button
+                        onClick={() => handleRead(pdf)}
+                        className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
+                        variant="default"
+                        data-testid={`button-read-${pdf.id}`}
+                      >
+                        <BookOpen className="h-4 w-4 mr-2" />
+                        Read Online
+                      </Button>
+                      <Button
+                        onClick={() => handleDownload(pdf.pdfUrl!, pdf.languageName)}
+                        className="w-full"
+                        variant="outline"
+                        data-testid={`button-download-${pdf.id}`}
+                      >
+                        <Download className="h-4 w-4 mr-2" />
+                        Download PDF
+                      </Button>
+                    </>
+                  )}
                 </div>
               </div>
             </Card>
@@ -110,27 +152,109 @@ export default function Scriptures() {
       <div className="mt-8 p-6 bg-muted/50 dark:bg-muted/30 rounded-lg border border-border dark:border-border">
         <h3 className="font-semibold mb-3 text-foreground dark:text-foreground flex items-center gap-2">
           <Book className="h-5 w-5" />
-          About Sacred Scriptures
+          About Reading Options
         </h3>
         <ul className="space-y-2 text-sm text-muted-foreground">
           <li className="flex items-start gap-2">
             <span className="text-primary mt-1">•</span>
-            <span>Each scripture is organized into books (Skandas) containing multiple chapters</span>
+            <span><strong>Read Online:</strong> Opens the PDF in a new tab for immediate reading in your browser</span>
           </li>
           <li className="flex items-start gap-2">
             <span className="text-primary mt-1">•</span>
-            <span>Read online in your preferred language with easy chapter navigation</span>
+            <span><strong>Download PDF:</strong> Save the scripture to your device for offline reading and study</span>
           </li>
           <li className="flex items-start gap-2">
             <span className="text-primary mt-1">•</span>
             <span>Available in multiple languages to help you study in the language most comfortable for you</span>
           </li>
-          <li className="flex items-start gap-2">
-            <span className="text-primary mt-1">•</span>
-            <span>Track your progress as you journey through these sacred texts</span>
-          </li>
         </ul>
       </div>
+
+      <Dialog open={!!selectedPdf} onOpenChange={(open) => !open && setSelectedPdf(null)}>
+        <DialogContent className={`${isFullscreen ? 'max-w-full h-screen' : 'max-w-5xl h-[90vh]'} p-0 flex flex-col`}>
+          {selectedPdf && (
+            <div className="flex flex-col h-full overflow-hidden">
+              {!isFullscreen && (
+                <DialogHeader className="p-4 md:p-6 border-b flex-shrink-0">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <h2 className="text-lg md:text-xl font-semibold truncate" title={selectedPdf.title}>
+                        {selectedPdf.title}
+                      </h2>
+                      <div className="flex flex-wrap items-center gap-2 mt-1 text-sm text-muted-foreground">
+                        <Badge variant="secondary">{selectedPdf.languageCode.toUpperCase()}</Badge>
+                        {selectedPdf.totalChapters && (
+                          <span>{selectedPdf.totalChapters} Chapters</span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setIsFullscreen(true)}
+                        data-testid="button-fullscreen"
+                      >
+                        <Maximize2 className="h-4 w-4 md:mr-2" />
+                        <span className="hidden md:inline">Fullscreen</span>
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDownload(selectedPdf.pdfUrl!, selectedPdf.languageName)}
+                        data-testid="button-download"
+                      >
+                        <Download className="h-4 w-4 md:mr-2" />
+                        <span className="hidden md:inline">Download</span>
+                      </Button>
+                    </div>
+                  </div>
+                </DialogHeader>
+              )}
+              
+              <div className="flex-1 overflow-hidden relative">
+                {selectedPdf.pdfUrl && (
+                  <PdfViewer
+                    url={selectedPdf.pdfUrl}
+                    title={selectedPdf.title}
+                  />
+                )}
+                
+                {isFullscreen && (
+                  <div className="absolute top-4 right-4 flex gap-2 z-50">
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => setIsFullscreen(false)}
+                      data-testid="button-exit-fullscreen"
+                      className="shadow-lg"
+                    >
+                      <Minimize2 className="h-4 w-4 mr-2" />
+                      Exit Fullscreen
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => handleDownload(selectedPdf.pdfUrl!, selectedPdf.languageName)}
+                      data-testid="button-download-fullscreen"
+                      className="shadow-lg"
+                    >
+                      <Download className="h-4 w-4 mr-2" />
+                      Download
+                    </Button>
+                  </div>
+                )}
+              </div>
+
+              {selectedPdf.description && !isFullscreen && (
+                <div className="px-4 md:px-6 py-2 md:py-3 border-t bg-muted/30 flex-shrink-0">
+                  <p className="text-xs md:text-sm text-muted-foreground line-clamp-2">{selectedPdf.description}</p>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

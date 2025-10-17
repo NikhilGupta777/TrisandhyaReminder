@@ -37,7 +37,6 @@ import UserManagement from "@/pages/admin/UserManagement";
 import MediaManagement from "@/pages/admin/MediaManagement";
 import MediaCategoriesManagement from "@/pages/admin/MediaCategoriesManagement";
 import ScripturesManagement from "@/pages/admin/ScripturesManagement";
-import SadhanaContentManagement from "@/pages/admin/SadhanaContentManagement";
 import AlarmSoundsManagement from "@/pages/admin/AlarmSoundsManagement";
 import JapaAudiosManagement from "@/pages/admin/JapaAudiosManagement";
 import MahapuranPdfsManagement from "@/pages/admin/MahapuranPdfsManagement";
@@ -55,7 +54,6 @@ function AdminRouter() {
       <Route path="/admin/scriptures/:titleId/skanda/:skandaId" component={MahapuranChapters} />
       <Route path="/admin/scriptures/:titleId" component={MahapuranSkandas} />
       <Route path="/admin/scriptures" component={ScripturesManagement} />
-      <Route path="/admin/sadhana-content" component={SadhanaContentManagement} />
       <Route path="/admin/alarm-sounds" component={AlarmSoundsManagement} />
       <Route path="/admin/japa-audios" component={JapaAudiosManagement} />
       <Route path="/admin/mahapuran-pdfs" component={MahapuranPdfsManagement} />

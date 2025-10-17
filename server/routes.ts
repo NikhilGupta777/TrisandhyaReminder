@@ -1645,6 +1645,98 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
+  // Scripture PDF routes
+  app.get("/api/scripture-pdfs", async (req, res) => {
+    try {
+      const pdfs = await storage.getAllScripturePdfs();
+      res.json(pdfs);
+    } catch (error) {
+      console.error("Error fetching Scripture PDFs:", error);
+      res.status(500).json({ message: "Failed to fetch Scripture PDFs" });
+    }
+  });
+
+  app.get("/api/scripture-pdfs/:id", async (req, res) => {
+    try {
+      const pdf = await storage.getScripturePdfById(req.params.id);
+      if (!pdf) {
+        return res.status(404).json({ message: "Scripture PDF not found" });
+      }
+      res.json(pdf);
+    } catch (error) {
+      console.error("Error fetching Scripture PDF:", error);
+      res.status(500).json({ message: "Failed to fetch Scripture PDF" });
+    }
+  });
+
+  app.post("/api/scripture-pdfs", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { insertScripturePdfSchema } = await import("@shared/schema");
+      const validatedData = insertScripturePdfSchema.parse(req.body);
+      const pdf = await storage.createScripturePdf(validatedData);
+      res.json(pdf);
+    } catch (error) {
+      console.error("Error creating Scripture PDF:", error);
+      res.status(400).json({ message: "Failed to create Scripture PDF" });
+    }
+  });
+
+  app.patch("/api/scripture-pdfs/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const pdf = await storage.updateScripturePdf(req.params.id, req.body);
+      res.json(pdf);
+    } catch (error) {
+      console.error("Error updating Scripture PDF:", error);
+      res.status(400).json({ message: "Failed to update Scripture PDF" });
+    }
+  });
+
+  app.delete("/api/scripture-pdfs/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const pdf = await storage.getScripturePdfById(req.params.id);
+      if (pdf && pdf.pdfKey) {
+        await deleteFromS3(pdf.pdfKey);
+      }
+      await storage.deleteScripturePdf(req.params.id);
+      res.json({ message: "Scripture PDF deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting Scripture PDF:", error);
+      res.status(500).json({ message: "Failed to delete Scripture PDF" });
+    }
+  });
+
+  app.post("/api/scripture-pdfs/upload", isAuthenticated, isAdmin, (req: any, res) => {
+    req.uploadFolder = "scripture-pdfs";
+    
+    uploadToS3.single("pdf")(req, res, async (err: any) => {
+      if (err) {
+        console.error("Error uploading PDF:", err);
+        return res.status(400).json({ message: err.message || "Failed to upload PDF" });
+      }
+
+      try {
+        if (!req.file) {
+          return res.status(400).json({ message: "No file uploaded" });
+        }
+
+        const file = req.file as any;
+        const pdfUrl = file.location;
+        const pdfKey = file.key;
+        const fileSize = file.size;
+
+        res.json({
+          message: "PDF uploaded successfully",
+          pdfUrl,
+          pdfKey,
+          fileSize,
+        });
+      } catch (error) {
+        console.error("Error processing PDF upload:", error);
+        res.status(500).json({ message: "Failed to process PDF upload" });
+      }
+    });
+  });
+
   // Notification routes
   app.get("/api/notifications", isAuthenticated, async (req, res) => {
     try {

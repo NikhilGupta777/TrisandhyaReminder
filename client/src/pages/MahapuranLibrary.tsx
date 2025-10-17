@@ -85,35 +85,41 @@ export default function MahapuranLibrary() {
               data-testid={`card-pdf-${pdf.id}`}
             >
               <div className="space-y-4">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <BookOpen className="h-5 w-5 text-primary" />
-                      <h3 className="text-xl font-semibold text-foreground dark:text-foreground">
-                        {pdf.languageName}
+                <div className="space-y-3">
+                  <div className="flex items-start gap-2">
+                    <BookOpen className="h-6 w-6 text-primary flex-shrink-0 mt-1" />
+                    <div className="flex-1 min-w-0">
+                      <h3 
+                        className="text-lg font-bold text-foreground dark:text-foreground line-clamp-2 leading-tight"
+                        title={pdf.title || pdf.languageName}
+                        data-testid={`text-title-${pdf.id}`}
+                      >
+                        {pdf.title || pdf.languageName}
                       </h3>
+                      <Badge variant="secondary" className="mt-2" data-testid={`badge-language-${pdf.id}`}>
+                        {pdf.languageCode.toUpperCase()}
+                      </Badge>
                     </div>
-                    
-                    <Badge variant="secondary" className="mb-3">
-                      {pdf.languageCode.toUpperCase()}
-                    </Badge>
-                    
-                    {pdf.description && (
-                      <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
-                        {pdf.description}
-                      </p>
-                    )}
-                    
+                  </div>
+                  
+                  {pdf.description && (
+                    <p className="text-sm text-muted-foreground line-clamp-2" data-testid={`text-description-${pdf.id}`}>
+                      {pdf.description}
+                    </p>
+                  )}
+                  
+                  <div className="flex flex-wrap gap-3 text-xs text-muted-foreground pt-2 border-t border-border/50">
                     {pdf.fileSize && (
-                      <p className="text-xs text-muted-foreground">
-                        File size: {(pdf.fileSize / (1024 * 1024)).toFixed(2)} MB
-                      </p>
+                      <div className="flex items-center gap-1" data-testid={`text-filesize-${pdf.id}`}>
+                        <FileText className="h-3 w-3" />
+                        <span>{(pdf.fileSize / (1024 * 1024)).toFixed(2)} MB</span>
+                      </div>
                     )}
-                    
                     {pdf.totalChapters && (
-                      <p className="text-xs text-muted-foreground">
-                        Chapters: {pdf.totalChapters}
-                      </p>
+                      <div className="flex items-center gap-1" data-testid={`text-chapters-${pdf.id}`}>
+                        <Book className="h-3 w-3" />
+                        <span>{pdf.totalChapters} Chapters</span>
+                      </div>
                     )}
                   </div>
                 </div>

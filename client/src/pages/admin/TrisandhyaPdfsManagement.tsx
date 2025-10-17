@@ -32,7 +32,9 @@ export default function TrisandhyaPdfsManagement() {
   const [editingPdf, setEditingPdf] = useState<TrisandhyaPdf | null>(null);
   const [uploadingFile, setUploadingFile] = useState<File | null>(null);
   const [formData, setFormData] = useState({
+    languageCode: "",
     languageName: "",
+    title: "",
     description: "",
     pdfUrl: "",
     pdfKey: "",
@@ -162,7 +164,9 @@ export default function TrisandhyaPdfsManagement() {
 
   const resetForm = () => {
     setFormData({
+      languageCode: "",
       languageName: "",
+      title: "",
       description: "",
       pdfUrl: "",
       pdfKey: "",
@@ -202,7 +206,9 @@ export default function TrisandhyaPdfsManagement() {
   const handleEdit = (pdf: TrisandhyaPdf) => {
     setEditingPdf(pdf);
     setFormData({
+      languageCode: pdf.languageCode,
       languageName: pdf.languageName,
+      title: pdf.title,
       description: pdf.description || "",
       pdfUrl: pdf.pdfUrl || "",
       pdfKey: pdf.pdfKey || "",
@@ -425,6 +431,19 @@ export default function TrisandhyaPdfsManagement() {
             )}
 
             <div className="space-y-2">
+              <Label htmlFor="language-code">Language Code *</Label>
+              <Input
+                id="language-code"
+                value={formData.languageCode}
+                onChange={(e) => setFormData({ ...formData, languageCode: e.target.value.toLowerCase() })}
+                placeholder="e.g., en, hi, or, sa"
+                required
+                maxLength={10}
+                data-testid="input-trisandhya-language-code"
+              />
+            </div>
+
+            <div className="space-y-2">
               <Label htmlFor="language-name">Language Name *</Label>
               <Input
                 id="language-name"
@@ -433,6 +452,18 @@ export default function TrisandhyaPdfsManagement() {
                 placeholder="e.g., English, Hindi, Odia, Sanskrit"
                 required
                 data-testid="input-trisandhya-language-name"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="title">Title *</Label>
+              <Input
+                id="title"
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                placeholder="e.g., Trisandhya Path"
+                required
+                data-testid="input-trisandhya-title"
               />
             </div>
 

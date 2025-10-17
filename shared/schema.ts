@@ -441,6 +441,33 @@ export const insertTrisandhyaPdfSchema = createInsertSchema(trisandhyaPdfs).omit
 export type InsertTrisandhyaPdf = z.infer<typeof insertTrisandhyaPdfSchema>;
 export type TrisandhyaPdf = typeof trisandhyaPdfs.$inferSelect;
 
+// Scripture PDFs for different languages
+export const scripturePdfs = pgTable("scripture_pdfs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  languageCode: varchar("language_code", { length: 10 }).notNull(), // 'en', 'hin', 'san', etc.
+  languageName: varchar("language_name", { length: 100 }).notNull(), // 'English', 'Hindi', 'Sanskrit'
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  pdfUrl: text("pdf_url"), // S3 URL for the PDF
+  pdfKey: varchar("pdf_key", { length: 500 }), // S3 key for deletion
+  fileSize: integer("file_size"), // in bytes
+  totalSkandas: integer("total_skandas"), // Total books/sections
+  totalChapters: integer("total_chapters"), // Total chapters
+  orderIndex: integer("order_index").default(0).notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertScripturePdfSchema = createInsertSchema(scripturePdfs).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertScripturePdf = z.infer<typeof insertScripturePdfSchema>;
+export type ScripturePdf = typeof scripturePdfs.$inferSelect;
+
 // Notification sounds library
 export const notificationSounds = pgTable("notification_sounds", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
