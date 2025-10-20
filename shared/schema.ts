@@ -609,3 +609,67 @@ export const insertMobileAlarmSchema = createInsertSchema(mobileAlarms).omit({
 
 export type InsertMobileAlarm = z.infer<typeof insertMobileAlarmSchema>;
 export type MobileAlarm = typeof mobileAlarms.$inferSelect;
+
+// Web Alarms - Production-grade web alarm system with offline-first architecture
+export const webAlarms = pgTable("web_alarms", {
+  id: varchar("id").primaryKey(),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }),
+  label: varchar("label", { length: 255 }).notNull(),
+  time: varchar("time", { length: 5 }).notNull(), // HH:MM format
+  enabled: boolean("enabled").default(true).notNull(),
+  repeatDays: text("repeat_days").notNull(), // JSON array of numbers [0-6]
+  toneId: varchar("tone_id"),
+  toneName: varchar("tone_name", { length: 255 }).notNull(),
+  volume: integer("volume").default(80).notNull(),
+  vibrate: boolean("vibrate").default(true).notNull(),
+  snoozeMinutes: integer("snooze_minutes").default(5).notNull(),
+  lastSyncedAt: timestamp("last_synced_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertWebAlarmSchema = createInsertSchema(webAlarms).omit({
+  createdAt: true,
+  lastSyncedAt: true,
+});
+
+export type InsertWebAlarm = z.infer<typeof insertWebAlarmSchema>;
+export type WebAlarm = typeof webAlarms.$inferSelect;
+
+// Web Alarm Instances - Track alarm triggers, snoozes, and dismissals
+export const webAlarmInstances = pgTable("web_alarm_instances", {
+  id: varchar("id").primaryKey(),
+  alarmId: varchar("alarm_id").references(() => webAlarms.id, { onDelete: "cascade" }).notNull(),
+  scheduledTime: timestamp("scheduled_time").notNull(),
+  triggered: boolean("triggered").default(false).notNull(),
+  snoozed: boolean("snoozed").default(false).notNull(),
+  dismissed: boolean("dismissed").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertWebAlarmInstanceSchema = createInsertSchema(webAlarmInstances).omit({
+  createdAt: true,
+});
+
+export type InsertWebAlarmInstance = z.infer<typeof insertWebAlarmInstanceSchema>;
+export type WebAlarmInstance = typeof webAlarmInstances.$inferSelect;
+
+// Custom Alarm Tones - User-uploaded audio files stored as base64 data URLs
+export const customAlarmTones = pgTable("custom_alarm_tones", {
+  id: varchar("id").primaryKey(),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }),
+  name: varchar("name", { length: 255 }).notNull(),
+  dataUrl: text("data_url"),
+  s3Key: varchar("s3_key", { length: 500 }),
+  duration: integer("duration"),
+  fileSize: integer("file_size").notNull(),
+  mimeType: varchar("mime_type", { length: 100 }).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertCustomAlarmToneSchema = createInsertSchema(customAlarmTones).omit({
+  createdAt: true,
+});
+
+export type InsertCustomAlarmTone = z.infer<typeof insertCustomAlarmToneSchema>;
+export type CustomAlarmTone = typeof customAlarmTones.$inferSelect;

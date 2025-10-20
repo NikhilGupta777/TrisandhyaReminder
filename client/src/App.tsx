@@ -23,6 +23,7 @@ import SadhanaGuide from "@/pages/SadhanaGuide";
 import MediaLibraryConnected from "@/pages/MediaLibraryConnected";
 import ProgressConnected from "@/pages/ProgressConnected";
 import AlarmsConnected from "@/pages/AlarmsConnected";
+import AlarmsNew from "@/pages/AlarmsNew";
 import SettingsConnected from "@/pages/SettingsConnected";
 import MahapuranLibrary from "@/pages/MahapuranLibrary";
 import MahapuranSkandas from "@/pages/MahapuranSkandas";
@@ -82,6 +83,7 @@ function UserRouter() {
       <Route path="/scriptures/:titleId/skanda/:skandaId/chapter/:chapterId" component={MahapuranChapterRead} />
       <Route path="/progress" component={ProgressConnected} />
       <Route path="/alarms" component={AlarmsConnected} />
+      <Route path="/alarms-new" component={AlarmsNew} />
       <Route path="/settings" component={SettingsConnected} />
       <Route path="/questions" component={QuestionsAnswers} />
       <Route path="/bhavishya-malika" component={BhavishyaMalika} />

@@ -22,6 +22,9 @@ import {
   notificationReceipts,
   notificationPreferences,
   pushSubscriptions,
+  webAlarms,
+  webAlarmInstances,
+  customAlarmTones,
   type User,
   type UpsertUser,
   type AlarmSettings,
@@ -67,6 +70,12 @@ import {
   type InsertNotificationPreferences,
   type PushSubscription,
   type InsertPushSubscription,
+  type WebAlarm,
+  type InsertWebAlarm,
+  type WebAlarmInstance,
+  type InsertWebAlarmInstance,
+  type CustomAlarmTone,
+  type InsertCustomAlarmTone,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, gte, lte, or, isNull, sql } from "drizzle-orm";
