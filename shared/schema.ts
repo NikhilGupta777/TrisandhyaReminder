@@ -583,3 +583,29 @@ export const insertPushSubscriptionSchema = createInsertSchema(pushSubscriptions
 
 export type InsertPushSubscription = z.infer<typeof insertPushSubscriptionSchema>;
 export type PushSubscription = typeof pushSubscriptions.$inferSelect;
+
+// Mobile alarm backups for optional cloud sync
+export const mobileAlarms = pgTable("mobile_alarms", {
+  id: varchar("id").primaryKey(),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  label: varchar("label", { length: 255 }).notNull(),
+  time: varchar("time", { length: 5 }).notNull(), // HH:MM format
+  enabled: boolean("enabled").default(true).notNull(),
+  repeatDays: text("repeat_days").notNull(), // JSON array
+  toneName: varchar("tone_name", { length: 255 }).notNull(),
+  toneUri: text("tone_uri"),
+  volume: integer("volume").default(80).notNull(),
+  vibrate: boolean("vibrate").default(true).notNull(),
+  snoozeMinutes: integer("snooze_minutes").default(5).notNull(),
+  lastSyncedAt: timestamp("last_synced_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertMobileAlarmSchema = createInsertSchema(mobileAlarms).omit({
+  createdAt: true,
+  lastSyncedAt: true,
+});
+
+export type InsertMobileAlarm = z.infer<typeof insertMobileAlarmSchema>;
+export type MobileAlarm = typeof mobileAlarms.$inferSelect;

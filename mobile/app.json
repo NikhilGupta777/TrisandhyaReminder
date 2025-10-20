@@ -1,0 +1,69 @@
+{
+  "expo": {
+    "name": "Trisandhya Alarm",
+    "slug": "trisandhya-alarm",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FF6B35"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.trisandhya.alarm",
+      "infoPlist": {
+        "UIBackgroundModes": [
+          "audio",
+          "fetch"
+        ],
+        "NSMicrophoneUsageDescription": "This app needs access to select audio files for custom alarm tones.",
+        "NSPhotoLibraryUsageDescription": "This app needs access to your media library to select custom alarm tones."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#FF6B35"
+      },
+      "package": "com.trisandhya.alarm",
+      "permissions": [
+        "SCHEDULE_EXACT_ALARM",
+        "USE_EXACT_ALARM",
+        "RECEIVE_BOOT_COMPLETED",
+        "VIBRATE",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "WAKE_LOCK",
+        "USE_FULL_SCREEN_INTENT"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#FF6B35",
+          "sounds": ["./assets/sounds/default-alarm.mp3"]
+        }
+      ],
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Allow Trisandhya Alarm to access your audio files for custom alarm tones.",
+          "savePhotosPermission": "Allow Trisandhya Alarm to save alarm audio files."
+        }
+      ]
+    ],
+    "scheme": "trisandhya"
+  }
+}
