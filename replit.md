@@ -2,24 +2,52 @@
 
 ## Overview
 
-The Trisandhya Sadhana Companion is a Progressive Web Application (PWA) designed to guide spiritual practitioners through daily Trisandhya rituals. The application provides intelligent alarm reminders for three sacred prayer times (Pratah, Madhyahna, and Sayam Sandhya), tracks spiritual progress, offers a media library of bhajans and pravachans, and includes interactive features like a Japa counter. All spiritual content is sourced from bhavishyamalika.com to ensure authenticity.
+The Trisandhya Sadhana Companion is a full-stack spiritual practice application consisting of a Progressive Web Application (PWA) and a native React Native mobile app. The platform guides spiritual practitioners through daily Trisandhya rituals with intelligent alarm reminders, progress tracking, and authentic spiritual content from bhavishyamalika.com.
+
+**Platform Components:**
+- **Web Application**: Content browsing, account management, media library, and spiritual guides
+- **Mobile App** (NEW): Production-grade native alarm application with offline-first architecture
 
 **Key Features:**
+
+*Web Application:*
 - PWA architecture with offline capability and "Add to Home Screen" functionality
-- Intelligent alarm system for three daily Sandhya periods with precise timing windows
-- Progress tracking with streak visualization and calendar views
 - Media library for spiritual audio (bhajans) and video (pravachans) content
 - Interactive Japa counter for mantra chanting
 - Scripture reading guide for Shrimad Bhagwat Mahapuran
+- Progress tracking with streak visualization and calendar views
 - Google OAuth authentication
 - Admin panel for content management
 - Light/dark theme support with custom spiritual color palette
+
+*Mobile Application:*
+- **Production-grade alarm system** like smartphone default alarm apps
+- **Full offline capability** - all alarms stored locally in SQLite database
+- **Native alarm scheduling** - triggers reliably even when app is closed
+- **Custom alarm tones** - import local audio files (MP3, WAV, M4A)
+- **Multiple alarms** with repeat days, custom names, snooze/dismiss logic
+- **Volume and vibration control** per alarm
+- **Background execution** - works during Doze mode and screen-off states
+- **Optional cloud sync** for backup/restore across devices
+- **Minimal battery drain** with efficient native APIs
 
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
+
+### October 20, 2025
+- **React Native Mobile App**: Built production-grade native alarm application with full offline capability
+  - Created complete mobile app structure using Expo React Native
+  - Implemented SQLite local database for offline-first architecture
+  - Built native alarm scheduler using expo-notifications and expo-task-manager
+  - Created three main screens: Alarm List, Add/Edit Alarm, Alarm Ring Screen
+  - Added custom alarm tone picker with local file support
+  - Implemented repeat days, volume control, vibration, and snooze functionality
+  - Set up background execution for reliable alarm triggering when app is closed
+  - Added optional cloud sync schema for backup/restore across devices
+  - Comprehensive documentation in /mobile/README.md and MOBILE_APP_GUIDE.md
 
 ### October 14, 2025
 - **Database Setup**: Configured Neon PostgreSQL database with proper environment variable security (DATABASE_URL secret)
