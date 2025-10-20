@@ -1942,13 +1942,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const data = JSON.parse(message.toString());
         
         if (data.type === "authenticate" && data.userId) {
-          userId = data.userId;
+          userId = data.userId as string;
           
           // Add client to user's connection set
           if (!notificationClients.has(userId)) {
             notificationClients.set(userId, new Set());
           }
-          notificationClients.get(userId)!.add(ws);
+          notificationClients.get(userId)?.add(ws);
           
           console.log(`[WS] User ${userId} connected for notifications`);
           
