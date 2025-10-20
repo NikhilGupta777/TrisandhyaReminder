@@ -1,0 +1,37 @@
+hey in this app the we have to transform the alarm functionality to the best every like any smartphone system default alarm app is.
+
+Key objectives:
+- Full offline capability. All alarms, schedules, and user preferences must be stored locally (SQLite, localStorage, or device file system or what is the best like system default alarm apps).
+- Alarms must trigger accurately even without internet or app being open.
+- Allow users to import or select local audio/music files (mp3, wav, etc.) as alarm tones.
+- Keep optional cloud sync (using S3 or your API) only for backup or cross-device restore, never required for operation.
+- Enable multiple alarms with:
+  - Repeat days
+  - Custom names
+  - Snooze / dismiss logic
+  - Adjustable volume and vibration
+- Add local notification + background wakeup for mobile devices (use WorkManager / flutter_local_notifications / react-native-background-fetch).
+- Build a native-feeling alarm ring screen with big dismiss + snooze buttons and animation support.
+- Ensure reliability during Doze mode, screen off, or browser minimized states.
+- Provide smooth UI for:
+  - Creating and editing alarms
+  - Browsing and testing tones
+  - Viewing upcoming alarms
+- Use a modular architecture:
+  - UI Layer
+  - Alarm Scheduler Core
+  - Local Storage Layer
+  - Notification & Audio Player Layer
+- Include fallback handling for devices with restricted background execution.
+- Use system-native APIs whenever possible (e.g., Android AlarmManager, iOS NotificationCenter).
+- Ensure minimal battery drain while maintaining precision.
+- Keep UX minimal and elegant — fast setup, instant load, no lag.
+
+Technical stack preferences:
+- Cross-platform support (React Native or Flutter).
+- Local database (SQLite or Hive).
+- Background execution (WorkManager, background_fetch, or service workers for web).
+- Audio handling through local media libraries (no dependency on internet).
+- Battery- and permission-safe implementation ready for production.
+
+make it production-grade fully working offline alarm that feel as natural and reliable as system alarms.
