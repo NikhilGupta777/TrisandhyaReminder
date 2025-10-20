@@ -32,6 +32,8 @@ import Scriptures from "@/pages/Scriptures";
 import About from "@/pages/About";
 import Contact from "@/pages/Contact";
 import Legal from "@/pages/Legal";
+import QuestionsAnswers from "@/pages/QuestionsAnswers";
+import BhavishyaMalika from "@/pages/BhavishyaMalika";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
 import UserManagement from "@/pages/admin/UserManagement";
 import MediaManagement from "@/pages/admin/MediaManagement";
@@ -81,6 +83,8 @@ function UserRouter() {
       <Route path="/progress" component={ProgressConnected} />
       <Route path="/alarms" component={AlarmsConnected} />
       <Route path="/settings" component={SettingsConnected} />
+      <Route path="/questions" component={QuestionsAnswers} />
+      <Route path="/bhavishya-malika" component={BhavishyaMalika} />
       <Route path="/about" component={About} />
       <Route path="/contact" component={Contact} />
       <Route path="/legal" component={Legal} />

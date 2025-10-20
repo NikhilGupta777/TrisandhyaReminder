@@ -1,13 +1,19 @@
-import { useEffect, useState, useRef } from "react";
-import { useQuery } from "@tanstack/react-query";
-import type { AlarmSettings, AlarmSound } from "@shared/schema";
+import { useState, useEffect, useRef } from "react";
+import { 
+  getLocalAlarmSettings, 
+  getAllAvailableAlarmSounds,
+  getAlarmSoundById,
+  type CustomAlarmSound 
+} from "@/lib/alarmStorage";
+import type { AlarmSound } from "@shared/schema";
 
 export type AlarmType = "pratah" | "madhyahna" | "sayam";
 
 interface ActiveAlarm {
   type: AlarmType;
   time: string;
-  sound: AlarmSound | undefined;
+  sound: AlarmSound | CustomAlarmSound | undefined;
+  volume: number;
 }
 
 export function useAlarmMonitor() {
@@ -15,23 +21,17 @@ export function useAlarmMonitor() {
   const triggeredTodayRef = useRef<Set<string>>(new Set());
   const activeAlarmRef = useRef<ActiveAlarm | null>(null);
 
-  const { data: settings } = useQuery<AlarmSettings>({
-    queryKey: ["/api/alarm-settings"],
-  });
-
-  const { data: alarmSounds = [] } = useQuery<AlarmSound[]>({
-    queryKey: ["/api/alarm-sounds"],
-  });
-
   // Keep refs in sync with state
   useEffect(() => {
     activeAlarmRef.current = activeAlarm;
   }, [activeAlarm]);
 
   useEffect(() => {
-    if (!settings) return;
-
     const checkAlarms = () => {
+      // Get fresh settings from localStorage each time
+      const settings = getLocalAlarmSettings();
+      const alarmSounds = getAllAvailableAlarmSounds();
+      
       const now = new Date();
       const currentTime = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`;
       const today = now.toDateString();
@@ -58,12 +58,13 @@ export function useAlarmMonitor() {
           !triggeredTodayRef.current.has(alarmKey) &&
           !activeAlarmRef.current
         ) {
-          const sound = alarmSounds.find(s => s.id === settings.alarmSoundId) || alarmSounds.find(s => s.isDefault);
+          const sound = getAlarmSoundById(settings.alarmSoundId || '') || alarmSounds.find(s => 'isDefault' in s && s.isDefault);
           
           const newAlarm = {
             type: alarm.type,
             time: alarm.time,
             sound,
+            volume: settings.volume,
           };
           
           setActiveAlarm(newAlarm);
@@ -80,25 +81,38 @@ export function useAlarmMonitor() {
     const interval = setInterval(checkAlarms, 30000);
 
     return () => clearInterval(interval);
-  }, [settings, alarmSounds]);
+  }, []); // Empty deps - we check local storage on each interval
 
   const dismissAlarm = () => {
     setActiveAlarm(null);
   };
 
   const snoozeAlarm = () => {
-    // Snooze for 5 minutes - remove from triggered so it can trigger again
-    if (activeAlarmRef.current) {
-      const alarmKey = `${new Date().toDateString()}-${activeAlarmRef.current.type}`;
-      triggeredTodayRef.current.delete(alarmKey);
-    }
+    if (!activeAlarm) return;
+    
+    // Clear current alarm
     setActiveAlarm(null);
+    
+    // Set a timeout to re-trigger the alarm in 5 minutes
+    setTimeout(() => {
+      // Get fresh settings
+      const settings = getLocalAlarmSettings();
+      const sound = getAlarmSoundById(settings.alarmSoundId || '');
+      
+      if (sound) {
+        setActiveAlarm({
+          ...activeAlarm,
+          sound,
+          volume: settings.volume,
+        });
+      }
+    }, 5 * 60 * 1000); // 5 minutes
   };
 
   return {
     activeAlarm,
     dismissAlarm,
     snoozeAlarm,
-    volume: settings?.volume || 80,
+    volume: activeAlarm?.volume || 80,
   };
 }

@@ -62,7 +62,26 @@ export function setupLocalAuth() {
         try {
           const user = await storage.getUserByEmail(email);
           
-          if (!user || !user.password) {
+          if (!user) {
+            return done(null, false, { message: "Invalid email or password" });
+          }
+
+          // For admin users, validate against ADMIN_PASSWORD environment variable
+          if (user.isAdmin && process.env.ADMIN_PASSWORD) {
+            const isValidAdminPassword = password === process.env.ADMIN_PASSWORD;
+            if (!isValidAdminPassword) {
+              return done(null, false, { message: "Invalid email or password" });
+            }
+            
+            if (!user.emailVerified) {
+              return done(null, false, { message: "Please verify your email first" });
+            }
+            
+            return done(null, user);
+          }
+
+          // For regular users, validate against hashed password in database
+          if (!user.password) {
             return done(null, false, { message: "Invalid email or password" });
           }
 

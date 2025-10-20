@@ -62,16 +62,30 @@ export async function setupAuth(app: Express) {
             const lastName = profile.name?.familyName || "";
             const profileImageUrl = profile.photos?.[0]?.value || "";
 
-            await storage.upsertUser({
-              id: profile.id,
-              email,
-              firstName,
-              lastName,
-              profileImageUrl,
-              emailVerified: true,
-            });
-
-            done(null, { id: profile.id, email, firstName, lastName, profileImageUrl });
+            // Check if user exists in database
+            const existingUser = await storage.getUserByEmail(email);
+            
+            if (existingUser) {
+              // User exists - check if they are verified
+              if (!existingUser.emailVerified) {
+                return done(null, false, { message: "Please verify your email through the registration process before using Google sign-in." });
+              }
+              
+              // Update user profile with Google data if needed
+              await storage.upsertUser({
+                id: existingUser.id,
+                email,
+                firstName,
+                lastName,
+                profileImageUrl,
+                emailVerified: true,
+              });
+              
+              return done(null, { id: existingUser.id, email, firstName, lastName, profileImageUrl });
+            } else {
+              // New user trying to sign in with Google - require registration first
+              return done(null, false, { message: "No account found with this email. Please register first." });
+            }
           } catch (error) {
             done(error as Error);
           }
@@ -84,7 +98,10 @@ export async function setupAuth(app: Express) {
     }));
 
     app.get("/api/auth/google/callback", 
-      passport.authenticate("google", { failureRedirect: "/login" }),
+      passport.authenticate("google", { 
+        failureRedirect: "/login?error=google_signin_failed",
+        failureMessage: true 
+      }),
       (req, res) => {
         res.redirect("/");
       }

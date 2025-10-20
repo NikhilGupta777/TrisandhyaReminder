@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -17,6 +17,23 @@ export default function Login() {
   const [showVerification, setShowVerification] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [showResetPassword, setShowResetPassword] = useState(false);
+
+  // Check for Google sign-in errors in URL
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const error = params.get('error');
+    
+    if (error === 'google_signin_failed') {
+      toast({
+        title: "Google Sign-in Failed",
+        description: "Please verify your email through the registration process first, or use email/password login.",
+        variant: "destructive",
+        duration: 8000,
+      });
+      // Clean up URL
+      window.history.replaceState({}, '', '/login');
+    }
+  }, [toast]);
 
   const [loginData, setLoginData] = useState({
     email: "",
@@ -503,26 +520,6 @@ export default function Login() {
                   )}
                 </Button>
               </form>
-
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-gray-200 dark:border-gray-800" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-white dark:bg-gray-950 px-2 text-gray-500">Or continue with</span>
-                </div>
-              </div>
-
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full border-2"
-                onClick={() => window.location.href = "/api/auth/google"}
-                data-testid="button-google-register"
-              >
-                <SiGoogle className="mr-2 h-4 w-4" />
-                Google
-              </Button>
             </TabsContent>
           </Tabs>
         </CardContent>

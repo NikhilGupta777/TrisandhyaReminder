@@ -1,4 +1,4 @@
-import { Home, BookOpen, Music, BarChart3, Settings, Bell, Book, ScrollText, Info, Mail, FileText } from "lucide-react";
+import { Home, BookOpen, Music, BarChart3, Settings, Bell, Book, ScrollText, Info, Mail, FileText, HelpCircle, Scroll } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -18,10 +18,15 @@ const menuItems = [
   { title: "Daily Sadhna", url: "/guide", icon: BookOpen },
   { title: "Mahapuran PDFs", url: "/mahapuran", icon: Book },
   { title: "Scriptures", url: "/scriptures", icon: ScrollText },
+  { title: "Bhavishya Malika Website", url: "/bhavishya-malika", icon: Scroll },
   { title: "Media Library", url: "/media", icon: Music },
   { title: "Progress", url: "/progress", icon: BarChart3 },
   { title: "Alarms", url: "/alarms", icon: Bell },
   { title: "Settings", url: "/settings", icon: Settings },
+];
+
+const middleLinks = [
+  { title: "Question / Answers", url: "/questions", icon: HelpCircle },
 ];
 
 const footerLinks = [
@@ -59,6 +64,19 @@ export function AppSidebar() {
       
       <SidebarFooter>
         <Separator className="mb-2" />
+        <SidebarMenu>
+          {middleLinks.map((link) => (
+            <SidebarMenuItem key={link.title}>
+              <SidebarMenuButton asChild isActive={location === link.url} size="sm">
+                <Link href={link.url} data-testid={`link-${link.title.toLowerCase().replace(/ /g, "-").replace(/&/g, "and")}`}>
+                  <link.icon className="h-4 w-4" />
+                  <span className="text-sm">{link.title}</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          ))}
+        </SidebarMenu>
+        <Separator className="my-2" />
         <SidebarMenu>
           {footerLinks.map((link) => (
             <SidebarMenuItem key={link.title}>

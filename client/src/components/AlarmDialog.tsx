@@ -11,12 +11,13 @@ import { Button } from "@/components/ui/button";
 import { Bell, Clock, AlarmClock, X } from "lucide-react";
 import type { AlarmType } from "@/hooks/use-alarm-monitor";
 import type { AlarmSound } from "@shared/schema";
+import type { CustomAlarmSound } from "@/lib/alarmStorage";
 
 interface AlarmDialogProps {
   isOpen: boolean;
   alarmType: AlarmType;
   alarmTime: string;
-  alarmSound: AlarmSound | undefined;
+  alarmSound: AlarmSound | CustomAlarmSound | undefined;
   volume: number;
   onDismiss: () => void;
   onSnooze: () => void;
@@ -41,7 +42,47 @@ export function AlarmDialog({
 
   useEffect(() => {
     if (isOpen && alarmSound) {
-      audio.src = alarmSound.url;
+      // Get the audio source - either from URL or dataUrl (custom sound)
+      const soundUrl = 'dataUrl' in alarmSound ? alarmSound.dataUrl : alarmSound.url;
+      
+      if (!soundUrl || soundUrl === '') {
+        // For default sounds without URLs, use a beep tone
+        const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        oscillator.frequency.value = 440; // A4 note
+        oscillator.type = 'sine';
+        gainNode.gain.value = volume / 100;
+        
+        oscillator.start();
+        
+        // Loop the beep every 2 seconds
+        const beepInterval = setInterval(() => {
+          if (audioContext.state === 'running') {
+            const osc = audioContext.createOscillator();
+            const gain = audioContext.createGain();
+            osc.connect(gain);
+            gain.connect(audioContext.destination);
+            osc.frequency.value = 440;
+            osc.type = 'sine';
+            gain.gain.value = volume / 100;
+            osc.start();
+            osc.stop(audioContext.currentTime + 0.5);
+          }
+        }, 2000);
+        
+        return () => {
+          clearInterval(beepInterval);
+          oscillator.stop();
+          audioContext.close();
+        };
+      }
+      
+      audio.src = soundUrl;
       audio.loop = true;
       audio.volume = volume / 100;
       

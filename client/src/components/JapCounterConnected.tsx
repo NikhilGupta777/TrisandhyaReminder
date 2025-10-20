@@ -96,10 +96,28 @@ export function JapCounterConnected() {
   };
 
   const toggleAudio = () => {
-    if (!audioRef.current || !selectedAudio) {
+    if (!selectedAudio) {
       toast({ 
         title: "No audio available", 
-        description: "Please select a chant audio in settings",
+        description: "Please contact admin to upload japa audio files",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!selectedAudio.url || selectedAudio.url.trim() === '') {
+      toast({ 
+        title: "Invalid audio file", 
+        description: "The selected audio file is not available. Please contact admin.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!audioRef.current) {
+      toast({ 
+        title: "Audio player not ready", 
+        description: "Please try again in a moment",
         variant: "destructive"
       });
       return;
@@ -109,15 +127,31 @@ export function JapCounterConnected() {
       audioRef.current.pause();
       setIsPlaying(false);
     } else {
+      // Reset and load the audio
+      audioRef.current.load();
+      
       audioRef.current.play().then(() => {
         setIsPlaying(true);
       }).catch((error) => {
         console.error("Error playing audio:", error);
+        console.error("Audio URL:", selectedAudio.url);
+        
+        let errorMessage = "Could not play the audio. Please try again.";
+        
+        if (error.name === 'NotAllowedError') {
+          errorMessage = "Browser blocked autoplay. Please click play again.";
+        } else if (error.name === 'NotSupportedError') {
+          errorMessage = "Audio format not supported. Please contact admin.";
+        } else if (error.name === 'AbortError') {
+          errorMessage = "Audio loading was interrupted. Please try again.";
+        }
+        
         toast({ 
           title: "Playback error", 
-          description: "Could not play the audio. Please try again.",
+          description: errorMessage,
           variant: "destructive"
         });
+        setIsPlaying(false);
       });
     }
   };
