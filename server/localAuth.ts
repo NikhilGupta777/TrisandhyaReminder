@@ -66,21 +66,12 @@ export function setupLocalAuth() {
             return done(null, false, { message: "Invalid email or password" });
           }
 
-          // For admin users, validate against ADMIN_PASSWORD environment variable
-          if (user.isAdmin && process.env.ADMIN_PASSWORD) {
-            const isValidAdminPassword = password === process.env.ADMIN_PASSWORD;
-            if (!isValidAdminPassword) {
-              return done(null, false, { message: "Invalid email or password" });
-            }
-            
-            if (!user.emailVerified) {
-              return done(null, false, { message: "Please verify your email first" });
-            }
-            
-            return done(null, user);
+          // Check email verification first (before password validation to prevent timing attacks)
+          if (!user.emailVerified) {
+            return done(null, false, { message: "Please verify your email first" });
           }
 
-          // For regular users, validate against hashed password in database
+          // Validate password using hashed password in database
           if (!user.password) {
             return done(null, false, { message: "Invalid email or password" });
           }
@@ -88,10 +79,6 @@ export function setupLocalAuth() {
           const isValidPassword = await bcrypt.compare(password, user.password);
           if (!isValidPassword) {
             return done(null, false, { message: "Invalid email or password" });
-          }
-
-          if (!user.emailVerified) {
-            return done(null, false, { message: "Please verify your email first" });
           }
 
           return done(null, user);

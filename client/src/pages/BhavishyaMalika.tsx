@@ -9,31 +9,7 @@ export default function BhavishyaMalika() {
   const [isLoading, setIsLoading] = useState(true);
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8">
-      {/* Hero Section */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-orange-500 via-amber-500 to-yellow-500 dark:from-orange-600 dark:via-amber-600 dark:to-yellow-600 p-12 text-white shadow-2xl">
-        <div className="absolute inset-0 bg-black/10 dark:bg-black/20"></div>
-        <div className="relative z-10 text-center space-y-4">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-sm font-medium mb-2">
-            <Sparkles className="h-4 w-4" />
-            Sacred Prophecies
-          </div>
-          <h1 className="text-5xl md:text-6xl font-bold font-serif drop-shadow-lg">
-            Bhavishya Malika Website
-          </h1>
-          <p className="text-xl md:text-2xl font-medium text-white/90 max-w-3xl mx-auto">
-            Ancient Wisdom for the Modern Age
-          </p>
-        </div>
-      </div>
-
-      {/* Info Alert */}
-      <Alert className="border-2 border-orange-200 dark:border-orange-800 bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-950/30 dark:to-amber-950/30 shadow-lg">
-        <Info className="h-5 w-5 text-orange-600 dark:text-orange-400" />
-        <AlertDescription className="text-base ml-2">
-          <strong className="text-orange-900 dark:text-orange-300">Sacred Knowledge:</strong> Bhavishya Malika contains ancient prophecies about the future, including the coming of Kalki Avatar and the transformation from Kali Yuga to Satya Yuga beginning in 2032.
-        </AlertDescription>
-      </Alert>
+    <div className="max-w-7xl mx-auto space-y-4">
 
       {/* Tabs */}
       <Tabs defaultValue="website" className="w-full">
@@ -65,21 +41,28 @@ export default function BhavishyaMalika() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="website" className="space-y-6 mt-8">
+        <TabsContent value="website" className="space-y-0 mt-4">
           <Card className="border-2 shadow-xl overflow-hidden">
-            <CardHeader className="bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-950/20 dark:to-amber-950/20 border-b-2">
-              <CardTitle className="flex items-center gap-3 text-2xl">
-                <div className="p-2 bg-orange-500 text-white rounded-lg">
-                  <Globe className="h-6 w-6" />
-                </div>
-                Bhavishya Malika Official Website
-              </CardTitle>
-              <CardDescription className="text-base">
-                Explore the complete website with all resources, articles, and sacred content from bhavishyamalika.com
-              </CardDescription>
+            <CardHeader className="bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-950/20 dark:to-amber-950/20 border-b py-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Globe className="h-5 w-5 text-orange-500" />
+                  Bhavishya Malika - Sacred Prophecies
+                </CardTitle>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className="text-xs"
+                  onClick={() => window.open("https://www.bhavishyamalika.com/", "_blank")}
+                  data-testid="button-open-external-top"
+                >
+                  <ExternalLink className="h-3 w-3 mr-1" />
+                  Open in New Tab
+                </Button>
+              </div>
             </CardHeader>
             <CardContent className="p-0">
-              <div className="relative w-full" style={{ height: "calc(100vh - 360px)", minHeight: "650px" }}>
+              <div className="relative w-full" style={{ height: "calc(100vh - 280px)" }}>
                 {isLoading && (
                   <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-orange-50 to-amber-50 dark:from-gray-900 dark:to-gray-800 z-10">
                     <div className="text-center space-y-6">
@@ -102,24 +85,6 @@ export default function BhavishyaMalika() {
                   data-testid="iframe-bhavishyamalika"
                   sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
                 />
-              </div>
-              <div className="p-6 bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-950/20 dark:to-amber-950/20 border-t-2 flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div className="flex items-center gap-2 text-sm">
-                  <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse"></div>
-                  <p className="text-muted-foreground">
-                    Connected to <span className="font-mono font-semibold text-orange-600 dark:text-orange-400">bhavishyamalika.com</span>
-                  </p>
-                </div>
-                <Button 
-                  variant="default" 
-                  size="sm"
-                  className="bg-orange-500 hover:bg-orange-600 text-white shadow-lg"
-                  onClick={() => window.open("https://www.bhavishyamalika.com/", "_blank")}
-                  data-testid="button-open-external"
-                >
-                  <ExternalLink className="h-4 w-4 mr-2" />
-                  Open in New Tab
-                </Button>
               </div>
             </CardContent>
           </Card>

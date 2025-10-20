@@ -98,36 +98,19 @@ export default function QuestionsAnswers() {
   })).filter(category => category.questions.length > 0);
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8">
-      {/* Hero Section */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 dark:from-blue-600 dark:via-purple-600 dark:to-pink-600 p-12 text-white shadow-2xl">
-        <div className="absolute inset-0 bg-black/10 dark:bg-black/20"></div>
-        <div className="relative z-10 text-center space-y-4">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-sm font-medium mb-2">
-            <HelpCircle className="h-4 w-4" />
-            Help Center
-          </div>
-          <h1 className="text-5xl md:text-6xl font-bold font-serif drop-shadow-lg">
-            Question / Answers
-          </h1>
-          <p className="text-xl md:text-2xl font-medium text-white/90 max-w-3xl mx-auto">
-            Find answers to your questions about Trisandhya Sadhana
-          </p>
-        </div>
-      </div>
-
+    <div className="max-w-6xl mx-auto space-y-6">
       {/* Search Card */}
       <Card className="border-2 shadow-xl">
-        <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20 border-b-2">
-          <CardTitle className="flex items-center gap-3 text-2xl">
+        <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20 border-b py-3">
+          <div className="flex items-center gap-3">
             <div className="p-2 bg-blue-500 text-white rounded-lg">
-              <Search className="h-6 w-6" />
+              <Search className="h-5 w-5" />
             </div>
-            Search Questions
-          </CardTitle>
-          <CardDescription className="text-base">
-            Type keywords to quickly find the answers you need
-          </CardDescription>
+            <div className="flex-1">
+              <CardTitle className="text-lg">Question / Answers</CardTitle>
+              <CardDescription className="text-sm">Find answers about Trisandhya Sadhana</CardDescription>
+            </div>
+          </div>
         </CardHeader>
         <CardContent className="p-6">
           <div className="relative">
@@ -233,24 +216,20 @@ export default function QuestionsAnswers() {
       )}
 
       {/* CTA Card */}
-      <Card className="border-2 shadow-2xl bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 dark:from-blue-600 dark:via-purple-600 dark:to-pink-600 text-white overflow-hidden">
-        <div className="absolute inset-0 bg-black/10 dark:bg-black/20"></div>
-        <CardContent className="relative z-10 py-12 text-center">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-white/20 backdrop-blur-sm mb-6">
-            <HelpCircle className="h-10 w-10" />
-          </div>
-          <h3 className="text-3xl font-bold mb-4">Still have questions?</h3>
-          <p className="text-lg mb-8 text-white/90 max-w-2xl mx-auto">
-            Can't find the answer you're looking for? Our support team is here to help you with your spiritual journey.
+      <Card className="border-2 shadow-lg bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20">
+        <CardContent className="py-6 text-center">
+          <h3 className="text-xl font-bold mb-2">Still have questions?</h3>
+          <p className="text-sm text-muted-foreground mb-4">
+            Can't find the answer you're looking for? Contact our support team.
           </p>
           <Button 
-            variant="secondary" 
-            size="lg"
-            className="bg-white text-purple-600 hover:bg-gray-100 shadow-xl font-semibold"
+            variant="default" 
+            size="sm"
+            className="bg-blue-500 hover:bg-blue-600"
             onClick={() => window.location.href = "/contact"}
             data-testid="button-contact-support"
           >
-            <Mail className="h-5 w-5 mr-2" />
+            <Mail className="h-4 w-4 mr-2" />
             Contact Support
           </Button>
         </CardContent>
