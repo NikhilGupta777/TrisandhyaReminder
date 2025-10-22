@@ -35,6 +35,8 @@ import Contact from "@/pages/Contact";
 import Legal from "@/pages/Legal";
 import QuestionsAnswers from "@/pages/QuestionsAnswers";
 import BhavishyaMalika from "@/pages/BhavishyaMalika";
+import DivineExperiences from "@/pages/DivineExperiences";
+import Articles from "@/pages/Articles";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
 import UserManagement from "@/pages/admin/UserManagement";
 import MediaManagement from "@/pages/admin/MediaManagement";
@@ -85,7 +87,9 @@ function UserRouter() {
       <Route path="/alarms" component={AlarmsConnected} />
       <Route path="/alarms-new" component={AlarmsNew} />
       <Route path="/settings" component={SettingsConnected} />
+      <Route path="/divine-experiences" component={DivineExperiences} />
       <Route path="/questions" component={QuestionsAnswers} />
+      <Route path="/articles" component={Articles} />
       <Route path="/bhavishya-malika" component={BhavishyaMalika} />
       <Route path="/about" component={About} />
       <Route path="/contact" component={Contact} />

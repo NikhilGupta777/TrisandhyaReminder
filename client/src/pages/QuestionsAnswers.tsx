@@ -3,83 +3,68 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Search, HelpCircle, MessageSquare, Sparkles, Mail } from "lucide-react";
+import { Search, HelpCircle, MessageSquare, Sparkles, Mail, BookOpen } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 const faqCategories = [
   {
-    category: "General Questions",
-    icon: "📚",
+    category: "Trisandhya Basics",
+    icon: "🙏",
     color: "orange",
     questions: [
       {
-        question: "What is Trisandhya Sadhana?",
-        answer: "Trisandhya Sadhana is the practice of performing worship and meditation three times a day - during dawn (Pratah), noon (Madhyahna), and evening (Sayam). This ancient practice helps maintain spiritual discipline and connection with the divine throughout the day."
+        question: "What is the importance of chanting Madhav's name during Trisandhya?",
+        answer: "Chanting Madhav's name during Trisandhya invokes divine grace and protection. It connects the devotee directly with Lord Madhav's consciousness and brings spiritual transformation. Regular practice purifies the mind and heart, leading to inner peace and divine blessings."
       },
       {
-        question: "How do I start my daily Sadhana practice?",
-        answer: "Begin by setting up your alarm times in the Alarms section. Start with one Sandhya period that fits your schedule, and gradually add more. Use the Daily Sadhna guide to follow the proper rituals and mantras."
+        question: "What is Durga Madhav Stuti?",
+        answer: "Durga Madhav Stuti is a sacred hymn that praises both Goddess Durga and Lord Madhav. It is chanted during Trisandhya to invoke their combined divine power for protection, prosperity, and spiritual progress. The stuti acknowledges the divine masculine and feminine energies."
       },
       {
-        question: "What is the significance of 108 mantras?",
-        answer: "The number 108 is considered sacred in Hindu tradition. It represents spiritual completion and is derived from various cosmic calculations. Chanting mantras 108 times helps achieve focus and devotional connection."
+        question: "What is 'Dasavtara Strotra'?",
+        answer: "Dasavtara Strotra is a prayer that glorifies the ten incarnations (avatars) of Lord Vishnu. Reciting this during Trisandhya helps devotees remember and honor the divine manifestations that came to restore dharma at different times in history, including the upcoming Kalki Avatar."
+      },
+      {
+        question: "What is the 'Vishnu Shodasha Naam' and why should it be chanted?",
+        answer: "Vishnu Shodasha Naam refers to the sixteen sacred names of Lord Vishnu. Chanting these names during Trisandhya invokes different divine qualities and energies. Each name carries specific spiritual vibrations that purify consciousness and grant divine blessings."
+      },
+      {
+        question: "What is the Gayatri Mantra, and what is its significance in Trisandhya?",
+        answer: "The Gayatri Mantra is one of the most powerful Vedic mantras that invokes divine light and wisdom. In Trisandhya, it is chanted to illuminate the mind, remove ignorance, and awaken spiritual consciousness. It is considered the essence of all Vedic knowledge."
+      },
+      {
+        question: "Which mantras are chanted with Trisandhya / Trikal Sandhya?",
+        answer: "Trisandhya includes several mantras: Gayatri Mantra, Vishnu Shodasha Naam, Dasavtara Strotra, Durga Madhav Stuti, and continuous chanting of Madhav's name. Each mantra serves a specific spiritual purpose and collectively they create a complete spiritual practice."
       }
     ]
   },
   {
-    category: "Bhavishya Malika",
-    icon: "📜",
+    category: "Practice & Timing",
+    icon: "⏰",
     color: "amber",
     questions: [
       {
-        question: "What is Bhavishya Malika?",
-        answer: "Bhavishya Malika is a prophetic text that contains predictions about future events. It is part of the sacred scriptures that guide spiritual seekers about the path ahead and the coming of the Kalki Avatar."
+        question: "It was told that Trisandhya can be done in less than 5 minutes, especially during lunch break in the office for working people. Please give a complete step-by-step process to do it in the mentioned duration.",
+        answer: "Quick Trisandhya process: 1) Sit quietly and take 3 deep breaths (30 seconds). 2) Chant 'Om Namo Madhavaya' 21 times with focus (2 minutes). 3) Recite Gayatri Mantra 3 times (1 minute). 4) Close eyes and meditate on Madhav for 1 minute. 5) Pray for guidance (30 seconds). Total: approximately 5 minutes. The key is sincere devotion, not duration."
       },
       {
-        question: "How can I access Bhavishya Malika content?",
-        answer: "You can access Bhavishya Malika content through the dedicated Bhavishya Malika Website section in the navigation menu. There you'll find teachings, predictions, and interpretations of this sacred text."
+        question: "What to do if we forget any one of Trikal sandhya, like in morning?",
+        answer: "If you miss morning Trisandhya, do it as soon as you remember during the day. The important thing is not to feel guilty but to resume practice with devotion. You can also do an extra round during the next Sandhya time as compensation. Lord Madhav appreciates sincere effort more than perfect timing."
       },
       {
-        question: "When will Satya Yuga begin?",
-        answer: "According to Bhavishya Malika and Jagannath culture, Satya Yuga (the Golden Age) will begin in 2032, marking the end of Kali Yuga and the start of a new era of truth and righteousness."
+        question: "I do Trisandhya regularly, but I'm away at work all day, so I'm unable to do it with my 1.5-year-old baby. Is there a way for my baby to also benefit from it?",
+        answer: "Your baby automatically receives spiritual benefits from your Trisandhya practice! The divine energy you generate creates a protective aura around your family. You can also play Madhav naam chanting audio for your baby, or do a quick simplified Trisandhya (just Madhav naam chanting) together when you're with your child in the morning or evening."
       }
     ]
   },
   {
-    category: "Technical Support",
-    icon: "⚙️",
+    category: "Spiritual Questions",
+    icon: "✨",
     color: "blue",
     questions: [
       {
-        question: "How do I set custom alarm sounds?",
-        answer: "Go to the Alarms page and upload your own audio files. You can use MP3, WAV, or OGG format files up to 10MB. The alarm system works offline, so your custom sounds are stored locally on your device."
-      },
-      {
-        question: "Why isn't my Japa audio playing?",
-        answer: "Make sure you have selected a Japa audio in the settings. If no audio is available, contact the administrator to upload Japa audio files. Also, ensure your browser allows audio playback."
-      },
-      {
-        question: "How do I save my progress?",
-        answer: "Your daily Sadhana progress is automatically saved when you check off completed tasks or save your Japa count. You can view your progress history in the Progress section."
-      }
-    ]
-  },
-  {
-    category: "App Features",
-    icon: "✨",
-    color: "purple",
-    questions: [
-      {
-        question: "What is the Madhav Naam Jap counter?",
-        answer: "The Jap counter helps you keep track of your mantra repetitions. You can set daily goals, save your progress, and listen to chanting audio while counting. Your progress contributes to your overall spiritual journey."
-      },
-      {
-        question: "Can I use the app offline?",
-        answer: "Yes! The alarm system and many features work offline. Your alarm sounds are stored locally, and the app continues to function even without an internet connection."
-      },
-      {
-        question: "How do I access Mahapuran content?",
-        answer: "Navigate to Mahapuran PDFs in the sidebar. You'll find organized chapters and skandas of the Shreemad Bhagwat Mahapuran. You can read, download, and study the sacred texts."
+        question: "My Rajput friend has been following non-vegetarian food habits from birth. Now he wants to change and become a vegetarian. Is it necessary to follow Trisandhya? Is it possible for him to become pure?",
+        answer: "Yes, it is absolutely possible for anyone to become pure through sincere practice! Trisandhya greatly helps in spiritual transformation. When someone regularly practices Trisandhya, their consciousness naturally elevates and they develop sattvic (pure) tendencies. The combination of vegetarian diet and Trisandhya accelerates spiritual purification. Start gradually - reduce non-vegetarian food while increasing Trisandhya practice. Divine grace supports all sincere seekers regardless of their past."
       }
     ]
   }
@@ -97,26 +82,33 @@ export default function QuestionsAnswers() {
     )
   })).filter(category => category.questions.length > 0);
 
+  const totalQuestions = faqCategories.reduce((acc, cat) => acc + cat.questions.length, 0);
+
   return (
     <div className="max-w-6xl mx-auto space-y-6">
-      {/* Search Card */}
-      <Card className="border-2 shadow-xl">
-        <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20 border-b py-3">
+      {/* Header */}
+      <Card className="border-2 shadow-xl bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20">
+        <CardHeader className="border-b pb-6">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-500 text-white rounded-lg">
-              <Search className="h-5 w-5" />
+            <div className="p-3 bg-blue-500 text-white rounded-xl">
+              <BookOpen className="h-6 w-6" />
             </div>
             <div className="flex-1">
-              <CardTitle className="text-lg">Question / Answers</CardTitle>
-              <CardDescription className="text-sm">Find answers about Trisandhya Sadhana</CardDescription>
+              <CardTitle className="text-3xl font-bold">Question / Answers</CardTitle>
+              <CardDescription className="text-base mt-1">
+                Read all answers about Trisandhya based on authentic information from Bhavishya Malika
+              </CardDescription>
             </div>
+            <Badge variant="secondary" className="text-lg px-4 py-2">
+              {totalQuestions} Questions
+            </Badge>
           </div>
         </CardHeader>
-        <CardContent className="p-6">
+        <CardContent className="pt-6">
           <div className="relative">
             <Search className="absolute left-4 top-4 h-5 w-5 text-muted-foreground" />
             <Input
-              placeholder="Search for answers... (e.g., 'alarm sounds', 'Satya Yuga', 'offline')"
+              placeholder="Search questions about Trisandhya, mantras, practice..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-12 h-14 text-lg border-2 focus:border-blue-500 dark:focus:border-blue-400"
@@ -214,6 +206,17 @@ export default function QuestionsAnswers() {
           ))}
         </div>
       )}
+
+      {/* Info Card */}
+      <Card className="border-2 shadow-xl bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-950/20 dark:to-yellow-950/20">
+        <CardContent className="py-6 text-center">
+          <Sparkles className="h-8 w-8 mx-auto mb-3 text-amber-600" />
+          <p className="text-sm font-medium text-amber-900 dark:text-amber-200 max-w-2xl mx-auto">
+            All answers are based on authentic information from the Bhavishya Malika community and Trisandhya teachings. 
+            For more detailed guidance, visit the official Bhavishya Malika website or consult with spiritual teachers.
+          </p>
+        </CardContent>
+      </Card>
 
       {/* CTA Card */}
       <Card className="border-2 shadow-lg bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20">

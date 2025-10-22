@@ -12,6 +12,8 @@ import {
   FileText,
   HelpCircle,
   Scroll,
+  Heart,
+  Newspaper,
 } from "lucide-react";
 import {
   Sidebar,
@@ -41,7 +43,9 @@ const menuItems = [
 ];
 
 const middleLinks = [
+  { title: "Divine Experiences", url: "/divine-experiences", icon: Heart },
   { title: "Question / Answers", url: "/questions", icon: HelpCircle },
+  { title: "Articles", url: "/articles", icon: Newspaper },
 ];
 
 const footerLinks = [
