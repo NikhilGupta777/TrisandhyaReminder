@@ -22,6 +22,7 @@ const menuItems = [
   { title: "Media Library", url: "/media", icon: Music },
   { title: "Progress", url: "/progress", icon: BarChart3 },
   { title: "Alarms", url: "/alarms", icon: Bell },
+  { title: "Alarms (New)", url: "/alarms-new", icon: Bell },
   { title: "Settings", url: "/settings", icon: Settings },
 ];
 
