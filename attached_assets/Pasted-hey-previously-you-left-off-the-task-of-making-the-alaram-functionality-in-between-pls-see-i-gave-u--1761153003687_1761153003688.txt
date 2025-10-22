@@ -1,0 +1,33 @@
+hey previously you left off the task of making the alaram functionality in between pls see i gave u this task:
+
+hey in this app the we have to transform the alarm functionality to the best every like any smartphone system default alarm app is.
+
+Key objectives:
+
+    Full offline capability. All alarms, schedules, and user preferences must be stored locally (SQLite, localStorage, or device file system or what is the best like system default alarm apps).
+    Alarms must trigger accurately even without internet or app being open.
+    Allow users to import or select local audio/music files (mp3, wav, etc.) as alarm tones.
+    Keep optional cloud sync (using S3 or your API) only for backup or cross-device restore, never required for operation.
+    Enable multiple alarms with:
+        Repeat days
+        Custom names
+        Snooze / dismiss logic
+        Adjustable volume and vibration
+    Add local notification + background wakeup for mobile devices (use WorkManager / flutter_local_notifications / react-native-background-fetch).
+    Build a native-feeling alarm ring screen with big dismiss + snooze buttons and animation support.
+    Ensure reliability during Doze mode, screen off, or browser minimized states.
+    Provide smooth UI for:
+        Creating and editing alarms
+        Browsing and testing tones
+        Viewing upcoming alarms
+    Use a modular architecture:
+        UI Layer
+        Local Storage Layer
+        Notification & Audio Player Layer
+    Include fallback handling for devices with restricted background execution.
+    Use system-native APIs whenever possible (e.g., Android AlarmManager, iOS NotificationCenter).
+    Keep UX minimal and elegant — fast setup, instant load, no lag.
+    Technical stack preferences:
+    ...
+
+pls see what have u done also i said u to make the best of it in new page in the app: "Alarms-New" maybe u have made a folder "/mobile" in this app files pls see it too, i had told u to make the best alaram thing in the app pls see and do literally the best of best think fully and do!
