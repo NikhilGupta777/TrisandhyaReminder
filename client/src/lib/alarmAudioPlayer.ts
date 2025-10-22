@@ -43,7 +43,8 @@ export class AlarmAudioPlayer {
       }
 
       // Play the alarm sound
-      if (audioSource) {
+      // audioSource can be a data URL (base64 encoded audio) or null for default
+      if (audioSource && audioSource.startsWith('data:')) {
         await this.playCustomAudio(audioSource);
       } else {
         await this.playDefaultAlarmSound();
@@ -52,6 +53,13 @@ export class AlarmAudioPlayer {
       this.isPlaying = true;
     } catch (error) {
       console.error('Failed to play alarm sound:', error);
+      // Fallback to default sound if custom audio fails
+      try {
+        await this.playDefaultAlarmSound();
+        this.isPlaying = true;
+      } catch (fallbackError) {
+        console.error('Fallback to default sound also failed:', fallbackError);
+      }
     }
   }
 

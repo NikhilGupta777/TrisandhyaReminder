@@ -28,12 +28,25 @@ export function useWebAlarmSystem() {
     }
   }, []);
 
-  const handleAlarmTrigger = useCallback((alarm: IndexedDBAlarm) => {
+  const handleAlarmTrigger = useCallback(async (alarm: IndexedDBAlarm) => {
     setState(prev => ({ ...prev, activeAlarm: alarm }));
+    
+    // Load custom tone if one is selected
+    let audioSource = null;
+    if (alarm.toneId && !alarm.toneId.startsWith('default') && !alarm.toneId.startsWith('gentle') && !alarm.toneId.startsWith('classic')) {
+      try {
+        const customTone = await indexedDBAlarmStorage.getCustomTone(alarm.toneId);
+        if (customTone) {
+          audioSource = customTone.dataUrl;
+        }
+      } catch (error) {
+        console.error('Failed to load custom tone:', error);
+      }
+    }
     
     // Play alarm sound
     alarmAudioPlayer.playAlarmSound(
-      alarm.toneId ? `tone_${alarm.toneId}` : null,
+      audioSource,
       alarm.volume,
       alarm.vibrate
     );

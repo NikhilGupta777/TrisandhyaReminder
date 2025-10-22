@@ -1,13 +1,16 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
-import { Trash2, Volume2, Bell } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Trash2, Volume2, Bell, Upload, Play } from 'lucide-react';
 import { useWebAlarmSystem } from '@/hooks/use-web-alarm-system';
-import type { IndexedDBAlarm } from '@/lib/indexedDBAlarmStorage';
+import { indexedDBAlarmStorage, type IndexedDBAlarm, type CustomTone } from '@/lib/indexedDBAlarmStorage';
+import { alarmAudioPlayer } from '@/lib/alarmAudioPlayer';
+import type { IndexedDBAlarm as IndexedDBAlarmType } from '@/lib/indexedDBAlarmStorage';
 import { useToast } from '@/hooks/use-toast';
 
 const WEEK_DAYS = [
@@ -20,10 +23,16 @@ const WEEK_DAYS = [
   { id: 6, label: 'S', fullLabel: 'Saturday' },
 ];
 
+const DEFAULT_TONES = [
+  { id: 'default', name: 'Default Bell' },
+  { id: 'gentle', name: 'Gentle Chime' },
+  { id: 'classic', name: 'Classic Alarm' },
+];
+
 interface AddEditAlarmDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  editingAlarm: IndexedDBAlarm | null;
+  editingAlarm: IndexedDBAlarmType | null;
   onClose: () => void;
   onDelete: (id: string, label: string) => void;
 }
@@ -37,6 +46,7 @@ export function AddEditAlarmDialog({
 }: AddEditAlarmDialogProps) {
   const { toast } = useToast();
   const { createAlarm, updateAlarm } = useWebAlarmSystem();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [label, setLabel] = useState('');
   const [time, setTime] = useState('06:00');
@@ -44,6 +54,15 @@ export function AddEditAlarmDialog({
   const [volume, setVolume] = useState([80]);
   const [vibrate, setVibrate] = useState(true);
   const [snoozeMinutes, setSnoozeMinutes] = useState(5);
+  const [selectedToneId, setSelectedToneId] = useState<string | null>(null);
+  const [customTones, setCustomTones] = useState<CustomTone[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+
+  useEffect(() => {
+    if (open) {
+      loadCustomTones();
+    }
+  }, [open]);
 
   useEffect(() => {
     if (editingAlarm) {
@@ -53,16 +72,26 @@ export function AddEditAlarmDialog({
       setVolume([editingAlarm.volume]);
       setVibrate(editingAlarm.vibrate);
       setSnoozeMinutes(editingAlarm.snoozeMinutes);
+      setSelectedToneId(editingAlarm.toneId);
     } else {
-      // Reset for new alarm
       setLabel('');
       setTime('06:00');
       setRepeatDays([]);
       setVolume([80]);
       setVibrate(true);
       setSnoozeMinutes(5);
+      setSelectedToneId(null);
     }
   }, [editingAlarm, open]);
+
+  const loadCustomTones = async () => {
+    try {
+      const tones = await indexedDBAlarmStorage.getAllCustomTones();
+      setCustomTones(tones);
+    } catch (error) {
+      console.error('Failed to load custom tones:', error);
+    }
+  };
 
   const toggleRepeatDay = (day: number) => {
     setRepeatDays(prev =>
@@ -70,15 +99,104 @@ export function AddEditAlarmDialog({
     );
   };
 
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: 'File too large',
+        description: 'Please select an audio file smaller than 5MB',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!file.type.startsWith('audio/')) {
+      toast({
+        title: 'Invalid file type',
+        description: 'Please select an audio file (MP3, WAV, etc.)',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsUploading(true);
+
+    try {
+      const dataUrl = await fileToDataUrl(file);
+      const tone = await indexedDBAlarmStorage.addCustomTone({
+        name: file.name.replace(/\.[^/.]+$/, ''),
+        dataUrl,
+        duration: null,
+        fileSize: file.size,
+        mimeType: file.type,
+      });
+
+      await loadCustomTones();
+      setSelectedToneId(tone.id);
+
+      toast({
+        title: 'Tone uploaded',
+        description: `${file.name} has been added`,
+        duration: 2000,
+      });
+    } catch (error) {
+      console.error('Failed to upload tone:', error);
+      toast({
+        title: 'Upload failed',
+        description: 'Could not upload audio file',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const fileToDataUrl = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleTestTone = async () => {
+    try {
+      let audioSource = null;
+      if (selectedToneId && !DEFAULT_TONES.find(t => t.id === selectedToneId)) {
+        const tone = await indexedDBAlarmStorage.getCustomTone(selectedToneId);
+        audioSource = tone?.dataUrl || null;
+      }
+      await alarmAudioPlayer.testSound(audioSource, volume[0]);
+    } catch (error) {
+      console.error('Failed to test tone:', error);
+      toast({
+        title: 'Test failed',
+        description: 'Could not play alarm tone',
+        variant: 'destructive',
+      });
+    }
+  };
+
   const handleSave = async () => {
     try {
+      const selectedTone = selectedToneId 
+        ? (DEFAULT_TONES.find(t => t.id === selectedToneId) || 
+           customTones.find(t => t.id === selectedToneId))
+        : null;
+
       const alarmData = {
         label: label || 'Alarm',
         time,
         enabled: true,
         repeatDays,
-        toneId: null,
-        toneName: 'Default',
+        toneId: selectedToneId,
+        toneName: selectedTone?.name || 'Default Bell',
         volume: volume[0],
         vibrate,
         snoozeMinutes,
@@ -109,9 +227,11 @@ export function AddEditAlarmDialog({
     }
   };
 
+  const allTones = [...DEFAULT_TONES, ...customTones];
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] bg-zinc-900 text-white border-white/10">
+      <DialogContent className="sm:max-w-[500px] bg-zinc-900 text-white border-white/10 max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center justify-between">
             <DialogTitle className="text-xl font-light">
@@ -183,6 +303,61 @@ export function AddEditAlarmDialog({
             {repeatDays.length === 7 && (
               <p className="text-xs text-orange-400">Every day</p>
             )}
+          </div>
+
+          {/* Alarm Tone Selection */}
+          <div className="space-y-3">
+            <Label className="text-sm text-white/70">Alarm Tone</Label>
+            <div className="flex gap-2">
+              <Select value={selectedToneId || undefined} onValueChange={setSelectedToneId}>
+                <SelectTrigger className="flex-1 bg-white/5 border-white/10 text-white">
+                  <SelectValue placeholder="Default Bell" />
+                </SelectTrigger>
+                <SelectContent className="bg-zinc-900 border-white/10">
+                  {allTones.map(tone => (
+                    <SelectItem 
+                      key={tone.id} 
+                      value={tone.id}
+                      className="text-white focus:bg-white/10 focus:text-white"
+                    >
+                      {tone.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handleTestTone}
+                className="bg-white/5 border-white/10 text-white hover:bg-white/10"
+                data-testid="button-test-tone"
+              >
+                <Play className="h-4 w-4" />
+              </Button>
+            </div>
+            
+            {/* Upload Custom Tone */}
+            <div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="audio/*"
+                onChange={handleFileUpload}
+                className="hidden"
+                data-testid="input-file-upload"
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploading}
+                className="w-full bg-white/5 border-white/10 text-white/70 hover:bg-white/10 hover:text-white"
+                data-testid="button-upload-tone"
+              >
+                <Upload className="h-4 w-4 mr-2" />
+                {isUploading ? 'Uploading...' : 'Upload Custom Tone'}
+              </Button>
+            </div>
           </div>
 
           {/* Volume */}
