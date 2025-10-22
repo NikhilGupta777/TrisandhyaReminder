@@ -1,4 +1,18 @@
-import { Home, BookOpen, Music, BarChart3, Settings, Bell, Book, ScrollText, Info, Mail, FileText, HelpCircle, Scroll } from "lucide-react";
+import {
+  Home,
+  BookOpen,
+  Music,
+  BarChart3,
+  Settings,
+  Bell,
+  Book,
+  ScrollText,
+  Info,
+  Mail,
+  FileText,
+  HelpCircle,
+  Scroll,
+} from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -50,8 +64,18 @@ export function AppSidebar() {
             <SidebarMenu>
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={location === item.url || location.startsWith(item.url + "/")} className="py-3">
-                    <Link href={item.url} data-testid={`link-${item.title.toLowerCase().replace(/ /g, "-")}`}>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={
+                      location === item.url ||
+                      location.startsWith(item.url + "/")
+                    }
+                    className="py-3"
+                  >
+                    <Link
+                      href={item.url}
+                      data-testid={`link-${item.title.toLowerCase().replace(/ /g, "-")}`}
+                    >
                       <item.icon className="h-5 w-5" />
                       <span className="font-medium">{item.title}</span>
                     </Link>
@@ -62,14 +86,21 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      
+
       <SidebarFooter>
         <Separator className="mb-2" />
         <SidebarMenu>
           {middleLinks.map((link) => (
             <SidebarMenuItem key={link.title}>
-              <SidebarMenuButton asChild isActive={location === link.url} size="sm">
-                <Link href={link.url} data-testid={`link-${link.title.toLowerCase().replace(/ /g, "-").replace(/&/g, "and")}`}>
+              <SidebarMenuButton
+                asChild
+                isActive={location === link.url}
+                size="sm"
+              >
+                <Link
+                  href={link.url}
+                  data-testid={`link-${link.title.toLowerCase().replace(/ /g, "-").replace(/&/g, "and")}`}
+                >
                   <link.icon className="h-4 w-4" />
                   <span className="text-sm">{link.title}</span>
                 </Link>
@@ -81,8 +112,15 @@ export function AppSidebar() {
         <SidebarMenu>
           {footerLinks.map((link) => (
             <SidebarMenuItem key={link.title}>
-              <SidebarMenuButton asChild isActive={location === link.url} size="sm">
-                <Link href={link.url} data-testid={`link-${link.title.toLowerCase().replace(/ /g, "-").replace(/&/g, "and")}`}>
+              <SidebarMenuButton
+                asChild
+                isActive={location === link.url}
+                size="sm"
+              >
+                <Link
+                  href={link.url}
+                  data-testid={`link-${link.title.toLowerCase().replace(/ /g, "-").replace(/&/g, "and")}`}
+                >
                   <link.icon className="h-4 w-4" />
                   <span className="text-sm">{link.title}</span>
                 </Link>
@@ -91,7 +129,7 @@ export function AppSidebar() {
           ))}
         </SidebarMenu>
         <div className="px-2 py-2 text-xs text-muted-foreground text-center">
-          <p>© 2024 Trisandhya Sadhana</p>
+          <p>© 2025 Trisandhya App</p>
         </div>
       </SidebarFooter>
     </Sidebar>
