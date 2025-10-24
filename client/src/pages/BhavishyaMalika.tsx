@@ -2,27 +2,58 @@ import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Scroll, BookOpen, Calendar, Star, Info, ExternalLink, Globe, Sparkles, Maximize, Minimize } from "lucide-react";
+import { Scroll, BookOpen, Calendar, Info, ExternalLink, Globe, Sparkles, Maximize, Minimize, Menu, X, Shield, Bell as BellIcon, LogOut, Sun, Moon, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useSidebar } from "@/components/ui/sidebar";
+import { useSidebar, SidebarTrigger } from "@/components/ui/sidebar";
+import { useTheme } from "@/components/ThemeProvider";
+import { useAuth } from "@/hooks/useAuth";
+import { NotificationBell } from "@/components/NotificationBell";
 
 export default function BhavishyaMalika() {
   const [isLoading, setIsLoading] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isMenuCollapsed, setIsMenuCollapsed] = useState(false);
+  const [activeTab, setActiveTab] = useState("website");
   const iframeContainerRef = useRef<HTMLDivElement>(null);
-  const { setOpen, isMobile } = useSidebar();
+  const menuRef = useRef<HTMLDivElement>(null);
+  const { setOpen } = useSidebar();
+  const { theme, setTheme } = useTheme();
+  const { isAdmin } = useAuth();
 
-  // Auto-close sidebar on first visit (desktop only)
+  // Auto-close sidebar every time the page loads
   useEffect(() => {
-    const hasVisited = sessionStorage.getItem("bhavishya_malika_visited");
-    if (!hasVisited && !isMobile) {
-      setOpen(false);
-      sessionStorage.setItem("bhavishya_malika_visited", "true");
-    }
-  }, [setOpen, isMobile]);
+    setOpen(false);
+    }, [setOpen]);
 
-  const toggleFullscreen = () => {
-    if (!document.fullscreenElement) {
+    // Auto-hide menu after 2 seconds
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsMenuCollapsed(true);
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node) && isMenuOpen) {
+        setIsMenuOpen(false);
+      }
+    };
+
+    if (isMenuOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isMenuOpen]);
+  
+    const toggleFullscreen = () => {
+      if (!document.fullscreenElement) {
       iframeContainerRef.current?.requestFullscreen();
       setIsFullscreen(true);
     } else {
@@ -39,72 +70,31 @@ export default function BhavishyaMalika() {
     return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
   }, []);
 
-  return (
-    <div className="fixed inset-0 flex flex-col bg-background" style={{ marginTop: '65px', marginLeft: '0' }}>
-      {/* Tabs */}
-      <Tabs defaultValue="website" className="w-full h-full flex flex-col">
-        <div className="border-b bg-background px-4 py-2 flex-shrink-0">
-          <TabsList className="grid w-full max-w-4xl mx-auto grid-cols-5 h-auto p-1 bg-muted/50 rounded-lg">
-            <TabsTrigger value="website" className="data-[state=active]:bg-orange-500 data-[state=active]:text-white py-2 rounded-md transition-all text-xs sm:text-sm" data-testid="tab-website">
-              <Globe className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-              <span className="hidden sm:inline">Official Website</span>
-              <span className="sm:hidden">Website</span>
-            </TabsTrigger>
-            <TabsTrigger value="introduction" className="data-[state=active]:bg-orange-500 data-[state=active]:text-white py-2 rounded-md transition-all text-xs sm:text-sm" data-testid="tab-introduction">
-              <BookOpen className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-              <span className="hidden sm:inline">Introduction</span>
-              <span className="sm:hidden">Intro</span>
-            </TabsTrigger>
-            <TabsTrigger value="prophecies" className="data-[state=active]:bg-orange-500 data-[state=active]:text-white py-2 rounded-md transition-all text-xs sm:text-sm" data-testid="tab-prophecies">
-              <Scroll className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-              <span className="hidden sm:inline">Prophecies</span>
-              <span className="sm:hidden">Prophecies</span>
-            </TabsTrigger>
-            <TabsTrigger value="kalki" className="data-[state=active]:bg-orange-500 data-[state=active]:text-white py-2 rounded-md transition-all text-xs sm:text-sm" data-testid="tab-kalki">
-              <Star className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-              <span className="hidden sm:inline">Kalki Avatar</span>
-              <span className="sm:hidden">Kalki</span>
-            </TabsTrigger>
-            <TabsTrigger value="timeline" className="data-[state=active]:bg-orange-500 data-[state=active]:text-white py-2 rounded-md transition-all text-xs sm:text-sm" data-testid="tab-timeline">
-              <Calendar className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-              <span className="hidden sm:inline">Timeline</span>
-              <span className="sm:hidden">Timeline</span>
-            </TabsTrigger>
-          </TabsList>
-        </div>
+  const toggleTheme = () => {
+    setTheme(theme === "light" ? "dark" : "light");
+  };
 
-        <TabsContent value="website" className="flex-1 mt-0 m-0 p-0 flex flex-col">
-          <div className="flex-shrink-0 border-b bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-950/20 dark:to-amber-950/20 px-4 py-2">
-            <div className="flex items-center justify-between">
-              <h2 className="flex items-center gap-2 text-base sm:text-lg font-semibold">
-                <Globe className="h-4 w-4 sm:h-5 sm:w-5 text-orange-500" />
-                Bhavishya Malika - Sacred Prophecies
-              </h2>
-              <div className="flex gap-2">
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  className="text-xs h-8"
-                  onClick={toggleFullscreen}
-                  data-testid="button-fullscreen"
-                >
-                  {isFullscreen ? <Minimize className="h-3 w-3 mr-1" /> : <Maximize className="h-3 w-3 mr-1" />}
-                  {isFullscreen ? "Exit" : "Fullscreen"}
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  className="text-xs h-8"
-                  onClick={() => window.open("https://www.bhavishyamalika.com/", "_blank")}
-                  data-testid="button-open-external-top"
-                >
-                  <ExternalLink className="h-3 w-3 mr-1" />
-                  New Tab
-                </Button>
-              </div>
-            </div>
-          </div>
-          <div className="flex-1 relative" ref={iframeContainerRef}>
+  const handleMenuToggle = () => {
+    if (isMenuCollapsed) {
+      setIsMenuCollapsed(false);
+      setIsMenuOpen(true);
+    } else {
+      setIsMenuOpen(!isMenuOpen);
+    }
+  };
+  
+  return (
+    <div className="fixed inset-0 bg-background">
+            {/* Sidebar Toggle Button with Blur */}
+      <div className="fixed top-4 left-4 z-50">
+        <div className="backdrop-blur-md bg-background/80 rounded-lg shadow-lg border border-border p-1">
+          <SidebarTrigger data-testid="button-sidebar-toggle" />
+        </div>
+      </div>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full flex flex-col">
+        {/* Fullscreen Website Tab */}
+        <TabsContent value="website" className="flex-1 mt-0 m-0 p-0 relative">
+          <div className="absolute inset-0" ref={iframeContainerRef}>
             {isLoading && (
               <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-orange-50 to-amber-50 dark:from-gray-900 dark:to-gray-800 z-10">
                 <div className="text-center space-y-6">
@@ -121,17 +111,19 @@ export default function BhavishyaMalika() {
             )}
             <iframe
               src="https://www.bhavishyamalika.com/"
-              className="w-full h-full border-0"
+              className="w-full h-full border-0 notranslate"
               title="Bhavishya Malika Official Website"
               onLoad={() => setIsLoading(false)}
               data-testid="iframe-bhavishyamalika"
               sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation"
               allow="fullscreen"
+              translate="no"
             />
           </div>
         </TabsContent>
 
-        <TabsContent value="introduction" className="flex-1 overflow-auto mt-0 p-4 sm:p-6">
+        {/* Introduction Tab */}
+        <TabsContent value="introduction" className="flex-1 overflow-auto mt-0 p-6">
           <div className="max-w-5xl mx-auto space-y-6">
             <Card className="border-2 shadow-xl">
               <CardHeader className="bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-950/20 dark:to-amber-950/20">
@@ -142,45 +134,51 @@ export default function BhavishyaMalika() {
                   About Bhavishya Malika
                 </CardTitle>
                 <CardDescription className="text-base">
-                  Understanding the sacred prophetic texts and their significance
+                  The Sacred Prophetic Scripture - Garland of Prophecies
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6 p-8">
                 <div className="prose dark:prose-invert max-w-none">
                   <p className="text-lg leading-relaxed text-muted-foreground">
-                    Bhavishya Malika is a collection of prophetic texts in Sanskrit that describe future events and the coming transformations in the world. These texts have been preserved and passed down through generations of spiritual masters and scholars.
+                    Bhavishya Malika, meaning <strong>"Garland of Prophecies"</strong>, is an ancient prophetic scripture written approximately 600 years ago (16th century, ~1450-1550 AD) by the <strong>Panchasakha</strong> (Five Friends) – a revered group of saints from Odisha, India. The primary author is <strong>Sant Shri Achyutananda Das</strong>, alongside Saints Ananta Das, Jasovanta Das, Jagannath Das, and Balaram Das.
                   </p>
                   <p className="text-lg leading-relaxed text-muted-foreground">
-                    The texts speak of the transition from Kali Yuga to Satya Yuga, the appearance of divine incarnations, and the establishment of dharma (righteousness) on Earth. Central to these prophecies is the arrival of Kalki Avatar, the tenth incarnation of Lord Vishnu.
+                    This sacred text comprises approximately <strong>185,000 individual works</strong> originally inscribed on palm leaves in the Odia script. It is considered the <strong>last and final scripture of Sanatan Dharma</strong> for the Kali Yuga era.
+                  </p>
+                </div>
+
+                <div className="bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-950/20 dark:to-amber-950/20 p-6 rounded-xl border-2 border-orange-200 dark:border-orange-800">
+                  <h4 className="font-bold text-xl mb-4 flex items-center gap-2">
+                    <Sparkles className="h-5 w-5 text-orange-500" />
+                    Divine Inspiration
+                  </h4>
+                  <p className="text-base leading-relaxed">
+                    Bhavishya Malika was divinely inspired by <strong>Lord Jagannath</strong> to guide humanity through the end of Kali Yuga, awaken devotees who have reincarnated across all four Yugas, prepare for Lord Kalki's arrival, and provide salvation guidance during the transformational period leading to <strong>Satya Yuga</strong> (the Golden Age), predicted to begin in <strong>2032</strong>.
                   </p>
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-6">
                   <div className="bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-950/20 dark:to-amber-950/20 p-6 rounded-xl border-2 border-orange-200 dark:border-orange-800">
                     <h4 className="font-bold text-lg mb-4 flex items-center gap-2">
-                      <Star className="h-5 w-5 text-orange-500" />
-                      Key Themes
+                      <Scroll className="h-5 w-5 text-orange-500" />
+                      Core Purpose
                     </h4>
                     <ul className="space-y-3">
                       <li className="flex items-start gap-2">
                         <span className="text-orange-500 mt-1">✦</span>
-                        <span>The transformation from Kali Yuga to Satya Yuga starting in 2032</span>
+                        <span>Guide humanity through the end of Kali Yuga</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <span className="text-orange-500 mt-1">✦</span>
-                        <span>The coming of Kalki Avatar</span>
+                        <span>Awaken devotees scattered across all four Yugas</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <span className="text-orange-500 mt-1">✦</span>
-                        <span>Restoration of dharma and righteousness</span>
+                        <span>Prepare for Lord Kalki's arrival</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <span className="text-orange-500 mt-1">✦</span>
-                        <span>Purification of the world and humanity</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span className="text-orange-500 mt-1">✦</span>
-                        <span>Signs and portents of the changing age</span>
+                        <span>Provide salvation guidance for the transformation</span>
                       </li>
                     </ul>
                   </div>
@@ -188,11 +186,61 @@ export default function BhavishyaMalika() {
                   <div className="bg-gradient-to-br from-amber-50 to-yellow-50 dark:from-amber-950/20 dark:to-yellow-950/20 p-6 rounded-xl border-2 border-amber-200 dark:border-amber-800">
                     <h4 className="font-bold text-lg mb-4 flex items-center gap-2">
                       <Info className="h-5 w-5 text-amber-600" />
-                      Important Note
+                      Key Prophecies
                     </h4>
-                    <p className="text-base leading-relaxed">
-                      According to Jagannath culture and Bhavishya Malika scriptures, <strong className="text-amber-700 dark:text-amber-400">Kali Yuga has ended</strong> and <strong className="text-amber-700 dark:text-amber-400">Satya Yuga will begin from 2032</strong>, marking the start of a new golden age of truth and righteousness.
-                    </p>
+                    <ul className="space-y-3">
+                      <li className="flex items-start gap-2">
+                        <span className="text-amber-600 mt-1">✦</span>
+                        <span>Signs of the end of Kali Yuga (shortened to 5,000 years)</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-amber-600 mt-1">✦</span>
+                        <span>Natural disasters, wars, famines, epidemics</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-amber-600 mt-1">✦</span>
+                        <span>Signs from Jagannath Temple in Puri, Odisha</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-amber-600 mt-1">✦</span>
+                        <span>Lord Kalki's birthplace: Jajpur district, Odisha</span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+
+                <Alert className="border-2 border-orange-200 dark:border-orange-800 bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-950/30 dark:to-amber-950/30">
+                  <BookOpen className="h-5 w-5 text-orange-600" />
+                  <AlertDescription className="text-base ml-2">
+                    <strong>Modern Availability:</strong> Pandit Shri Kashinath Mishra, a renowned scholar of Jagannath culture, has translated and compiled the text after 40+ years of research. The scripture is now available in English, Hindi, Russian, German, Japanese, Gujarati, Kannada, Bengali, Telugu, and Punjabi. Free PDF downloads are available on en.bhavishyamalika.com.
+                  </AlertDescription>
+                </Alert>
+
+                <div className="bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-950/20 dark:to-amber-950/20 p-6 rounded-xl border-2 border-orange-200 dark:border-orange-800">
+                  <h4 className="font-bold text-xl mb-4 flex items-center gap-2">
+                    <Sparkles className="h-5 w-5 text-orange-500" />
+                    Spiritual Guidance for the Transition
+                  </h4>
+                  <div className="space-y-3">
+                    <p className="text-base leading-relaxed">The text emphasizes righteous living during these transformative times:</p>
+                    <ul className="space-y-3 ml-4">
+                      <li className="flex items-start gap-2">
+                        <span className="text-orange-500 mt-1">✦</span>
+                        <span><strong>Righteous Living:</strong> Give up harmful habits (non-vegetarian food, alcohol, intoxicants)</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-orange-500 mt-1">✦</span>
+                        <span><strong>Daily Spiritual Practice:</strong> Trisandhya worship (three times daily), chanting "Madhav"</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-orange-500 mt-1">✦</span>
+                        <span><strong>Scripture Study:</strong> Reading Shrimad Bhagavat Mahapuran</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-orange-500 mt-1">✦</span>
+                        <span><strong>Faith and Devotion:</strong> Maintain unwavering faith to navigate coming challenges</span>
+                      </li>
+                    </ul>
                   </div>
                 </div>
               </CardContent>
@@ -200,7 +248,8 @@ export default function BhavishyaMalika() {
           </div>
         </TabsContent>
 
-        <TabsContent value="prophecies" className="flex-1 overflow-auto mt-0 p-4 sm:p-6">
+        {/* Prophecies Tab */}
+        <TabsContent value="prophecies" className="flex-1 overflow-auto mt-0 p-6">
           <div className="max-w-5xl mx-auto space-y-6">
             <Card className="border-2 shadow-xl">
               <CardHeader className="bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-950/20 dark:to-amber-950/20">
@@ -275,89 +324,8 @@ export default function BhavishyaMalika() {
           </div>
         </TabsContent>
 
-        <TabsContent value="kalki" className="flex-1 overflow-auto mt-0 p-4 sm:p-6">
-          <div className="max-w-5xl mx-auto space-y-6">
-            <Card className="border-2 shadow-xl">
-              <CardHeader className="bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-950/20 dark:to-amber-950/20">
-                <CardTitle className="flex items-center gap-3 text-2xl">
-                  <div className="p-2 bg-orange-500 text-white rounded-lg">
-                    <Star className="h-6 w-6" />
-                  </div>
-                  Kalki Avatar
-                </CardTitle>
-                <CardDescription className="text-base">
-                  The tenth incarnation of Lord Vishnu
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6 p-8">
-                <p className="text-lg leading-relaxed text-muted-foreground">
-                  Kalki Avatar is prophesied to appear at the end of Kali Yuga to destroy evil, restore dharma, and usher in Satya Yuga. The avatar will come riding a white horse named Devadatta, wielding a blazing sword.
-                </p>
-
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div className="bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-950/20 dark:to-amber-950/20 p-6 rounded-xl border-2 border-orange-200 dark:border-orange-800">
-                    <h4 className="font-bold text-lg mb-4 flex items-center gap-2">
-                      <Star className="h-5 w-5 text-orange-500" />
-                      Purpose
-                    </h4>
-                    <ul className="space-y-3">
-                      <li className="flex items-start gap-2">
-                        <span className="text-orange-500 mt-1">✦</span>
-                        <span>Destroy evil and corrupt forces</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span className="text-orange-500 mt-1">✦</span>
-                        <span>Restore righteousness (dharma)</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span className="text-orange-500 mt-1">✦</span>
-                        <span>Purify the world</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span className="text-orange-500 mt-1">✦</span>
-                        <span>Establish Satya Yuga</span>
-                      </li>
-                    </ul>
-                  </div>
-
-                  <div className="bg-gradient-to-br from-amber-50 to-yellow-50 dark:from-amber-950/20 dark:to-yellow-950/20 p-6 rounded-xl border-2 border-amber-200 dark:border-amber-800">
-                    <h4 className="font-bold text-lg mb-4 flex items-center gap-2">
-                      <Sparkles className="h-5 w-5 text-amber-600" />
-                      Characteristics
-                    </h4>
-                    <ul className="space-y-3">
-                      <li className="flex items-start gap-2">
-                        <span className="text-amber-600 mt-1">✦</span>
-                        <span>Born in Shambhala village</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span className="text-amber-600 mt-1">✦</span>
-                        <span>Rides white horse Devadatta</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span className="text-amber-600 mt-1">✦</span>
-                        <span>Wields divine sword</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span className="text-amber-600 mt-1">✦</span>
-                        <span>Possesses supreme knowledge</span>
-                      </li>
-                    </ul>
-                  </div>
-                </div>
-
-                <Alert className="border-2 border-orange-200 dark:border-orange-800 bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-950/30 dark:to-amber-950/30">
-                  <Star className="h-5 w-5 text-orange-600" />
-                  <AlertDescription className="text-base ml-2">
-                    <strong>Divine Victory:</strong> The appearance of Kalki Avatar signifies the ultimate victory of good over evil and the beginning of a new golden age where truth, compassion, and spiritual wisdom will prevail.
-                  </AlertDescription>
-                </Alert>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="timeline" className="flex-1 overflow-auto mt-0 p-4 sm:p-6">
+        {/* Timeline Tab */}
+        <TabsContent value="timeline" className="flex-1 overflow-auto mt-0 p-6">
           <div className="max-w-5xl mx-auto space-y-6">
             <Card className="border-2 shadow-xl">
               <CardHeader className="bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-950/20 dark:to-amber-950/20">
@@ -377,33 +345,23 @@ export default function BhavishyaMalika() {
                     {
                       title: "The Dark Age (Kali Yuga)",
                       description: "Period of spiritual decline, moral degradation, and increasing chaos. According to Bhavishya Malika, this age has now ended.",
-                      color: "gray",
-                      size: "normal"
+                      color: "gray"
                     },
                     {
                       title: "Transition Period (Current Time)",
                       description: "Natural calamities, pandemics, social upheaval, breakdown of traditional values, and widespread confusion mark the transition period between ages.",
-                      color: "amber",
-                      size: "normal"
+                      color: "amber"
                     },
                     {
                       title: "2032 - Beginning of Satya Yuga",
                       description: "According to Jagannath culture and Bhavishya Malika, Satya Yuga (the Golden Age) will begin in 2032, bringing a new era of truth and righteousness.",
                       color: "orange",
-                      size: "large",
                       highlight: true
-                    },
-                    {
-                      title: "Appearance of Kalki",
-                      description: "The divine avatar appears to restore order, destroy evil forces, and prepare the world for complete transformation.",
-                      color: "yellow",
-                      size: "normal"
                     },
                     {
                       title: "Satya Yuga (Golden Age Fully Established)",
                       description: "The new age of truth, righteousness, and spiritual enlightenment. Peace, prosperity, and divine knowledge prevail across the world.",
-                      color: "green",
-                      size: "normal"
+                      color: "green"
                     }
                   ].map((event, index) => (
                     <div key={index} className="relative pl-12 pb-2">
@@ -411,24 +369,17 @@ export default function BhavishyaMalika() {
                         event.highlight ? 'bg-orange-500 ring-4 ring-orange-200 dark:ring-orange-800' :
                         event.color === 'gray' ? 'bg-gray-400' :
                         event.color === 'amber' ? 'bg-amber-500' :
-                        event.color === 'yellow' ? 'bg-yellow-500' :
                         'bg-green-500'
                       } ${event.highlight ? 'animate-pulse' : ''}`}></div>
-                      {index < 4 && (
+                      {index < 3 && (
                         <div className="absolute left-3 top-8 bottom-0 w-0.5 bg-gradient-to-b from-gray-300 to-gray-100 dark:from-gray-700 dark:to-gray-800"></div>
                       )}
                       <div className={`${
                         event.highlight ? 'bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-950/30 dark:to-amber-950/30 border-2 border-orange-300 dark:border-orange-700 shadow-lg' :
                         'bg-muted/30 border'
-                      } p-5 rounded-xl`}>
-                        <h4 className={`font-bold mb-2 ${event.size === 'large' ? 'text-xl' : 'text-lg'} ${
-                          event.highlight ? 'text-orange-700 dark:text-orange-400' : ''
-                        }`}>
-                          {event.title}
-                        </h4>
-                        <p className="text-muted-foreground leading-relaxed">
-                          {event.description}
-                        </p>
+                      } p-6 rounded-xl`}>
+                        <h4 className="font-bold text-lg mb-2">{event.title}</h4>
+                        <p className="text-muted-foreground leading-relaxed">{event.description}</p>
                       </div>
                     </div>
                   ))}
@@ -438,6 +389,175 @@ export default function BhavishyaMalika() {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Floating Menu - Modern Design with Auto-hide */}
+      <div 
+        ref={menuRef}
+        className={`fixed right-0 top-24 z-50 transition-all duration-500 ease-in-out ${
+          isMenuCollapsed && !isMenuOpen ? 'translate-x-[calc(100%-32px)]' : 'translate-x-0'
+        }`}
+      >
+        {/* Menu Container */}
+        <div className="relative">
+          {/* Collapsed State - Half Circle Button */}
+          {isMenuCollapsed && !isMenuOpen && (
+            <button
+              onClick={handleMenuToggle}
+              className="absolute right-0 top-0 h-16 w-16 rounded-l-full bg-orange-500 hover:bg-orange-600 text-white shadow-xl hover:shadow-2xl transition-all duration-300 flex items-center justify-start pl-3"
+              data-testid="button-floating-menu-collapsed"
+            >
+              <ChevronLeft className="h-6 w-6" />
+            </button>
+          )}
+
+          {/* Expanded Menu Panel */}
+          <div 
+            className={`backdrop-blur-xl bg-gradient-to-br from-background/95 to-background/90 rounded-l-2xl shadow-2xl border-l border-t border-b border-border/50 overflow-hidden transition-all duration-500 ${
+              isMenuCollapsed && !isMenuOpen ? 'opacity-0 w-0' : 'opacity-100 w-72'
+            }`}
+          >
+            <div className="p-4 space-y-3">
+              {/* Header with Close Button */}
+              <div className="flex items-center justify-between mb-2 pb-3 border-b border-border/50">
+                <h3 className="font-semibold text-lg flex items-center gap-2">
+                  <Menu className="h-5 w-5 text-orange-500" />
+                  Menu
+                </h3>
+                <Button
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    setTimeout(() => setIsMenuCollapsed(true), 300);
+                  }}
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0"
+                  data-testid="button-close-menu"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+
+              {/* Tab Navigation - Compact Grid */}
+              <div className="grid grid-cols-2 gap-2">
+                <Button
+                  onClick={() => { setActiveTab("website"); }}
+                  variant={activeTab === "website" ? "default" : "outline"}
+                  size="sm"
+                  className="h-auto py-2 px-3 flex flex-col items-center gap-1"
+                  data-testid="button-menu-website"
+                >
+                  <Globe className="h-4 w-4" />
+                  <span className="text-xs">Website</span>
+                </Button>
+
+                <Button
+                  onClick={() => { setActiveTab("introduction"); }}
+                  variant={activeTab === "introduction" ? "default" : "outline"}
+                  size="sm"
+                  className="h-auto py-2 px-3 flex flex-col items-center gap-1"
+                  data-testid="button-menu-introduction"
+                >
+                  <BookOpen className="h-4 w-4" />
+                  <span className="text-xs">Introduction</span>
+                </Button>
+
+                <Button
+                  onClick={() => { setActiveTab("prophecies"); }}
+                  variant={activeTab === "prophecies" ? "default" : "outline"}
+                  size="sm"
+                  className="h-auto py-2 px-3 flex flex-col items-center gap-1"
+                  data-testid="button-menu-prophecies"
+                >
+                  <Scroll className="h-4 w-4" />
+                  <span className="text-xs">Prophecies</span>
+                </Button>
+
+                <Button
+                  onClick={() => { setActiveTab("timeline"); }}
+                  variant={activeTab === "timeline" ? "default" : "outline"}
+                  size="sm"
+                  className="h-auto py-2 px-3 flex flex-col items-center gap-1"
+                  data-testid="button-menu-timeline"
+                >
+                  <Calendar className="h-4 w-4" />
+                  <span className="text-xs">Timeline</span>
+                </Button>
+              </div>
+
+              {/* Website Controls - Only show on website tab */}
+              {activeTab === "website" && (
+                <div className="space-y-2 pt-2 border-t border-border/50">
+                  <Button
+                    onClick={toggleFullscreen}
+                    variant="outline"
+                    size="sm"
+                    className="w-full justify-start gap-2 h-9"
+                    data-testid="button-menu-fullscreen"
+                  >
+                    {isFullscreen ? <Minimize className="h-4 w-4" /> : <Maximize className="h-4 w-4" />}
+                    <span className="text-sm">{isFullscreen ? "Exit Fullscreen" : "Fullscreen"}</span>
+                  </Button>
+
+                  <Button
+                    onClick={() => window.open("https://www.bhavishyamalika.com/", "_blank")}
+                    variant="outline"
+                    size="sm"
+                    className="w-full justify-start gap-2 h-9"
+                    data-testid="button-menu-external"
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                    <span className="text-sm">Open in New Tab</span>
+                  </Button>
+                </div>
+              )}
+
+              {/* App Controls */}
+              <div className="space-y-2 pt-2 border-t border-border/50">
+                {isAdmin && (
+                  <Button
+                    onClick={() => window.location.href = "/admin"}
+                    variant="outline"
+                    size="sm"
+                    className="w-full justify-start gap-2 h-9"
+                    data-testid="button-menu-admin"
+                  >
+                    <Shield className="h-4 w-4" />
+                    <span className="text-sm">Admin Panel</span>
+                  </Button>
+                )}
+
+                <div className="flex items-center gap-2">
+                  <div className="flex-1">
+                    <NotificationBell />
+                  </div>
+                </div>
+
+                <Button
+                  onClick={toggleTheme}
+                  variant="outline"
+                  size="sm"
+                  className="w-full justify-start gap-2 h-9"
+                  data-testid="button-menu-theme"
+                >
+                  {theme === "light" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+                  <span className="text-sm">{theme === "light" ? "Dark Mode" : "Light Mode"}</span>
+                </Button>
+
+                <Button
+                  onClick={() => window.location.href = "/api/logout"}
+                  variant="outline"
+                  size="sm"
+                  className="w-full justify-start gap-2 h-9 text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/20"
+                  data-testid="button-menu-logout"
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span className="text-sm">Logout</span>
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
