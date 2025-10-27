@@ -1,4 +1,4 @@
-import { Switch, Route, useLocation } from "wouter";
+import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -161,9 +161,8 @@ function AuthenticatedApp() {
   );
 }
 
-function Router() {
+function AppRouter() {
   const { isAuthenticated, isLoading } = useAuth();
-  const isLoginPage = window.location.pathname === "/login";
 
   if (isLoading) {
     return (
@@ -180,7 +179,15 @@ function Router() {
     return <AuthenticatedApp />;
   }
 
-  return isLoginPage ? <Login /> : <Landing />;
+  return (
+    <Switch>
+      <Route path="/login" component={Login} />
+      <Route path="/" component={Landing} />
+      <Route>
+        <Landing />
+      </Route>
+    </Switch>
+  );
 }
 
 export default function App() {
@@ -190,7 +197,9 @@ export default function App() {
         <AudioPlayerProvider>
           <TooltipProvider>
             <Toaster />
-            <Router />
+            <WouterRouter>
+              <AppRouter />
+            </WouterRouter>
             <GlobalAudioPlayer />
           </TooltipProvider>
         </AudioPlayerProvider>
