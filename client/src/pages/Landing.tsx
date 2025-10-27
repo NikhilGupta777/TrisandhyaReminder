@@ -16,8 +16,11 @@ import {
   ChevronRight,
 } from "lucide-react";
 import deityBg from "@assets/stock_images/sunrise_golden_hour__a22c9f34.jpg";
+import { useLocation } from "wouter";
 
 export default function Landing() {
+  const [, setLocation] = useLocation();
+
   return (
     <div className="min-h-screen">
       <div
@@ -34,7 +37,7 @@ export default function Landing() {
             <Button
               variant="outline"
               className="bg-white/10 backdrop-blur-sm border-white/20 text-white hover:bg-white/20 gap-2"
-              onClick={() => (window.location.href = "/login")}
+              onClick={() => setLocation("/login")}
               data-testid="button-login-nav"
             >
               <LogIn className="h-4 w-4" />
@@ -65,7 +68,7 @@ export default function Landing() {
             <Button
               size="lg"
               className="px-10 sm:px-12 py-5 sm:py-6 text-base sm:text-lg rounded-full shadow-2xl hover:shadow-primary/50 hover:scale-105 active:scale-95 transition-all duration-300 gap-2 group"
-              onClick={() => (window.location.href = "/login")}
+              onClick={() => setLocation("/login")}
               data-testid="button-login"
             >
               Begin Your Journey
@@ -243,7 +246,7 @@ export default function Landing() {
           </p>
           <Button
             size="lg"
-            onClick={() => (window.location.href = "/login")}
+            onClick={() => setLocation("/login")}
             className="px-10 sm:px-12 py-5 sm:py-6 text-base sm:text-lg shadow-xl hover:scale-105 transition-transform"
             data-testid="button-login-bottom"
           >
