@@ -26,6 +26,7 @@ const menuItems = [
 
 export function AdminSidebar() {
   const [location] = useLocation();
+  const cleanPath = location.split('?')[0].split('#')[0];
 
   return (
     <Sidebar>
@@ -38,7 +39,7 @@ export function AdminSidebar() {
             <SidebarMenu>
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={location === item.url}>
+                  <SidebarMenuButton asChild isActive={cleanPath === item.url}>
                     <Link href={item.url} data-testid={`link-admin-${item.title.toLowerCase()}`}>
                       <item.icon />
                       <span>{item.title}</span>

@@ -56,6 +56,7 @@ const footerLinks = [
 
 export function AppSidebar() {
   const [location] = useLocation();
+  const cleanPath = location.split('?')[0].split('#')[0];
 
   return (
     <Sidebar>
@@ -71,8 +72,8 @@ export function AppSidebar() {
                   <SidebarMenuButton
                     asChild
                     isActive={
-                      location === item.url ||
-                      location.startsWith(item.url + "/")
+                      cleanPath === item.url ||
+                      cleanPath.startsWith(item.url + "/")
                     }
                     className="py-3"
                   >
@@ -98,7 +99,7 @@ export function AppSidebar() {
             <SidebarMenuItem key={link.title}>
               <SidebarMenuButton
                 asChild
-                isActive={location === link.url}
+                isActive={cleanPath === link.url}
                 size="sm"
               >
                 <Link
@@ -118,7 +119,7 @@ export function AppSidebar() {
             <SidebarMenuItem key={link.title}>
               <SidebarMenuButton
                 asChild
-                isActive={location === link.url}
+                isActive={cleanPath === link.url}
                 size="sm"
               >
                 <Link

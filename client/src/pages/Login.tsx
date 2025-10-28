@@ -6,12 +6,14 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "wouter";
 import { SiGoogle } from "react-icons/si";
 import { Sparkles, Mail, Lock, User, Loader2, KeyRound } from "lucide-react";
 import deityBg from "@assets/stock_images/sunrise_golden_hour__a22c9f34.jpg";
 
 export default function Login() {
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("login");
   const [showVerification, setShowVerification] = useState(false);
@@ -80,7 +82,7 @@ export default function Login() {
           title: "Success!",
           description: "Logged in successfully",
         });
-        window.location.href = "/";
+        setLocation("/");
       } else {
         toast({
           title: "Login Failed",

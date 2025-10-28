@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -101,9 +102,27 @@ function UserRouter() {
 
 function AuthenticatedApp() {
   const { user, isAdmin } = useAuth();
-  const [location] = useLocation();
-  const isAdminRoute = location.startsWith("/admin");
+  const [location, setLocation] = useLocation();
+  const pathname = location.split('?')[0].split('#')[0];
+  const isAdminRoute = /^\/admin(\/.*)?$/.test(pathname);
   const { activeAlarm, dismissAlarm, snoozeAlarm, volume } = useAlarmMonitor();
+
+  useEffect(() => {
+    if (isAdminRoute && !isAdmin) {
+      setLocation("/");
+    }
+  }, [isAdminRoute, isAdmin, setLocation]);
+
+  if (isAdminRoute && !isAdmin) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="text-muted-foreground">Redirecting...</p>
+        </div>
+      </div>
+    );
+  }
 
   const style = {
     "--sidebar-width": "16rem",
@@ -121,7 +140,7 @@ function AuthenticatedApp() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => window.location.href = "/admin"}
+                  onClick={() => setLocation("/admin")}
                   data-testid="button-admin-panel"
                 >
                   <Shield className="h-4 w-4 mr-2" />
@@ -134,7 +153,14 @@ function AuthenticatedApp() {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => window.location.href = "/api/logout"}
+                onClick={async () => {
+                  try {
+                    await fetch("/api/logout", { method: "POST", credentials: "include" });
+                  } catch (error) {
+                    console.error("Logout failed:", error);
+                  }
+                  setLocation("/login");
+                }}
                 data-testid="button-logout"
               >
                 Logout
@@ -183,9 +209,7 @@ function AppRouter() {
     <Switch>
       <Route path="/login" component={Login} />
       <Route path="/" component={Landing} />
-      <Route>
-        <Landing />
-      </Route>
+      <Route component={NotFound} />
     </Switch>
   );
 }

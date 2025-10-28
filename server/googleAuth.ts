@@ -121,6 +121,15 @@ export async function setupAuth(app: Express) {
     }
   });
 
+  app.post("/api/logout", (req, res) => {
+    req.logout(() => {
+      req.session.destroy(() => {
+        res.clearCookie('connect.sid');
+        res.json({ message: "Logged out successfully" });
+      });
+    });
+  });
+
   app.get("/api/logout", (req, res) => {
     req.logout(() => {
       req.session.destroy(() => {
