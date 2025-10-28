@@ -10,6 +10,7 @@ import { useLocation } from "wouter";
 import { SiGoogle } from "react-icons/si";
 import { Sparkles, Mail, Lock, User, Loader2, KeyRound } from "lucide-react";
 import deityBg from "@assets/stock_images/sunrise_golden_hour__a22c9f34.jpg";
+import { queryClient } from "@/lib/queryClient";
 
 export default function Login() {
   const { toast } = useToast();
@@ -73,6 +74,7 @@ export default function Login() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(loginData),
+        credentials: "include",
       });
 
       const data = await response.json();
@@ -82,7 +84,8 @@ export default function Login() {
           title: "Success!",
           description: "Logged in successfully",
         });
-        setLocation("/");
+        await queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+        window.location.href = "/";
       } else {
         toast({
           title: "Login Failed",
@@ -110,6 +113,7 @@ export default function Login() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(registerData),
+        credentials: "include",
       });
 
       const data = await response.json();
@@ -155,6 +159,7 @@ export default function Login() {
           email: verificationData.email,
           code: verificationData.code,
         }),
+        credentials: "include",
       });
 
       const data = await response.json();
@@ -200,6 +205,7 @@ export default function Login() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(forgotPasswordData),
+        credentials: "include",
       });
 
       const data = await response.json();
@@ -248,6 +254,7 @@ export default function Login() {
           code: resetPasswordData.code,
           password: resetPasswordData.password,
         }),
+        credentials: "include",
       });
 
       const data = await response.json();
@@ -287,6 +294,7 @@ export default function Login() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: verificationData.email }),
+        credentials: "include",
       });
 
       const data = await response.json();

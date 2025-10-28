@@ -41,6 +41,15 @@ export async function setupVite(app: Express, server: Server) {
   });
 
   app.use(vite.middlewares);
+  
+  // Serve service worker files from public directory during development
+  app.get('/alarm-sw.js', async (req, res) => {
+    const swPath = path.resolve(import.meta.dirname, "..", "public", "alarm-sw.js");
+    res.type('application/javascript');
+    const content = await fs.promises.readFile(swPath, "utf-8");
+    res.send(content);
+  });
+
   app.use("*", async (req, res, next) => {
     const url = req.originalUrl;
 
