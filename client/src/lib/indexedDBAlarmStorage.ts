@@ -2,7 +2,7 @@
 // This provides smartphone-level reliability for web alarms
 
 const DB_NAME = 'TrisandhyaAlarms';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const ALARMS_STORE = 'alarms';
 const TONES_STORE = 'customTones';
 const INSTANCES_STORE = 'alarmInstances';
@@ -18,6 +18,9 @@ export interface IndexedDBAlarm {
   volume: number; // 0-100
   vibrate: boolean;
   snoozeMinutes: number;
+  fadeInDuration: number; // Fade-in duration in seconds (0 = disabled)
+  enablePreAlarm: boolean; // Enable gentle alarm before main alarm
+  preAlarmMinutes: number; // Minutes before main alarm (default 30)
   createdAt: number;
   updatedAt: number;
 }

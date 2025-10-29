@@ -262,7 +262,7 @@ export default function AlarmsNew() {
         <AlarmRingScreen
           alarm={activeAlarm}
           onDismiss={dismissAlarm}
-          onSnooze={snoozeAlarm}
+          onSnooze={(customMinutes) => snoozeAlarm(customMinutes)}
         />
       )}
     </>

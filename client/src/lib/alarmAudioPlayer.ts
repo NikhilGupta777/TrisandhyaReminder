@@ -18,7 +18,8 @@ export class AlarmAudioPlayer {
   async playAlarmSound(
     audioSource: string | null,
     volume: number = 80,
-    vibrate: boolean = true
+    vibrate: boolean = true,
+    fadeInDuration: number = 0
   ): Promise<void> {
     if (!this.audioContext || !this.gainNode) {
       console.error('Audio context not available');
@@ -34,12 +35,32 @@ export class AlarmAudioPlayer {
         await this.audioContext.resume();
       }
 
-      // Set volume (0-100 to 0-1)
-      this.gainNode.gain.value = volume / 100;
+      // Set up fade-in or instant volume
+      const targetVolume = volume / 100;
+      if (fadeInDuration > 0) {
+        // Start from 5% volume for fade-in
+        this.gainNode.gain.value = targetVolume * 0.05;
+        
+        // Gradually increase volume over fadeInDuration seconds
+        this.gainNode.gain.linearRampToValueAtTime(
+          targetVolume,
+          this.audioContext.currentTime + fadeInDuration
+        );
 
-      // Trigger vibration if supported and enabled
-      if (vibrate && 'vibrate' in navigator) {
-        navigator.vibrate([500, 250, 500, 250, 500]);
+        // Trigger vibration only after fade-in completes
+        if (vibrate && 'vibrate' in navigator) {
+          setTimeout(() => {
+            navigator.vibrate([500, 250, 500, 250, 500]);
+          }, fadeInDuration * 1000);
+        }
+      } else {
+        // Instant volume
+        this.gainNode.gain.value = targetVolume;
+        
+        // Trigger vibration immediately
+        if (vibrate && 'vibrate' in navigator) {
+          navigator.vibrate([500, 250, 500, 250, 500]);
+        }
       }
 
       // Play the alarm sound

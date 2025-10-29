@@ -44,11 +44,12 @@ export function useWebAlarmSystem() {
       }
     }
     
-    // Play alarm sound
+    // Play alarm sound with fade-in
     alarmAudioPlayer.playAlarmSound(
       audioSource,
       alarm.volume,
-      alarm.vibrate
+      alarm.vibrate,
+      alarm.fadeInDuration
     );
   }, []);
 
@@ -135,11 +136,12 @@ export function useWebAlarmSystem() {
     setState(prev => ({ ...prev, activeAlarm: null }));
   }, [state.activeAlarm]);
 
-  const snoozeAlarm = useCallback(async () => {
+  const snoozeAlarm = useCallback(async (customMinutes?: number) => {
     if (!state.activeAlarm) return;
     
     await alarmAudioPlayer.stopAlarmSound();
-    await webAlarmScheduler.snoozeAlarm(state.activeAlarm.id, state.activeAlarm.snoozeMinutes);
+    const snoozeMinutes = customMinutes || state.activeAlarm.snoozeMinutes;
+    await webAlarmScheduler.snoozeAlarm(state.activeAlarm.id, snoozeMinutes);
     setState(prev => ({ ...prev, activeAlarm: null }));
   }, [state.activeAlarm]);
 

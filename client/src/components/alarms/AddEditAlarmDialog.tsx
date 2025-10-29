@@ -57,6 +57,9 @@ export function AddEditAlarmDialog({
   const [selectedToneId, setSelectedToneId] = useState<string | null>(null);
   const [customTones, setCustomTones] = useState<CustomTone[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [fadeInDuration, setFadeInDuration] = useState(30);
+  const [enablePreAlarm, setEnablePreAlarm] = useState(false);
+  const [preAlarmMinutes, setPreAlarmMinutes] = useState(30);
 
   useEffect(() => {
     if (open) {
@@ -73,6 +76,9 @@ export function AddEditAlarmDialog({
       setVibrate(editingAlarm.vibrate);
       setSnoozeMinutes(editingAlarm.snoozeMinutes);
       setSelectedToneId(editingAlarm.toneId);
+      setFadeInDuration(editingAlarm.fadeInDuration);
+      setEnablePreAlarm(editingAlarm.enablePreAlarm);
+      setPreAlarmMinutes(editingAlarm.preAlarmMinutes);
     } else {
       setLabel('');
       setTime('06:00');
@@ -81,6 +87,9 @@ export function AddEditAlarmDialog({
       setVibrate(true);
       setSnoozeMinutes(5);
       setSelectedToneId(null);
+      setFadeInDuration(30);
+      setEnablePreAlarm(false);
+      setPreAlarmMinutes(30);
     }
   }, [editingAlarm, open]);
 
@@ -200,6 +209,9 @@ export function AddEditAlarmDialog({
         volume: volume[0],
         vibrate,
         snoozeMinutes,
+        fadeInDuration,
+        enablePreAlarm,
+        preAlarmMinutes,
       };
 
       if (editingAlarm) {
@@ -406,6 +418,59 @@ export function AddEditAlarmDialog({
               className="bg-white/5 border-white/10 text-white"
               data-testid="input-snooze-minutes"
             />
+          </div>
+
+          {/* Fade-in Duration */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label className="text-sm text-white/70">Volume fade-in (seconds)</Label>
+              <span className="text-sm text-white/50">{fadeInDuration}s</span>
+            </div>
+            <Slider
+              value={[fadeInDuration]}
+              onValueChange={(val) => setFadeInDuration(val[0])}
+              min={0}
+              max={60}
+              step={5}
+              className="[&_[role=slider]]:bg-orange-500 [&_[role=slider]]:border-orange-500"
+              data-testid="slider-fade-in"
+            />
+            {fadeInDuration === 0 && (
+              <p className="text-xs text-white/40">Instant full volume</p>
+            )}
+            {fadeInDuration > 0 && (
+              <p className="text-xs text-orange-400">Gradually increases volume over {fadeInDuration}s</p>
+            )}
+          </div>
+
+          {/* Pre-alarm */}
+          <div className="space-y-3 border-t border-white/10 pt-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <Label className="text-sm text-white/70">Pre-alarm (gentle wake)</Label>
+                <p className="text-xs text-white/40 mt-1">Low volume alarm before main alarm</p>
+              </div>
+              <Switch
+                checked={enablePreAlarm}
+                onCheckedChange={setEnablePreAlarm}
+                className="data-[state=checked]:bg-orange-500"
+                data-testid="switch-pre-alarm"
+              />
+            </div>
+            {enablePreAlarm && (
+              <div className="space-y-2">
+                <Label className="text-sm text-white/70">Pre-alarm time (minutes before)</Label>
+                <Input
+                  type="number"
+                  value={preAlarmMinutes}
+                  onChange={(e) => setPreAlarmMinutes(Number(e.target.value))}
+                  min={5}
+                  max={60}
+                  className="bg-white/5 border-white/10 text-white"
+                  data-testid="input-pre-alarm-minutes"
+                />
+              </div>
+            )}
           </div>
 
           {/* Action Buttons */}

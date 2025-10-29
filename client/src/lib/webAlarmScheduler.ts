@@ -80,10 +80,38 @@ class WebAlarmScheduler {
 
       for (const alarm of alarms) {
         const alarmKey = `${today}-${alarm.id}`;
+        const preAlarmKey = `${today}-${alarm.id}-pre`;
 
         // Skip if already triggered today
         if (this.triggeredToday.has(alarmKey)) {
           continue;
+        }
+
+        // Check for pre-alarm
+        if (alarm.enablePreAlarm && !this.triggeredToday.has(preAlarmKey)) {
+          const [hours, minutes] = alarm.time.split(':').map(Number);
+          const alarmTimeMinutes = hours * 60 + minutes;
+          let preAlarmTimeMinutes = alarmTimeMinutes - alarm.preAlarmMinutes;
+          
+          // Handle pre-alarm time that wraps to previous day
+          let preAlarmDay = currentDay;
+          if (preAlarmTimeMinutes < 0) {
+            preAlarmTimeMinutes += 1440; // Add 24 hours in minutes
+            // Pre-alarm is on previous day
+            preAlarmDay = (currentDay - 1 + 7) % 7;
+          }
+          
+          const currentMinutes = now.getHours() * 60 + now.getMinutes();
+          
+          if (currentMinutes === preAlarmTimeMinutes) {
+            // Check if pre-alarm should trigger based on its day
+            const shouldTrigger = alarm.repeatDays.length === 0 || alarm.repeatDays.includes(preAlarmDay);
+            
+            if (shouldTrigger) {
+              this.triggerPreAlarm(alarm);
+              this.triggeredToday.add(preAlarmKey);
+            }
+          }
         }
 
         // Check if alarm time matches
@@ -104,6 +132,32 @@ class WebAlarmScheduler {
       }
     } catch (error) {
       console.error('Error checking due alarms:', error);
+    }
+  }
+
+  private triggerPreAlarm(alarm: IndexedDBAlarm): void {
+    // Show notification for pre-alarm
+    if (this.permissionGranted) {
+      new Notification('Pre-alarm', {
+        body: `Gentle wake for ${alarm.label} in ${alarm.preAlarmMinutes} minutes`,
+        icon: '/icon-192.png',
+        badge: '/icon-192.png',
+        tag: `pre-alarm-${alarm.id}`,
+        requireInteraction: false,
+        silent: true,
+      });
+    }
+
+    // Call the trigger callback with modified alarm (lower volume, no vibration)
+    if (this.onAlarmTrigger) {
+      const preAlarmData: IndexedDBAlarm = {
+        ...alarm,
+        label: `${alarm.label} (Pre-alarm)`,
+        volume: Math.min(20, alarm.volume * 0.3), // 30% of volume, max 20%
+        vibrate: false,
+        fadeInDuration: 10, // Gentle 10s fade-in
+      };
+      this.onAlarmTrigger(preAlarmData);
     }
   }
 
@@ -184,6 +238,9 @@ class WebAlarmScheduler {
         volume: alarm.volume,
         vibrate: alarm.vibrate,
         snoozeMinutes: alarm.snoozeMinutes,
+        fadeInDuration: alarm.fadeInDuration,
+        enablePreAlarm: false,
+        preAlarmMinutes: alarm.preAlarmMinutes,
       });
 
       // Update instance
