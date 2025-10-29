@@ -80,12 +80,16 @@ export default function Login() {
       const data = await response.json();
 
       if (response.ok) {
+        // Update auth cache immediately before redirect
+        queryClient.setQueryData(["/api/auth/user"], data.user);
+        
         toast({
           title: "Success!",
           description: "Logged in successfully",
         });
-        await queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-        window.location.href = "/";
+        
+        // Use client-side navigation instead of full page reload
+        setLocation("/");
       } else {
         toast({
           title: "Login Failed",

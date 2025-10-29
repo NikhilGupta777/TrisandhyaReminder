@@ -156,11 +156,13 @@ function AuthenticatedApp() {
                 onClick={async () => {
                   try {
                     await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
-                    await queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-                    window.location.href = "/login";
+                    // Clear auth cache immediately
+                    queryClient.setQueryData(["/api/auth/user"], null);
+                    // Use client-side navigation instead of full page reload
+                    setLocation("/login");
                   } catch (error) {
                     console.error("Logout failed:", error);
-                    window.location.href = "/login";
+                    setLocation("/login");
                   }
                 }}
                 data-testid="button-logout"
