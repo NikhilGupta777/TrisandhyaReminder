@@ -4,12 +4,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Scroll, BookOpen, Calendar, Info, ExternalLink, Globe, Sparkles, Maximize, Minimize, Menu, X, Shield, Bell as BellIcon, LogOut, Sun, Moon, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useSidebar, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarProvider, useSidebar, SidebarTrigger } from "@/components/ui/sidebar";
 import { useTheme } from "@/components/ThemeProvider";
 import { useAuth } from "@/hooks/useAuth";
 import { NotificationBell } from "@/components/NotificationBell";
 
-export default function BhavishyaMalika() {
+function BhavishyaMalikaContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -17,16 +17,17 @@ export default function BhavishyaMalika() {
   const [activeTab, setActiveTab] = useState("website");
   const iframeContainerRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
-  const { setOpen } = useSidebar();
+  const { open, setOpen } = useSidebar();
   const { theme, setTheme } = useTheme();
   const { isAdmin } = useAuth();
 
-  // Auto-close sidebar every time the page loads
+  // Auto-close sidebar every time the page loads (only once)
   useEffect(() => {
-    setOpen(false);
-    }, [setOpen]);
+    const id = requestAnimationFrame(() => setOpen(false));
+    return () => cancelAnimationFrame(id);
+  }, []); // Empty dependency array so it only runs once on mount
 
-    // Auto-hide menu after 2 seconds
+  // Auto-hide menu after 2 seconds
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsMenuCollapsed(true);
@@ -51,9 +52,9 @@ export default function BhavishyaMalika() {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [isMenuOpen]);
-  
-    const toggleFullscreen = () => {
-      if (!document.fullscreenElement) {
+
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
       iframeContainerRef.current?.requestFullscreen();
       setIsFullscreen(true);
     } else {
@@ -82,13 +83,16 @@ export default function BhavishyaMalika() {
       setIsMenuOpen(!isMenuOpen);
     }
   };
-  
+
   return (
     <div className="fixed inset-0 bg-background">
-            {/* Sidebar Toggle Button with Blur */}
-      <div className="fixed top-4 left-4 z-50">
+      {/* Sidebar Toggle Button with Blur - Always visible */}
+      <div className="fixed top-4 left-4 z-[100]">
         <div className="backdrop-blur-md bg-background/80 rounded-lg shadow-lg border border-border p-1">
-          <SidebarTrigger data-testid="button-sidebar-toggle" />
+          <SidebarTrigger
+            data-testid="button-sidebar-toggle"
+            onClick={() => setOpen(!open)}
+          />
         </div>
       </div>
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full flex flex-col">
@@ -293,13 +297,12 @@ export default function BhavishyaMalika() {
                       color: "amber"
                     }
                   ].map((prophecy, index) => (
-                    <div 
+                    <div
                       key={index}
-                      className={`border-l-4 ${
-                        prophecy.color === 'orange' ? 'border-orange-500 bg-orange-50 dark:bg-orange-950/20' :
-                        prophecy.color === 'amber' ? 'border-amber-500 bg-amber-50 dark:bg-amber-950/20' :
-                        'border-yellow-500 bg-yellow-50 dark:bg-yellow-950/20'
-                      } pl-6 pr-6 py-5 rounded-r-xl`}
+                      className={`border-l-4 ${prophecy.color === 'orange' ? 'border-orange-500 bg-orange-50 dark:bg-orange-950/20' :
+                          prophecy.color === 'amber' ? 'border-amber-500 bg-amber-50 dark:bg-amber-950/20' :
+                            'border-yellow-500 bg-yellow-50 dark:bg-yellow-950/20'
+                        } pl-6 pr-6 py-5 rounded-r-xl`}
                     >
                       <h4 className="font-bold text-lg mb-3 flex items-center gap-2">
                         <span className={`text-${prophecy.color}-500`}>✦</span>
@@ -365,19 +368,17 @@ export default function BhavishyaMalika() {
                     }
                   ].map((event, index) => (
                     <div key={index} className="relative pl-12 pb-2">
-                      <div className={`absolute left-0 top-2 w-6 h-6 rounded-full ${
-                        event.highlight ? 'bg-orange-500 ring-4 ring-orange-200 dark:ring-orange-800' :
-                        event.color === 'gray' ? 'bg-gray-400' :
-                        event.color === 'amber' ? 'bg-amber-500' :
-                        'bg-green-500'
-                      } ${event.highlight ? 'animate-pulse' : ''}`}></div>
+                      <div className={`absolute left-0 top-2 w-6 h-6 rounded-full ${event.highlight ? 'bg-orange-500 ring-4 ring-orange-200 dark:ring-orange-800' :
+                          event.color === 'gray' ? 'bg-gray-400' :
+                            event.color === 'amber' ? 'bg-amber-500' :
+                              'bg-green-500'
+                        } ${event.highlight ? 'animate-pulse' : ''}`}></div>
                       {index < 3 && (
                         <div className="absolute left-3 top-8 bottom-0 w-0.5 bg-gradient-to-b from-gray-300 to-gray-100 dark:from-gray-700 dark:to-gray-800"></div>
                       )}
-                      <div className={`${
-                        event.highlight ? 'bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-950/30 dark:to-amber-950/30 border-2 border-orange-300 dark:border-orange-700 shadow-lg' :
-                        'bg-muted/30 border'
-                      } p-6 rounded-xl`}>
+                      <div className={`${event.highlight ? 'bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-950/30 dark:to-amber-950/30 border-2 border-orange-300 dark:border-orange-700 shadow-lg' :
+                          'bg-muted/30 border'
+                        } p-6 rounded-xl`}>
                         <h4 className="font-bold text-lg mb-2">{event.title}</h4>
                         <p className="text-muted-foreground leading-relaxed">{event.description}</p>
                       </div>
@@ -391,11 +392,10 @@ export default function BhavishyaMalika() {
       </Tabs>
 
       {/* Floating Menu - Modern Design with Auto-hide */}
-      <div 
+      <div
         ref={menuRef}
-        className={`fixed right-0 top-24 z-50 transition-all duration-500 ease-in-out ${
-          isMenuCollapsed && !isMenuOpen ? 'translate-x-[calc(100%-32px)]' : 'translate-x-0'
-        }`}
+        className={`fixed right-0 top-24 z-50 transition-all duration-500 ease-in-out ${isMenuCollapsed && !isMenuOpen ? 'translate-x-[calc(100%-32px)]' : 'translate-x-0'
+          }`}
       >
         {/* Menu Container */}
         <div className="relative">
@@ -411,10 +411,9 @@ export default function BhavishyaMalika() {
           )}
 
           {/* Expanded Menu Panel */}
-          <div 
-            className={`backdrop-blur-xl bg-gradient-to-br from-background/95 to-background/90 rounded-l-2xl shadow-2xl border-l border-t border-b border-border/50 overflow-hidden transition-all duration-500 ${
-              isMenuCollapsed && !isMenuOpen ? 'opacity-0 w-0' : 'opacity-100 w-72'
-            }`}
+          <div
+            className={`backdrop-blur-xl bg-gradient-to-br from-background/95 to-background/90 rounded-l-2xl shadow-2xl border-l border-t border-b border-border/50 overflow-hidden transition-all duration-500 ${isMenuCollapsed && !isMenuOpen ? 'opacity-0 w-0' : 'opacity-100 w-72'
+              }`}
           >
             <div className="p-4 space-y-3">
               {/* Header with Close Button */}
@@ -561,3 +560,5 @@ export default function BhavishyaMalika() {
     </div>
   );
 }
+
+export default BhavishyaMalikaContent;
