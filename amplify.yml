@@ -12,7 +12,8 @@ frontend:
         # --- Backend Deployment ---
         # 2. Deploy Amplify backend and generate outputs
         - cd amplify-app
-        - npx amplify pipeline-deploy --outputs-format json --outputs-path ../amplify_outputs.json
+        - npx amplify pipeline-deploy --outputs-format json --outputs-path amplify_outputs.json
+        - mv amplify_outputs.json ..
         - cd ..
 
         # --- Dependency Fix (Must run from repository root) ---

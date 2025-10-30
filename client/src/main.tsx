@@ -6,7 +6,8 @@ import "./index.css";
 // 1. Import the Amplify libraries
 import { Amplify } from 'aws-amplify';
 // 2. Import the auto-generated configuration file from your backend folder
-import outputs from '../../amplify-app/amplify_outputs.json';
+// @ts-ignore - File generated at build time
+import outputs from '../../amplify_outputs.json';
 
 // 3. Configure Amplify *before* your app renders
 Amplify.configure(outputs);
