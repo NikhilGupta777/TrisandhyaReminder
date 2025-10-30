@@ -1,3 +1,5 @@
+import { Amplify } from "amplify-app";
+import outputs from "../amplify_outputs.json";
 import { useEffect } from "react";
 import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
@@ -51,6 +53,7 @@ import TrisandhyaPdfsManagement from "@/pages/admin/TrisandhyaPdfsManagement";
 import NotificationsManagement from "@/pages/admin/NotificationsManagement";
 import NotFound from "@/pages/not-found";
 
+Amplify.configure(outputs);
 function AdminRouter() {
   return (
     <Switch>
@@ -195,7 +198,7 @@ function AuthenticatedApp() {
           </main>
         </div>
       </div>
-      
+
       <AlarmDialog
         isOpen={!!activeAlarm}
         alarmType={activeAlarm?.type || "pratah"}
