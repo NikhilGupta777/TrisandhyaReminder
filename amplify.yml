@@ -9,12 +9,16 @@ frontend:
         # This implicitly runs 'nvm install 18' if needed.
         - nvm install 18
 
+        # --- Backend Deployment ---
+        # 2. Deploy Amplify backend and generate outputs
+        - cd amplify-app && npx amplify pipeline-deploy --outputs-format json --outputs-path amplify_outputs.json && cd ..
+
         # --- Dependency Fix (Must run from repository root) ---
-        # 2. Install ALL dependencies with the flag to ignore React peer dependency conflicts.
+        # 3. Install ALL dependencies with the flag to ignore React peer dependency conflicts.
         # This command runs in the repository root and uses the 'package.json' that contains the conflict.
         - npm ci --legacy-peer-deps
 
-        # 3. Change Directory: Navigate into the frontend application directory
+        # 4. Change Directory: Navigate into the frontend application directory
         # where the Vite build artifacts and the final code reside.
         - cd client
 
