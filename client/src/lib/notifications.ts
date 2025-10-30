@@ -5,7 +5,7 @@ export type NotificationPermission = 'default' | 'granted' | 'denied';
 // Request browser notification permission
 export async function requestNotificationPermission(): Promise<NotificationPermission> {
   if (!('Notification' in window)) {
-    console.warn('This browser does not support notifications');
+    // This browser does not support notifications
     return 'denied';
   }
 
@@ -48,7 +48,7 @@ export function showBrowserNotification(
 // Subscribe to push notifications
 export async function subscribeToPushNotifications(userId: string): Promise<PushSubscription | null> {
   if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-    console.warn('Push notifications are not supported');
+    // Push notifications are not supported
     return null;
   }
 
@@ -61,12 +61,14 @@ export async function subscribeToPushNotifications(userId: string): Promise<Push
     if (!subscription) {
       // Create new subscription
       // Note: In production, you'll need VAPID public key from your push service
+      const vapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY || '';
+      if (!vapidKey) {
+        throw new Error('VAPID public key not configured');
+      }
+
       subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(
-          // This is a placeholder - you'll need to generate VAPID keys
-          import.meta.env.VITE_VAPID_PUBLIC_KEY || ''
-        ),
+        applicationServerKey: urlBase64ToUint8Array(vapidKey) as BufferSource,
       });
     }
 
@@ -86,7 +88,7 @@ export async function subscribeToPushNotifications(userId: string): Promise<Push
 
     return subscription;
   } catch (error) {
-    console.error('Failed to subscribe to push notifications:', error);
+    // Failed to subscribe to push notifications - handle silently
     return null;
   }
 }
@@ -135,7 +137,7 @@ export class NotificationWebSocket {
       this.ws = new WebSocket(wsUrl);
 
       this.ws.onopen = () => {
-        console.log('[NotificationWS] Connected');
+        // [NotificationWS] Connected
         this.reconnectAttempts = 0;
         
         // Authenticate
@@ -171,21 +173,21 @@ export class NotificationWebSocket {
             }
           }
         } catch (error) {
-          console.error('[NotificationWS] Error parsing message:', error);
+          // [NotificationWS] Error parsing message - handle silently
         }
       };
 
       this.ws.onclose = () => {
-        console.log('[NotificationWS] Disconnected');
+        // [NotificationWS] Disconnected
         this.ws = null;
         this.attemptReconnect();
       };
 
       this.ws.onerror = (error) => {
-        console.error('[NotificationWS] Error:', error);
+        // [NotificationWS] Error - handle silently
       };
     } catch (error) {
-      console.error('[NotificationWS] Connection error:', error);
+      // [NotificationWS] Connection error - handle silently
       this.attemptReconnect();
     }
   }
@@ -194,7 +196,7 @@ export class NotificationWebSocket {
     if (this.reconnectAttempts < this.maxReconnectAttempts && this.userId) {
       this.reconnectAttempts++;
       const delay = this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1);
-      console.log(`[NotificationWS] Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts})`);
+      // [NotificationWS] Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts})
       
       setTimeout(() => {
         if (this.userId) {

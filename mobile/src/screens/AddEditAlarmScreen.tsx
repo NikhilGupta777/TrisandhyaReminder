@@ -9,8 +9,12 @@ import {
   Alert,
   Platform,
 } from 'react-native';
+// @ts-ignore
 import { Ionicons } from '@expo/vector-icons';
+// @ts-ignore
 import DateTimePicker from '@react-native-community/datetimepicker';
+// @ts-ignore
+import { Slider } from '@miblanchard/react-native-slider';
 import * as DocumentPicker from 'expo-document-picker';
 import { database } from '../database/database';
 import { alarmScheduler } from '../services/alarmScheduler';
@@ -19,7 +23,11 @@ import { WEEK_DAYS } from '../types/alarm';
 
 interface Props {
   navigation: any;
-  route: any;
+  route: {
+    params?: {
+      alarmId?: string;
+    };
+  };
 }
 
 export default function AddEditAlarmScreen({ navigation, route }: Props) {
@@ -43,6 +51,7 @@ export default function AddEditAlarmScreen({ navigation, route }: Props) {
   }, [alarmId]);
 
   const loadAlarm = async () => {
+    if (!alarmId) return;
     try {
       const alarm = await database.getAlarm(alarmId);
       if (alarm) {
@@ -59,7 +68,6 @@ export default function AddEditAlarmScreen({ navigation, route }: Props) {
         setSnoozeMinutes(alarm.snoozeMinutes);
       }
     } catch (error) {
-      console.error('Failed to load alarm:', error);
       Alert.alert('Error', 'Failed to load alarm');
     }
   };
@@ -85,7 +93,6 @@ export default function AddEditAlarmScreen({ navigation, route }: Props) {
         setToneName(asset.name);
       }
     } catch (error) {
-      console.error('Failed to pick audio file:', error);
       Alert.alert('Error', 'Failed to select audio file');
     }
   };
@@ -106,7 +113,7 @@ export default function AddEditAlarmScreen({ navigation, route }: Props) {
         snoozeMinutes,
       };
 
-      if (isEditing) {
+      if (isEditing && alarmId) {
         await database.updateAlarm(alarmId, alarmData);
         const updatedAlarm = await database.getAlarm(alarmId);
         if (updatedAlarm) {
@@ -119,7 +126,6 @@ export default function AddEditAlarmScreen({ navigation, route }: Props) {
 
       navigation.goBack();
     } catch (error) {
-      console.error('Failed to save alarm:', error);
       Alert.alert('Error', 'Failed to save alarm');
     }
   };
@@ -143,7 +149,7 @@ export default function AddEditAlarmScreen({ navigation, route }: Props) {
             value={time}
             mode="time"
             is24Hour={false}
-            onChange={(event, selectedTime) => {
+            onChange={(event: any, selectedTime: any) => {
               setShowTimePicker(Platform.OS === 'ios');
               if (selectedTime) setTime(selectedTime);
             }}
@@ -204,13 +210,14 @@ export default function AddEditAlarmScreen({ navigation, route }: Props) {
         <Text style={styles.sectionTitle}>Volume: {volume}%</Text>
         <View style={styles.sliderContainer}>
           <Ionicons name="volume-low" size={20} color="#666" />
-          <input
-            type="range"
-            min="0"
-            max="100"
+          <Slider
+            minimumValue={0}
+            maximumValue={100}
             value={volume}
-            onChange={(e) => setVolume(parseInt(e.target.value))}
-            style={{ flex: 1, margin: '0 12px' }}
+            onValueChange={(value: any) => setVolume(Math.round(value))}
+            minimumTrackTintColor="#FF6B35"
+            maximumTrackTintColor="#ddd"
+            thumbTintColor="#FF6B35"
           />
           <Ionicons name="volume-high" size={20} color="#666" />
         </View>
@@ -385,3 +392,4 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
 });
+

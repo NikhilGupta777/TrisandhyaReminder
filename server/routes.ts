@@ -2,6 +2,8 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated, isAdmin } from "./googleAuth";
+import { authRateLimiter, apiRateLimiter, fileUploadRateLimiter } from "./middleware/rateLimiter";
+import { logger } from "./middleware/logger";
 import passport from "passport";
 import {
   sendVerificationEmail,
@@ -31,7 +33,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   await setupAuth(app);
 
   // Registration endpoint
-  app.post("/api/auth/register", async (req, res, next) => {
+  app.post("/api/auth/register", authRateLimiter.middleware(), async (req, res, next) => {
     try {
       const validatedData = registerUserSchema.parse(req.body);
 
@@ -115,7 +117,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Verify email with code endpoint
-  app.post("/api/auth/verify-code", async (req, res) => {
+  app.post("/api/auth/verify-code", authRateLimiter.middleware(), async (req, res) => {
     try {
       const validatedData = verifyCodeSchema.parse(req.body);
       const user = await storage.verifyUserCode(
@@ -146,7 +148,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Resend verification email endpoint
-  app.post("/api/auth/resend-verification", async (req, res) => {
+  app.post("/api/auth/resend-verification", authRateLimiter.middleware(), async (req, res) => {
     try {
       const { email } = req.body;
 
@@ -225,7 +227,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Forgot password - request reset code
-  app.post("/api/auth/forgot-password", async (req, res) => {
+  app.post("/api/auth/forgot-password", authRateLimiter.middleware(), async (req, res) => {
     try {
       const validatedData = forgotPasswordSchema.parse(req.body);
 
@@ -280,7 +282,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Reset password with code
-  app.post("/api/auth/reset-password", async (req, res) => {
+  app.post("/api/auth/reset-password", authRateLimiter.middleware(), async (req, res) => {
     try {
       const validatedData = resetPasswordSchema.parse(req.body);
       const hashedPassword = await bcrypt.hash(validatedData.password, 10);
@@ -307,7 +309,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Login endpoint
-  app.post("/api/auth/login", async (req, res, next) => {
+  app.post("/api/auth/login", authRateLimiter.middleware(), async (req, res, next) => {
     try {
       const validatedData = loginUserSchema.parse(req.body);
 
@@ -400,7 +402,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         </html>
       `);
     } catch (error) {
-      console.error("Error verifying email:", error);
+      logger.error("Error verifying email", error, {
+        ip: req.ip,
+      });
       res.status(500).send(`
         <!DOCTYPE html>
         <html>
@@ -420,7 +424,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = await storage.getUser(userId);
       res.json(user);
     } catch (error) {
-      console.error("Error fetching user:", error);
+      logger.error("Error fetching user", error, {
+        userId: (req.user as any)?.id,
+        ip: req.ip,
+      });
       res.status(500).json({ message: "Failed to fetch user" });
     }
   });
@@ -629,7 +636,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin routes - User management
-  app.get("/api/admin/users", isAuthenticated, isAdmin, async (req, res) => {
+  app.get("/api/admin/users", isAuthenticated, isAdmin, async (req: any, res) => {
     try {
       const users = await storage.getAllUsers();
       res.json(users);
@@ -643,7 +650,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     "/api/admin/users/:id/admin",
     isAuthenticated,
     isAdmin,
-    async (req, res) => {
+    async (req: any, res) => {
       try {
         const { isAdmin: adminStatus } = req.body;
         const user = await storage.updateUserAdminStatus(
@@ -662,7 +669,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     "/api/admin/users/:id",
     isAuthenticated,
     isAdmin,
-    async (req, res) => {
+    async (req: any, res) => {
       try {
         await storage.deleteUser(req.params.id);
         res.json({ message: "User deleted successfully" });
@@ -674,7 +681,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   );
 
   // Admin routes - Media management
-  app.post("/api/admin/media", isAuthenticated, isAdmin, async (req, res) => {
+  app.post("/api/admin/media", isAuthenticated, isAdmin, async (req: any, res) => {
     try {
       const validatedData = insertMediaContentSchema.parse(req.body);
       const media = await storage.createMedia(validatedData);
@@ -689,7 +696,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     "/api/admin/media/:id",
     isAuthenticated,
     isAdmin,
-    async (req, res) => {
+    async (req: any, res) => {
       try {
         const media = await storage.updateMedia(req.params.id, req.body);
         res.json(media);
@@ -704,7 +711,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     "/api/admin/media/:id",
     isAuthenticated,
     isAdmin,
-    async (req, res) => {
+    async (req: any, res) => {
       try {
         const media = await storage.getMediaById(req.params.id);
         if (media && media.type === "audio") {
@@ -728,7 +735,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     "/api/admin/media-categories",
     isAuthenticated,
     isAdmin,
-    async (req, res) => {
+    async (req: any, res) => {
       try {
         const { insertMediaCategorySchema } = await import("@shared/schema");
         const validatedData = insertMediaCategorySchema.parse(req.body);
@@ -745,7 +752,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     "/api/admin/media-categories/:id",
     isAuthenticated,
     isAdmin,
-    async (req, res) => {
+    async (req: any, res) => {
       try {
         const category = await storage.updateMediaCategory(
           req.params.id,
@@ -763,7 +770,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     "/api/admin/media-categories/:id",
     isAuthenticated,
     isAdmin,
-    async (req, res) => {
+    async (req: any, res) => {
       try {
         await storage.deleteMediaCategory(req.params.id);
         res.json({ message: "Category deleted successfully" });
@@ -779,6 +786,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     "/api/admin/media/upload",
     isAuthenticated,
     isAdmin,
+    fileUploadRateLimiter.middleware(),
     async (req: any, res) => {
       try {
         const multer = await import("multer");
@@ -872,6 +880,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     "/api/admin/alarm-sounds/upload",
     isAuthenticated,
     isAdmin,
+    fileUploadRateLimiter.middleware(),
     async (req: any, res) => {
       try {
         const multer = await import("multer");
@@ -917,15 +926,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }) as any,
           limits: { fileSize: 10 * 1024 * 1024 },
           fileFilter: (req: any, file: any, cb: any) => {
-            if (audioMimeTypes.includes(file.mimetype)) {
-              cb(null, true);
-            } else {
+            // Enhanced validation
+            if (!audioMimeTypes.includes(file.mimetype)) {
               cb(
                 new Error(
-                  `Invalid file type for alarm sounds: ${file.mimetype}. Only audio files are allowed.`,
+                  `Invalid file type for alarm sounds: ${file.mimetype}. Only audio files (MP3, WAV, OGG, AAC, M4A, FLAC) are allowed.`,
                 ),
               );
+              return;
             }
+
+            // Additional security: check for dangerous file extensions
+            const originalName = file.originalname || '';
+            const dangerousExtensions = ['.exe', '.bat', '.cmd', '.scr', '.pif', '.com', '.jar', '.js', '.php', '.asp'];
+            const hasDangerousExt = dangerousExtensions.some(ext =>
+              originalName.toLowerCase().endsWith(ext)
+            );
+
+            if (hasDangerousExt) {
+              cb(new Error("File type not allowed for security reasons."));
+              return;
+            }
+
+            cb(null, true);
           },
         });
 
@@ -938,11 +961,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
             return res.status(400).json({ message: "No file uploaded" });
           }
 
+          const file = req.file as any;
           const fileData = {
-            url: (req.file as any).location || req.file.path,
-            filename: req.file.originalname,
-            mimeType: req.file.mimetype,
-            size: req.file.size,
+            url: file.location || file.path,
+            filename: file.originalname,
+            mimeType: file.mimetype,
+            size: file.size,
           };
 
           if (!fileData.url || fileData.url.trim() === "") {
@@ -1030,6 +1054,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     "/api/admin/japa-audios/upload",
     isAuthenticated,
     isAdmin,
+    fileUploadRateLimiter.middleware(),
     async (req: any, res) => {
       try {
         const multer = await import("multer");
@@ -1301,7 +1326,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   );
 
   // Alarm sounds routes
-  app.get("/api/alarm-sounds", async (req, res) => {
+  app.get("/api/alarm-sounds", isAuthenticated, async (req, res) => {
     try {
       const sounds = await storage.getAllAlarmSounds();
       res.json(sounds);
@@ -1609,6 +1634,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     "/api/admin/mahapuran-chapters/upload",
     isAuthenticated,
     isAdmin,
+    fileUploadRateLimiter.middleware(),
     async (req: any, res) => {
       try {
         const multer = await import("multer");
@@ -1873,6 +1899,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     "/api/mahapuran-pdfs/upload",
     isAuthenticated,
     isAdmin,
+    fileUploadRateLimiter.middleware(),
     (req: any, res) => {
       req.uploadFolder = "mahapuran-pdfs";
 
@@ -1987,6 +2014,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     "/api/trisandhya-pdfs/upload",
     isAuthenticated,
     isAdmin,
+    fileUploadRateLimiter.middleware(),
     (req: any, res) => {
       req.uploadFolder = "trisandhya-pdfs";
 
@@ -2101,6 +2129,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     "/api/scripture-pdfs/upload",
     isAuthenticated,
     isAdmin,
+    fileUploadRateLimiter.middleware(),
     (req: any, res) => {
       req.uploadFolder = "scripture-pdfs";
 
@@ -2338,7 +2367,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Notification sounds routes
-  app.get("/api/notification-sounds", async (req, res) => {
+  app.get("/api/notification-sounds", isAuthenticated, async (req, res) => {
     try {
       const sounds = await storage.getAllNotificationSounds();
       res.json(sounds);
@@ -2386,9 +2415,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     ws.on("message", async (message) => {
       try {
-        const data = JSON.parse(message.toString());
+        const rawMessage = message.toString();
+
+        // Basic validation - ensure it's valid JSON and not too large
+        if (rawMessage.length > 10000) {
+          ws.send(JSON.stringify({ type: "error", message: "Message too large" }));
+          return;
+        }
+
+        const data = JSON.parse(rawMessage);
+
+        // Validate message structure
+        if (typeof data !== 'object' || !data.type) {
+          ws.send(JSON.stringify({ type: "error", message: "Invalid message format" }));
+          return;
+        }
 
         if (data.type === "authenticate" && data.userId) {
+          // Validate userId format
+          if (typeof data.userId !== 'string' || data.userId.length > 100) {
+            ws.send(JSON.stringify({ type: "error", message: "Invalid userId" }));
+            return;
+          }
+
           userId = data.userId as string;
 
           // Add client to user's connection set
@@ -2404,6 +2453,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       } catch (error) {
         console.error("[WS] Error processing message:", error);
+        ws.send(JSON.stringify({ type: "error", message: "Failed to process message" }));
       }
     });
 

@@ -57,7 +57,7 @@ class AlarmScheduler {
       staysActiveInBackground: true,
     });
 
-    console.log('Alarm scheduler initialized');
+    // Alarm scheduler initialized
   }
 
   async scheduleAlarm(alarm: Alarm) {
@@ -87,12 +87,12 @@ class AlarmScheduler {
             snoozeMinutes: alarm.snoozeMinutes,
           },
         },
-        trigger,
+        trigger: { date: trigger } as any,
         identifier: `${alarm.id}_${occurrence}`,
       });
     }
 
-    console.log(`Scheduled ${nextOccurrences.length} occurrences for alarm ${alarm.id}`);
+    // Scheduled occurrences for alarm
   }
 
   async cancelAlarm(alarmId: string) {
@@ -119,7 +119,7 @@ class AlarmScheduler {
       await this.scheduleAlarm(alarm);
     }
 
-    console.log(`Rescheduled ${alarms.length} alarms`);
+    // Alarms rescheduled
   }
 
   async playAlarmSound(toneUri: string | null, volume: number, vibrate: boolean) {
@@ -191,7 +191,7 @@ class AlarmScheduler {
         priority: Notifications.AndroidNotificationPriority.MAX,
         data: { alarmId, snoozed: true },
       },
-      trigger: snoozeTime,
+      trigger: { date: snoozeTime } as any,
       identifier: `${alarmId}_snooze_${Date.now()}`,
     });
 
@@ -241,14 +241,14 @@ class AlarmScheduler {
       const alarmNotifications = scheduledNotifications
         .filter(notif => notif.identifier.startsWith(alarm.id))
         .sort((a, b) => {
-          const aTime = a.trigger && 'date' in a.trigger ? a.trigger.date : 0;
-          const bTime = b.trigger && 'date' in b.trigger ? b.trigger.date : 0;
+          const aTime = a.trigger && 'date' in a.trigger ? (a.trigger.date as number) : 0;
+          const bTime = b.trigger && 'date' in b.trigger ? (b.trigger.date as number) : 0;
           return aTime - bTime;
         });
 
       const nextNotif = alarmNotifications[0];
-      const nextRing = nextNotif && 'date' in nextNotif.trigger 
-        ? new Date(nextNotif.trigger.date)
+      const nextRing = nextNotif && nextNotif.trigger && 'date' in nextNotif.trigger
+        ? new Date(nextNotif.trigger.date as number)
         : new Date(0);
 
       return { alarm, nextRing };

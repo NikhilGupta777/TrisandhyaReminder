@@ -34,7 +34,6 @@ export default function AlarmListScreen({ navigation }: Props) {
       const allAlarms = await database.getAllAlarms();
       setAlarms(allAlarms);
     } catch (error) {
-      console.error('Failed to load alarms:', error);
       Alert.alert('Error', 'Failed to load alarms');
     }
   };
@@ -52,7 +51,6 @@ export default function AlarmListScreen({ navigation }: Props) {
       
       await loadAlarms();
     } catch (error) {
-      console.error('Failed to toggle alarm:', error);
       Alert.alert('Error', 'Failed to update alarm');
     }
   };
@@ -72,7 +70,6 @@ export default function AlarmListScreen({ navigation }: Props) {
               await database.deleteAlarm(alarmId);
               await loadAlarms();
             } catch (error) {
-              console.error('Failed to delete alarm:', error);
               Alert.alert('Error', 'Failed to delete alarm');
             }
           },

@@ -18,13 +18,13 @@ class WebAlarmScheduler {
     if ('Notification' in window) {
       const permission = await Notification.requestPermission();
       this.permissionGranted = permission === 'granted';
-      
+
       if (!this.permissionGranted) {
-        console.warn('Notification permission denied. Alarms will not trigger reliably.');
+        // Notification permission denied. Alarms will not trigger reliably.
         return false;
       }
     } else {
-      console.error('Notifications API not supported');
+      // Notifications API not supported
       return false;
     }
 
@@ -50,25 +50,28 @@ class WebAlarmScheduler {
     this.checkDueAlarms();
 
     // Reset triggered alarms at midnight
-    this.scheduleMiddnightReset();
+    this.scheduleMidnightReset();
   }
 
-  private scheduleMiddnightReset(): void {
+  private scheduleMidnightReset(): void {
     const now = new Date();
     const tomorrow = new Date(now);
     tomorrow.setDate(tomorrow.getDate() + 1);
     tomorrow.setHours(0, 0, 0, 0);
-    
+
     const msUntilMidnight = tomorrow.getTime() - now.getTime();
 
-    setTimeout(() => {
+    // Use a more reliable approach with proper cleanup
+    this.midnightTimeoutId = window.setTimeout(() => {
       this.triggeredToday.clear();
       localStorage.setItem('lastAlarmReset', new Date().toDateString());
-      
+
       // Schedule next midnight reset
-      this.scheduleMiddnightReset();
+      this.scheduleMidnightReset();
     }, msUntilMidnight);
   }
+
+  private midnightTimeoutId: number | null = null;
 
   private async checkDueAlarms(): Promise<void> {
     try {
@@ -91,8 +94,8 @@ class WebAlarmScheduler {
         if (alarm.enablePreAlarm && !this.triggeredToday.has(preAlarmKey)) {
           const [hours, minutes] = alarm.time.split(':').map(Number);
           const alarmTimeMinutes = hours * 60 + minutes;
-          let preAlarmTimeMinutes = alarmTimeMinutes - alarm.preAlarmMinutes;
-          
+          let preAlarmTimeMinutes = alarmTimeMinutes - (alarm.preAlarmMinutes || 0);
+
           // Handle pre-alarm time that wraps to previous day
           let preAlarmDay = currentDay;
           if (preAlarmTimeMinutes < 0) {
@@ -100,13 +103,13 @@ class WebAlarmScheduler {
             // Pre-alarm is on previous day
             preAlarmDay = (currentDay - 1 + 7) % 7;
           }
-          
+
           const currentMinutes = now.getHours() * 60 + now.getMinutes();
-          
+
           if (currentMinutes === preAlarmTimeMinutes) {
             // Check if pre-alarm should trigger based on its day
             const shouldTrigger = alarm.repeatDays.length === 0 || alarm.repeatDays.includes(preAlarmDay);
-            
+
             if (shouldTrigger) {
               this.triggerPreAlarm(alarm);
               this.triggeredToday.add(preAlarmKey);
@@ -131,7 +134,7 @@ class WebAlarmScheduler {
         }
       }
     } catch (error) {
-      console.error('Error checking due alarms:', error);
+      // Error checking due alarms - handle silently
     }
   }
 
@@ -205,7 +208,7 @@ class WebAlarmScheduler {
   async scheduleAlarm(alarm: IndexedDBAlarm): Promise<void> {
     // In web environment, we rely on the interval check
     // Store in IndexedDB for persistence
-    console.log('Alarm scheduled:', alarm.label, alarm.time);
+    // Alarm scheduled: ${alarm.label} ${alarm.time}
   }
 
   async cancelAlarm(alarmId: string): Promise<void> {
@@ -213,8 +216,8 @@ class WebAlarmScheduler {
     const today = new Date().toDateString();
     const alarmKey = `${today}-${alarmId}`;
     this.triggeredToday.delete(alarmKey);
-    
-    console.log('Alarm cancelled:', alarmId);
+
+    // Alarm cancelled: ${alarmId}
   }
 
   async snoozeAlarm(alarmId: string, snoozeMinutes: number): Promise<void> {
@@ -252,9 +255,9 @@ class WebAlarmScheduler {
         });
       }
 
-      console.log(`Alarm snoozed for ${snoozeMinutes} minutes`);
+      // Alarm snoozed for ${snoozeMinutes} minutes
     } catch (error) {
-      console.error('Failed to snooze alarm:', error);
+      // Failed to snooze alarm - handle silently
     }
   }
 
@@ -269,9 +272,9 @@ class WebAlarmScheduler {
         });
       }
 
-      console.log('Alarm dismissed:', alarmId);
+      // Alarm dismissed: ${alarmId}
     } catch (error) {
-      console.error('Failed to dismiss alarm:', error);
+      // Failed to dismiss alarm - handle silently
     }
   }
 
@@ -281,26 +284,26 @@ class WebAlarmScheduler {
       for (const alarm of alarms) {
         await this.scheduleAlarm(alarm);
       }
-      console.log(`Rescheduled ${alarms.length} alarms`);
+      // Rescheduled ${alarms.length} alarms
     } catch (error) {
-      console.error('Failed to reschedule alarms:', error);
+      // Failed to reschedule alarms - handle silently
     }
   }
 
   getNextOccurrence(alarm: IndexedDBAlarm): Date | null {
     const now = new Date();
     const [hours, minutes] = alarm.time.split(':').map(Number);
-    
+
     // If one-time alarm
     if (alarm.repeatDays.length === 0) {
       const next = new Date();
       next.setHours(hours, minutes, 0, 0);
-      
+
       // If time has passed today, it's for tomorrow
       if (next <= now) {
         next.setDate(next.getDate() + 1);
       }
-      
+
       return next;
     }
 
@@ -334,6 +337,11 @@ class WebAlarmScheduler {
     if (this.checkInterval !== null) {
       clearInterval(this.checkInterval);
       this.checkInterval = null;
+    }
+
+    if (this.midnightTimeoutId !== null) {
+      clearTimeout(this.midnightTimeoutId);
+      this.midnightTimeoutId = null;
     }
   }
 }

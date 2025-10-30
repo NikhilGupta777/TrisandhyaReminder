@@ -4,12 +4,30 @@ import "./index.css";
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/alarm-sw.js')
+    navigator.serviceWorker.register('/alarm-sw.js', {
+      scope: '/',
+      updateViaCache: 'none'
+    })
       .then(reg => {
-        console.log('Alarm Service Worker registered successfully');
+        // Service Worker registration successful
+        // Check for updates
+        reg.addEventListener('updatefound', () => {
+          const newWorker = reg.installing;
+          if (newWorker) {
+            newWorker.addEventListener('statechange', () => {
+              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                // New version available
+                if (confirm('A new version is available. Reload to update?')) {
+                  window.location.reload();
+                }
+              }
+            });
+          }
+        });
       })
       .catch(err => {
-        console.error('Alarm Service Worker registration failed:', err);
+        // Service Worker registration failed - handle silently in production
+        console.error('Service Worker registration failed:', err);
       });
   });
 }

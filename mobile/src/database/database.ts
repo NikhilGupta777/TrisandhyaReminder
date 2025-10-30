@@ -11,9 +11,7 @@ class Database {
     try {
       this.db = await SQLite.openDatabaseAsync(DB_NAME);
       await this.createTables();
-      console.log('Database initialized successfully');
     } catch (error) {
-      console.error('Failed to initialize database:', error);
       throw error;
     }
   }
@@ -207,7 +205,7 @@ class Database {
       try {
         await FileSystem.deleteAsync(tone.uri, { idempotent: true });
       } catch (error) {
-        console.error('Failed to delete tone file:', error);
+        // Failed to delete tone file - continue
       }
     }
     

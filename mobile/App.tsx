@@ -5,12 +5,19 @@ import * as Notifications from 'expo-notifications';
 import { database } from './src/database/database';
 import { alarmScheduler } from './src/services/alarmScheduler';
 
+type RootStackParamList = {
+  AlarmList: undefined;
+  AddAlarm: undefined;
+  EditAlarm: { alarmId: string };
+  AlarmRing: { alarmId: string };
+};
+
 // Screens
 import AlarmListScreen from './src/screens/AlarmListScreen';
 import AddEditAlarmScreen from './src/screens/AddEditAlarmScreen';
 import AlarmRingScreen from './src/screens/AlarmRingScreen';
 
-const Stack = createNativeStackNavigator();
+const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function App() {
   const [isReady, setIsReady] = useState(false);
@@ -23,15 +30,12 @@ export default function App() {
     try {
       // Initialize database
       await database.init();
-      console.log('Database initialized');
 
       // Initialize alarm scheduler
       await alarmScheduler.initialize();
-      console.log('Alarm scheduler initialized');
 
       // Reschedule all enabled alarms on app start
       await alarmScheduler.rescheduleAllAlarms();
-      console.log('Alarms rescheduled');
 
       // Set up notification listeners
       setupNotificationListeners();
@@ -46,21 +50,19 @@ export default function App() {
     // Handle notification tapped
     Notifications.addNotificationResponseReceivedListener(response => {
       const data = response.notification.request.content.data;
-      
+
       if (data.alarmId) {
         // Navigate to alarm ring screen
         // This will be handled by deep linking in a full implementation
-        console.log('Alarm notification tapped:', data.alarmId);
       }
     });
 
     // Handle notification received while app is foreground
     Notifications.addNotificationReceivedListener(notification => {
       const data = notification.request.content.data;
-      
+
       if (data.alarmId) {
         // Trigger alarm ring screen
-        console.log('Alarm triggered:', data);
       }
     });
   };

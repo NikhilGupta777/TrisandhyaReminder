@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { AlarmInterface } from "@/components/AlarmInterface";
+import { LoadingSpinner, LoadingOverlay } from "@/components/LoadingSpinner";
 import { Play, Pause } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -18,11 +19,11 @@ export default function AlarmsConnected() {
   const [playingSound, setPlayingSound] = useState<string | null>(null);
   const [audio] = useState(new Audio());
   
-  const { data: settings } = useQuery<AlarmSettings>({
+  const { data: settings, isLoading: settingsLoading } = useQuery<AlarmSettings>({
     queryKey: ["/api/alarm-settings"],
   });
 
-  const { data: alarmSounds = [] } = useQuery<AlarmSound[]>({
+  const { data: alarmSounds = [], isLoading: soundsLoading } = useQuery<AlarmSound[]>({
     queryKey: ["/api/alarm-sounds"],
   });
 
@@ -36,6 +37,13 @@ export default function AlarmsConnected() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/alarm-settings"] });
       toast({ title: "Settings updated" });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update settings",
+        variant: "destructive",
+      });
     },
   });
 
@@ -79,7 +87,9 @@ export default function AlarmsConnected() {
         <p className="text-muted-foreground">Set up reminders for your daily Sandhya practices</p>
       </div>
 
-      <Card className="p-6 space-y-6" data-testid="alarm-settings">
+      <LoadingOverlay isVisible={settingsLoading} text="Loading settings..." />
+
+      <Card className="p-6 space-y-6 relative" data-testid="alarm-settings">
         <h3 className="text-lg font-semibold">Alarm Settings</h3>
 
         <div className="space-y-6">
@@ -194,7 +204,8 @@ export default function AlarmsConnected() {
         </div>
       </Card>
 
-      <Card className="p-6 space-y-4">
+      <Card className="p-6 space-y-4 relative">
+        <LoadingOverlay isVisible={soundsLoading} text="Loading sounds..." />
         <h3 className="font-semibold">Available Alarm Sounds</h3>
         <div className="space-y-3">
           {alarmSounds.map((sound) => (
@@ -214,6 +225,7 @@ export default function AlarmsConnected() {
                 size="icon"
                 variant="ghost"
                 onClick={() => handlePlaySound(sound)}
+                disabled={updateSettingsMutation.isPending}
                 data-testid={`button-play-sound-${sound.id}`}
               >
                 {playingSound === sound.id ? (

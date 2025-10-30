@@ -13,6 +13,7 @@ import { NotificationBell } from "@/components/NotificationBell";
 import { AudioPlayerProvider } from "@/contexts/AudioPlayerContext";
 import { GlobalAudioPlayer } from "@/components/GlobalAudioPlayer";
 import { AlarmDialog } from "@/components/AlarmDialog";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useAlarmMonitor } from "@/hooks/use-alarm-monitor";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -101,24 +102,41 @@ function UserRouter() {
 }
 
 function AuthenticatedApp() {
-  const { user, isAdmin } = useAuth();
+  const { user, isAdmin, isLoading: authLoading } = useAuth();
   const [location, setLocation] = useLocation();
   const pathname = location.split('?')[0].split('#')[0];
   const isAdminRoute = /^\/admin(\/.*)?$/.test(pathname);
   const { activeAlarm, dismissAlarm, snoozeAlarm, volume } = useAlarmMonitor();
 
   useEffect(() => {
-    if (isAdminRoute && !isAdmin) {
+    // Only redirect if we have auth data and user is not admin but trying to access admin route
+    if (!authLoading && isAdminRoute && !isAdmin) {
       setLocation("/");
     }
-  }, [isAdminRoute, isAdmin, setLocation]);
+  }, [isAdminRoute, isAdmin, setLocation, authLoading]);
 
-  if (isAdminRoute && !isAdmin) {
+  // Show loading while checking auth
+  if (authLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="text-center space-y-4">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="text-muted-foreground">Redirecting...</p>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Block access to admin routes for non-admin users
+  if (isAdminRoute && !isAdmin) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center space-y-4">
+          <div className="text-red-600">
+            <Shield className="h-16 w-16 mx-auto mb-4" />
+            <h2 className="text-xl font-semibold mb-2">Access Denied</h2>
+            <p className="text-muted-foreground">You don't have permission to access this area.</p>
+          </div>
         </div>
       </div>
     );
@@ -161,7 +179,7 @@ function AuthenticatedApp() {
                     // Use client-side navigation instead of full page reload
                     setLocation("/login");
                   } catch (error) {
-                    console.error("Logout failed:", error);
+                    // Logout failed - handle silently
                     setLocation("/login");
                   }
                 }}
@@ -220,18 +238,20 @@ function AppRouter() {
 
 export default function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        <AudioPlayerProvider>
-          <TooltipProvider>
-            <Toaster />
-            <WouterRouter>
-              <AppRouter />
-            </WouterRouter>
-            <GlobalAudioPlayer />
-          </TooltipProvider>
-        </AudioPlayerProvider>
-      </ThemeProvider>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider>
+          <AudioPlayerProvider>
+            <TooltipProvider>
+              <Toaster />
+              <WouterRouter>
+                <AppRouter />
+              </WouterRouter>
+              <GlobalAudioPlayer />
+            </TooltipProvider>
+          </AudioPlayerProvider>
+        </ThemeProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }

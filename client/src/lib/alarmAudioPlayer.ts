@@ -22,7 +22,7 @@ export class AlarmAudioPlayer {
     fadeInDuration: number = 0
   ): Promise<void> {
     if (!this.audioContext || !this.gainNode) {
-      console.error('Audio context not available');
+      // Audio context not available - handle silently
       return;
     }
 
@@ -73,13 +73,12 @@ export class AlarmAudioPlayer {
 
       this.isPlaying = true;
     } catch (error) {
-      console.error('Failed to play alarm sound:', error);
-      // Fallback to default sound if custom audio fails
+      // Failed to play alarm sound - fallback to default sound
       try {
         await this.playDefaultAlarmSound();
         this.isPlaying = true;
       } catch (fallbackError) {
-        console.error('Fallback to default sound also failed:', fallbackError);
+        // Fallback to default sound also failed - handle silently
       }
     }
   }
@@ -95,8 +94,7 @@ export class AlarmAudioPlayer {
 
       this.playBuffer(audioBuffer);
     } catch (error) {
-      console.error('Failed to play custom audio:', error);
-      // Fallback to default sound
+      // Failed to play custom audio - fallback to default sound
       await this.playDefaultAlarmSound();
     }
   }
@@ -202,10 +200,17 @@ export class AlarmAudioPlayer {
 
   async cleanup(): Promise<void> {
     await this.stopAlarmSound();
-    
+
     if (this.audioContext && this.audioContext.state !== 'closed') {
       await this.audioContext.close();
     }
+
+    // Clear all references to prevent memory leaks
+    this.audioContext = null;
+    this.currentSource = null;
+    this.gainNode = null;
+    this.isPlaying = false;
+    this.loopTimeout = null;
   }
 }
 

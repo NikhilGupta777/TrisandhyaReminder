@@ -5,6 +5,7 @@ import { Plus, Clock, Settings, Bell, BellOff } from 'lucide-react';
 import { useWebAlarmSystem } from '@/hooks/use-web-alarm-system';
 import { AddEditAlarmDialog } from '@/components/alarms/AddEditAlarmDialog';
 import { AlarmRingScreen } from '@/components/alarms/AlarmRingScreen';
+import { LoadingSpinner } from '@/components/LoadingSpinner';
 import type { IndexedDBAlarm } from '@/lib/indexedDBAlarmStorage';
 import { useToast } from '@/hooks/use-toast';
 
@@ -121,10 +122,9 @@ export default function AlarmsNew() {
 
   if (!isInitialized) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
+      <div className="flex items-center justify-center min-h-screen bg-black dark:bg-black text-white">
         <div className="text-center space-y-4">
-          <Clock className="h-16 w-16 mx-auto animate-pulse text-muted-foreground" />
-          <p className="text-muted-foreground">Initializing alarm system...</p>
+          <LoadingSpinner size="lg" text="Initializing alarm system..." />
         </div>
       </div>
     );

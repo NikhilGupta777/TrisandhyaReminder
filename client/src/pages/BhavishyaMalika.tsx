@@ -53,6 +53,14 @@ function BhavishyaMalikaContent() {
     };
   }, [isMenuOpen]);
 
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      setIsMenuOpen(false);
+      setIsMenuCollapsed(true);
+    };
+  }, []);
+
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
       iframeContainerRef.current?.requestFullscreen();
@@ -562,3 +570,4 @@ function BhavishyaMalikaContent() {
 }
 
 export default BhavishyaMalikaContent;
+
