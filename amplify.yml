@@ -11,7 +11,9 @@ frontend:
 
         # --- Backend Deployment ---
         # 2. Deploy Amplify backend and generate outputs
-        - cd amplify-app && npx amplify pipeline-deploy --outputs-format json --outputs-path amplify_outputs.json && cd ..
+        - cd amplify-app
+        - npx amplify pipeline-deploy --outputs-format json --outputs-path ../amplify_outputs.json
+        - cd ..
 
         # --- Dependency Fix (Must run from repository root) ---
         # 3. Install ALL dependencies with the flag to ignore React peer dependency conflicts.
