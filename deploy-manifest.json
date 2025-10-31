@@ -4,12 +4,13 @@
     "name": "express",
     "version": "4.18.2"
   },
-  "computeResources": {
-    "default": {
-      "entry": "./compute/default/server/index.js",
-      "runtime": "nodejs20.x"
+  "computeResources": [
+    {
+      "name": "default",
+      "runtime": "nodejs20.x",
+      "entrypoint": "index.js"
     }
-  },
+  ],
   "imageSettings": {
     "sizes": [
       100,

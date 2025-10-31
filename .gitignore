@@ -18,7 +18,7 @@ yarn-error.log*
 *.swo
 *~
 .amplify
-# .amplify-hosting
+.amplify-hosting
 # amplify-build-config.json
 # amplify_outputs.json
 .local
