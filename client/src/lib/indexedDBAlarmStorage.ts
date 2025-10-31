@@ -51,7 +51,7 @@ class IndexedDBAlarmStorage {
     return new Promise((resolve, reject) => {
       const request = indexedDB.open(DB_NAME, DB_VERSION);
 
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(`Failed to open database: ${request.error?.message || 'Unknown error'}`));
       request.onsuccess = () => {
         this.db = request.result;
         resolve();
@@ -98,18 +98,20 @@ class IndexedDBAlarmStorage {
     const now = Date.now();
     const newAlarm: IndexedDBAlarm = {
       ...alarm,
-      id: `alarm_${now}_${Math.random().toString(36).substring(2, 11)}`,
+      id: `alarm_${crypto.randomUUID()}`,
       createdAt: now,
       updatedAt: now,
     };
 
     return new Promise((resolve, reject) => {
       const transaction = db.transaction([ALARMS_STORE], 'readwrite');
+      transaction.onerror = () => reject(new Error(`Transaction failed: ${transaction.error?.message || 'Unknown error'}`));
+      
       const store = transaction.objectStore(ALARMS_STORE);
       const request = store.add(newAlarm);
 
       request.onsuccess = () => resolve(newAlarm);
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(`Failed to create alarm: ${request.error?.message || 'Unknown error'}`));
     });
   }
 
@@ -128,11 +130,13 @@ class IndexedDBAlarmStorage {
 
     return new Promise((resolve, reject) => {
       const transaction = db.transaction([ALARMS_STORE], 'readwrite');
+      transaction.onerror = () => reject(new Error(`Transaction failed: ${transaction.error?.message || 'Unknown error'}`));
+      
       const store = transaction.objectStore(ALARMS_STORE);
       const request = store.put(updatedAlarm);
 
       request.onsuccess = () => resolve();
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(`Failed to update alarm: ${request.error?.message || 'Unknown error'}`));
     });
   }
 
@@ -140,11 +144,13 @@ class IndexedDBAlarmStorage {
     const db = await this.ensureDB();
     return new Promise((resolve, reject) => {
       const transaction = db.transaction([ALARMS_STORE], 'readwrite');
+      transaction.onerror = () => reject(new Error(`Transaction failed: ${transaction.error?.message || 'Unknown error'}`));
+      
       const store = transaction.objectStore(ALARMS_STORE);
       const request = store.delete(id);
 
       request.onsuccess = () => resolve();
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(`Failed to delete alarm: ${request.error?.message || 'Unknown error'}`));
     });
   }
 
