@@ -37,35 +37,14 @@ cp deploy-manifest.json ./.amplify-hosting/deploy-manifest.json
 
 echo "✅ Deployment manifest copied"
 
-# --- Ensure computeResources is fully defined in deploy-manifest.json ---
-echo "🧩 Validating and updating deploy-manifest.json..."
-node -e "
-const fs = require('fs');
-const path = require('path');
-
-const manifestPath = './.amplify-hosting/deploy-manifest.json';
-let manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
-
-// Ensure computeResources exists with required fields
-if (!manifest.computeResources) {
-  manifest.computeResources = {};
-}
-if (!manifest.computeResources.default) {
-  manifest.computeResources.default = {};
-}
-
-// Ensure required fields for Amplify schema
-if (!manifest.computeResources.default.entry) {
-  manifest.computeResources.default.entry = './compute/default/server/index.js';
-}
-if (!manifest.computeResources.default.runtime) {
-  manifest.computeResources.default.runtime = 'nodejs20.x';
-}
-
-fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
-console.log('✅ computeResources validated with entry and runtime');
-"
-# -----------------------------------------------
+# --- Add computeResources to deploy-manifest.json ---
+#
+# THIS BLOCK HAS BEEN INTENTIONALLY REMOVED
+# AS IT WAS CAUSING THE DEPLOYMENT ERROR.
+# THE CONFIGURATION IS NOW CORRECTLY PLACED
+# IN THE `deploy-manifest.json` FILE.
+#
+# ----------------------------------------------------
 
 # Create environment variable template
 cat > ./.amplify-hosting/compute/default/.env.production << 'EOF'

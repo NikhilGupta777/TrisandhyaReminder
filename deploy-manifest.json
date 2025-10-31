@@ -4,6 +4,12 @@
     "name": "express",
     "version": "4.18.2"
   },
+  "computeResources": {
+    "default": {
+      "entry": "./compute/default/server/index.js",
+      "runtime": "nodejs20.x"
+    }
+  },
   "imageSettings": {
     "sizes": [
       100,
@@ -15,12 +21,6 @@
     "formats": [],
     "minimumCacheTTL": 60,
     "dangerouslyAllowSVG": false
-  },
-  "computeResources": {
-    "default": {
-      "entry": "./compute/default/server/index.js",
-      "runtime": "nodejs20.x"
-    }
   },
   "routes": [
     {
