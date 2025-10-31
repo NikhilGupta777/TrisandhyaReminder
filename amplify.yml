@@ -3,11 +3,15 @@ frontend:
   phases:
     preBuild:
       commands:
+        - echo "Setting Node version..."
+        - nvm use 20
+        - node --version
+        - npm --version
         - echo "Installing dependencies..."
         - npm ci --legacy-peer-deps
     build:
       commands:
-        - echo "Building frontend..."
+        - echo "Building frontend and backend..."
         - npm run build
   artifacts:
     baseDirectory: dist/public
