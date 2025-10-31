@@ -108,10 +108,10 @@ docker push YOUR_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/trisandhya-backend:l
 ```
 DATABASE_URL=postgresql://user:password@host:port/database
 SESSION_SECRET=your-super-secret-key
-AWS_REGION=us-east-1
-AWS_ACCESS_KEY_ID=your-key
-AWS_SECRET_ACCESS_KEY=your-secret
-AWS_S3_BUCKET_NAME=your-bucket
+S3_REGION=us-east-1
+S3_ACCESS_KEY_ID=your-key
+S3_SECRET_ACCESS_KEY=your-secret
+S3_BUCKET_NAME=your-bucket
 SENDGRID_API_KEY=your-key
 SENDGRID_FROM_EMAIL=noreply@yourdomain.com
 GOOGLE_CLIENT_ID=your-id
@@ -175,7 +175,7 @@ psql $RDS_DATABASE_URL < backup.sql
 
 Your app uses S3 for media storage. Ensure:
 
-1. **S3 Bucket exists** with the name in `AWS_S3_BUCKET_NAME`
+1. **S3 Bucket exists** with the name in `S3_BUCKET_NAME`
 2. **CORS is configured** (see `S3_CORS_CONFIG.md` in your project)
 3. **IAM User has permissions**:
 ```json
@@ -254,10 +254,10 @@ Once set up, deployments are automatic:
 ### Backend (.env for App Runner/ECS)
 - [ ] `DATABASE_URL` - PostgreSQL connection string
 - [ ] `SESSION_SECRET` - Random secure string
-- [ ] `AWS_REGION` - AWS region (e.g., us-east-1)
-- [ ] `AWS_ACCESS_KEY_ID` - AWS access key
-- [ ] `AWS_SECRET_ACCESS_KEY` - AWS secret key
-- [ ] `AWS_S3_BUCKET_NAME` - S3 bucket name
+- [ ] `S3_REGION` - S3 region (e.g., us-east-1)
+- [ ] `S3_ACCESS_KEY_ID` - S3 access key
+- [ ] `S3_SECRET_ACCESS_KEY` - S3 secret key
+- [ ] `S3_BUCKET_NAME` - S3 bucket name
 - [ ] `SENDGRID_API_KEY` - SendGrid API key
 - [ ] `SENDGRID_FROM_EMAIL` - From email address
 - [ ] `GOOGLE_CLIENT_ID` - Google OAuth client ID

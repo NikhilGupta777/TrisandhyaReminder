@@ -6,24 +6,24 @@ import path from "path";
 import type { Request } from "express";
 
 function getS3Client() {
-  if (!process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY) {
-    throw new Error("AWS credentials not configured. Please set AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY environment variables.");
+  if (!process.env.S3_ACCESS_KEY_ID || !process.env.S3_SECRET_ACCESS_KEY) {
+    throw new Error("S3 credentials not configured. Please set S3_ACCESS_KEY_ID and S3_SECRET_ACCESS_KEY environment variables.");
   }
   
   return new S3Client({
-    region: process.env.AWS_REGION || "us-east-1",
+    region: process.env.S3_REGION || "us-east-1",
     credentials: {
-      accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+      accessKeyId: process.env.S3_ACCESS_KEY_ID,
+      secretAccessKey: process.env.S3_SECRET_ACCESS_KEY,
     },
   });
 }
 
 function getBucketName() {
-  if (!process.env.AWS_S3_BUCKET_NAME) {
-    throw new Error("AWS S3 bucket not configured. Please set AWS_S3_BUCKET_NAME environment variable.");
+  if (!process.env.S3_BUCKET_NAME) {
+    throw new Error("S3 bucket not configured. Please set S3_BUCKET_NAME environment variable.");
   }
-  return process.env.AWS_S3_BUCKET_NAME;
+  return process.env.S3_BUCKET_NAME;
 }
 
 let uploadToS3Instance: multer.Multer | null = null;
