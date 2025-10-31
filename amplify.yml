@@ -17,6 +17,7 @@ frontend:
         - export NODE_ENV=production
         - npm run build
         - echo "Running post-build packaging for SSR deployment..."
+        - yum install -y jq
         - chmod +x bin/postbuild.sh
         - ./bin/postbuild.sh
   artifacts:
