@@ -16,8 +16,9 @@ frontend:
         - echo "Setting environment..."
         - export NODE_ENV=production
         - npm run build
+        - echo "Installing jq via npm..."
+        - npm install -g jq-cli-wrapper
         - echo "Running post-build packaging for SSR deployment..."
-        - yum install -y jq
         - chmod +x bin/postbuild.sh
         - ./bin/postbuild.sh
   artifacts:
