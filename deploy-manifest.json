@@ -18,7 +18,8 @@
   },
   "computeResources": {
     "default": {
-      "type": "server"
+      "entry": "./compute/default/server/index.js",
+      "runtime": "nodejs20.x"
     }
   },
   "routes": [
