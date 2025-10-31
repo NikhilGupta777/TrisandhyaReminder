@@ -37,6 +37,14 @@ cp deploy-manifest.json ./.amplify-hosting/deploy-manifest.json
 
 echo "✅ Deployment manifest copied"
 
+# --- Add computeResources to deploy-manifest.json ---
+echo "🧩 Adding computeResources to deploy-manifest.json..."
+jq '. + {"computeResources": {"default": {"type": "server"}}}' \
+  ./.amplify-hosting/deploy-manifest.json > ./.amplify-hosting/deploy-manifest.tmp.json \
+  && mv ./.amplify-hosting/deploy-manifest.tmp.json ./.amplify-hosting/deploy-manifest.json
+echo "✅ computeResources added"
+# ----------------------------------------------------
+
 # Create environment variable template
 cat > ./.amplify-hosting/compute/default/.env.production << 'EOF'
 # This file is a template - actual values set in Amplify Console
