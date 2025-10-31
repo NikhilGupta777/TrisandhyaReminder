@@ -5,12 +5,21 @@
     "version": "4.18.2"
   },
   "imageSettings": {
-    "sizes": [100, 200, 1920],
+    "sizes": [
+      100,
+      200,
+      1920
+    ],
     "domains": [],
     "remotePatterns": [],
     "formats": [],
     "minimumCacheTTL": 60,
     "dangerouslyAllowSVG": false
+  },
+  "computeResources": {
+    "default": {
+      "type": "server"
+    }
   },
   "routes": [
     {

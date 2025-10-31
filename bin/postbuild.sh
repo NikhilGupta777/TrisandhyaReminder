@@ -37,13 +37,27 @@ cp deploy-manifest.json ./.amplify-hosting/deploy-manifest.json
 
 echo "✅ Deployment manifest copied"
 
-# # --- Add computeResources to deploy-manifest.json ---
-# echo "🧩 Adding computeResources to deploy-manifest.json..."
-# npx jq '.computeResources.default = .computeResources.default + {"type": "server"}' \
-#   ./.amplify-hosting/deploy-manifest.json > ./.amplify-hosting/deploy-manifest.tmp.json \
-#   && mv ./.amplify-hosting/deploy-manifest.tmp.json ./.amplify-hosting/deploy-manifest.json
-# echo "✅ computeResources added"
-# # ----------------------------------------------------
+# --- Ensure computeResources is defined in deploy-manifest.json ---
+echo "🧩 Validating and updating deploy-manifest.json..."
+node -e "
+const fs = require('fs');
+const path = require('path');
+
+const manifestPath = './.amplify-hosting/deploy-manifest.json';
+let manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+
+// Ensure computeResources exists with 'default' server resource
+if (!manifest.computeResources) {
+  manifest.computeResources = {};
+}
+if (!manifest.computeResources.default) {
+  manifest.computeResources.default = { type: 'server' };
+}
+
+fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
+console.log('✅ computeResources validated and ensured in manifest');
+"
+# -----------------------------------------------
 
 # Create environment variable template
 cat > ./.amplify-hosting/compute/default/.env.production << 'EOF'
