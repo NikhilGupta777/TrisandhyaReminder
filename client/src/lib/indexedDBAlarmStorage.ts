@@ -190,7 +190,7 @@ class IndexedDBAlarmStorage {
     const db = await this.ensureDB();
     const newTone: CustomTone = {
       ...tone,
-      id: `tone_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
+      id: `tone_${crypto.randomUUID()}`,
       createdAt: Date.now(),
     };
 
@@ -245,7 +245,7 @@ class IndexedDBAlarmStorage {
     const db = await this.ensureDB();
     const newInstance: AlarmInstance = {
       ...instance,
-      id: `instance_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
+      id: `instance_${crypto.randomUUID()}`,
     };
 
     return new Promise((resolve, reject) => {

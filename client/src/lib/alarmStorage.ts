@@ -121,7 +121,7 @@ export async function addCustomAlarmSound(file: File): Promise<CustomAlarmSound>
     reader.onload = (e) => {
       const dataUrl = e.target?.result as string;
       const customSound: CustomAlarmSound = {
-        id: `custom-${Date.now()}-${Math.random().toString(36).substring(7)}`,
+        id: `custom-${crypto.randomUUID()}`,
         name: file.name.replace(/\.[^/.]+$/, ""), // Remove extension
         dataUrl,
         fileSize: file.size,

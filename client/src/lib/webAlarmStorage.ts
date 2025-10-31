@@ -35,7 +35,7 @@ export class WebAlarmStorage {
   createAlarm(alarm: Omit<WebAlarm, 'id' | 'createdAt' | 'updatedAt'>): WebAlarm {
     const newAlarm: WebAlarm = {
       ...alarm,
-      id: `alarm_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      id: `alarm_${crypto.randomUUID()}`,
       createdAt: Date.now(),
       updatedAt: Date.now(),
     };
