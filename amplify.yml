@@ -18,7 +18,7 @@ frontend:
         - chmod +x bin/postbuild.sh
         - ./bin/postbuild.sh
   artifacts:
-    baseDirectory: .amplify-hosting
+    baseDirectory: dist/public
     files:
       - '**/*'
   cache:
