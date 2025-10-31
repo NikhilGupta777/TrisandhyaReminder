@@ -4,6 +4,7 @@ frontend:
     preBuild:
       commands:
         - echo "Setting Node version..."
+        - nvm install 20
         - nvm use 20
         - node --version
         - npm --version
@@ -13,15 +14,13 @@ frontend:
       commands:
         - echo "Building frontend and backend..."
         - npm run build
+        - echo "Running post-build packaging for SSR deployment..."
+        - chmod +x bin/postbuild.sh
+        - ./bin/postbuild.sh
   artifacts:
-    baseDirectory: dist/public
+    baseDirectory: .amplify-hosting
     files:
       - '**/*'
   cache:
     paths:
       - node_modules/**/*
-backend:
-  phases:
-    build:
-      commands:
-        - echo "Backend build completed in frontend build step"

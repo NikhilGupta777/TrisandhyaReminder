@@ -20,11 +20,19 @@ export function log(message: string, source = "express") {
 }
 
 export async function setupVite(app: Express, server: Server) {
+  // For Replit HTTPS environment, use wss:// protocol
+  const hmrConfig = process.env.REPL_ID
+    ? { 
+        protocol: "wss" as const,
+        host: process.env.REPLIT_DOMAINS?.split(',')[0] || undefined,
+        clientPort: 443,
+        server 
+      }
+    : { server };
+  
   const serverOptions = {
     middlewareMode: true,
-    hmr: {
-      server,
-    },
+    hmr: hmrConfig,
     allowedHosts: true as const,
   };
 

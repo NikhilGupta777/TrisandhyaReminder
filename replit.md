@@ -37,6 +37,18 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+### October 31, 2025
+- **Unified Amplify Deployment**: Configured full-stack SSR deployment through AWS Amplify Hosting
+  - Created deployment manifest (`deploy-manifest.json`) with proper routing rules
+  - Built post-build script (`bin/postbuild.sh`) to package application for SSR
+  - Updated `amplify.yml` to support SSR deployment with compute functions
+  - Added comprehensive deployment documentation in `AMPLIFY_SSR_DEPLOYMENT.md`
+  - Backend now deploys alongside frontend on same Amplify domain (no separate App Runner/ECS needed)
+  - Environment variables renamed from AWS_* to S3_* prefix to avoid conflicts
+  - Improved security with crypto.randomUUID() for ID generation
+  - Enhanced error handling in IndexedDB operations
+  - Fixed WebSocket HMR configuration for HTTPS environment
+
 ### October 20, 2025
 - **React Native Mobile App**: Built production-grade native alarm application with full offline capability
   - Created complete mobile app structure using Expo React Native
