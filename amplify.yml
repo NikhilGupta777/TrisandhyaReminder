@@ -13,6 +13,8 @@ frontend:
     build:
       commands:
         - echo "Building frontend and backend..."
+        - echo "Setting environment..."
+        - export NODE_ENV=production
         - npm run build
         - echo "Running post-build packaging for SSR deployment..."
         - chmod +x bin/postbuild.sh

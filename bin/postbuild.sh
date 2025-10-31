@@ -12,9 +12,9 @@ echo "✅ Created .amplify-hosting directory structure"
 
 # Copy server code and dependencies
 echo "📋 Copying server files..."
-cp -r ./dist/server ./.amplify-hosting/compute/default/
-cp -r ./dist/shared ./.amplify-hosting/compute/default/
-cp ./server/index.ts ./.amplify-hosting/compute/default/server/
+mkdir -p ./.amplify-hosting/compute/default/server
+cp ./dist/index.js ./.amplify-hosting/compute/default/server/
+cp -r ./shared ./.amplify-hosting/compute/default/ || true
 cp ./package.json ./.amplify-hosting/compute/default/
 cp ./package-lock.json ./.amplify-hosting/compute/default/
 
