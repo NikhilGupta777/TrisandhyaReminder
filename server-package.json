@@ -1,0 +1,31 @@
+{
+  "name": "trisandhya-server",
+  "version": "1.0.0",
+  "type": "module",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.910.0",
+    "@aws-sdk/s3-request-presigner": "^3.910.0",
+    "@neondatabase/serverless": "^0.10.4",
+    "@sendgrid/mail": "^8.1.6",
+    "bcrypt": "^6.0.0",
+    "connect-pg-simple": "^10.0.0",
+    "dotenv": "^17.2.3",
+    "drizzle-orm": "^0.39.1",
+    "drizzle-zod": "^0.7.0",
+    "express": "^4.21.2",
+    "express-session": "^1.18.1",
+    "memoizee": "^0.4.17",
+    "memorystore": "^1.6.7",
+    "multer": "^2.0.2",
+    "multer-s3": "^3.0.1",
+    "openid-client": "^6.8.1",
+    "passport": "^0.7.0",
+    "passport-google-oauth20": "^2.0.0",
+    "passport-local": "^1.0.0",
+    "ws": "^8.18.0",
+    "zod": "^3.24.2"
+  }
+}

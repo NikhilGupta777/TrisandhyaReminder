@@ -1,0 +1,344 @@
+    All apps
+    TrisandhyaReminder
+
+    main: Deployments
+
+Support
+Docs
+
+main
+Deployments
+Authentication
+Data
+AI
+Storage
+Functions
+Deployments
+Deployment card updated showing deployment 23
+Deployment 23
+Failed
+
+Started at
+11/1/2025, 4:36 PM
+
+Build duration
+3 minutes 32 seconds
+
+Domain
+https://main.d2nshwfv6xcw10.amplifyapp.com
+
+Repository
+TrisandhyaReminder:main
+
+Last commit
+deploy
+Build
+3 minutes 32 seconds
+
+142
+
+2025-11-01T11:08:32.207Z [INFO]: 21 packages are looking for funding
+
+143
+
+                                 run `npm fund` for details
+
+144
+
+2025-11-01T11:08:32.226Z [INFO]: # Executing command: echo "Running post-build packaging for SSR deployment..."
+
+145
+
+                                 Running post-build packaging for SSR deployment...
+
+146
+
+2025-11-01T11:08:32.226Z [INFO]: # Executing command: chmod +x bin/postbuild.sh
+
+147
+
+2025-11-01T11:08:32.229Z [INFO]: # Executing command: ./bin/postbuild.sh
+
+148
+
+2025-11-01T11:08:32.232Z [INFO]: 📦 Starting post-build process...
+
+149
+
+2025-11-01T11:08:32.234Z [INFO]: ✅ Created .amplify-hosting directory structure
+
+150
+
+                                 📋 Copying server files...
+
+151
+
+2025-11-01T11:08:32.239Z [INFO]: 📦 Installing production dependencies...
+
+152
+
+2025-11-01T11:08:32.335Z [WARNING]: npm warn config production Use `--omit=dev` instead.
+
+153
+
+2025-11-01T11:08:41.954Z [INFO]: added 930 packages, and audited 931 packages in 10s
+
+154
+
+2025-11-01T11:08:41.963Z [INFO]: 73 packages are looking for funding
+
+155
+
+                                 run `npm fund` for details
+
+156
+
+                                 3 low severity vulnerabilities
+
+157
+
+                                 To address all issues, run:
+
+158
+
+                                 npm audit fix
+
+159
+
+                                 Run `npm audit` for details.
+
+160
+
+2025-11-01T11:08:41.991Z [INFO]: ✅ Production dependencies installed
+
+161
+
+                                 🎨 Copying frontend static files...
+
+162
+
+2025-11-01T11:08:41.993Z [INFO]: ✅ Frontend files copied
+
+163
+
+2025-11-01T11:08:41.995Z [INFO]: ✅ Deployment manifest copied
+
+164
+
+2025-11-01T11:08:41.996Z [INFO]: ✅ Environment template created
+
+165
+
+                                 🎉 Post-build process completed!
+
+166
+
+2025-11-01T11:08:41.997Z [INFO]: # Completed phase: build
+
+167
+
+                                 ## Completed Frontend Build
+
+168
+
+2025-11-01T11:08:42.083Z [INFO]: ## Build completed successfully
+
+169
+
+2025-11-01T11:08:42.122Z [INFO]: # Starting caching...
+
+170
+
+2025-11-01T11:08:42.125Z [INFO]: # Creating cache artifact...
+
+171
+
+2025-11-01T11:08:52.940Z [INFO]: # Created cache artifact
+
+172
+
+2025-11-01T11:08:53.032Z [INFO]: # Uploading cache artifact...
+
+173
+
+2025-11-01T11:08:57.642Z [INFO]: # Uploaded cache artifact
+
+174
+
+2025-11-01T11:08:57.777Z [INFO]: # Caching completed
+
+175
+
+2025-11-01T11:09:24.809Z [ERROR]: !!! CustomerError: The size of the build output (350682280) exceeds the max allowed size of 230686720 bytes. Please reduce the size of your build output (/codebuild/output/src1009729490/src/TrisandhyaReminder/.amplify-hosting/compute/default) and try again.
+
+176
+
+2025-11-01T11:09:24.938Z [INFO]: # Starting environment caching...
+
+177
+
+2025-11-01T11:09:24.938Z [INFO]: # Uploading environment cache artifact...
+
+178
+
+2025-11-01T11:09:25.023Z [INFO]: # Uploaded environment cache artifact
+
+179
+
+2025-11-01T11:09:25.023Z [INFO]: # Environment caching completed
+
+180
+
+181
+
+142
+
+2025-11-01T11:08:32.207Z [INFO]: 21 packages are looking for funding
+
+143
+
+                                 run `npm fund` for details
+
+144
+
+2025-11-01T11:08:32.226Z [INFO]: # Executing command: echo "Running post-build packaging for SSR deployment..."
+
+145
+
+                                 Running post-build packaging for SSR deployment...
+
+146
+
+2025-11-01T11:08:32.226Z [INFO]: # Executing command: chmod +x bin/postbuild.sh
+
+147
+
+2025-11-01T11:08:32.229Z [INFO]: # Executing command: ./bin/postbuild.sh
+
+148
+
+2025-11-01T11:08:32.232Z [INFO]: 📦 Starting post-build process...
+
+149
+
+2025-11-01T11:08:32.234Z [INFO]: ✅ Created .amplify-hosting directory structure
+
+150
+
+                                 📋 Copying server files...
+
+151
+
+2025-11-01T11:08:32.239Z [INFO]: 📦 Installing production dependencies...
+
+152
+
+2025-11-01T11:08:32.335Z [WARNING]: npm warn config production Use `--omit=dev` instead.
+
+153
+
+2025-11-01T11:08:41.954Z [INFO]: added 930 packages, and audited 931 packages in 10s
+
+154
+
+2025-11-01T11:08:41.963Z [INFO]: 73 packages are looking for funding
+
+155
+
+                                 run `npm fund` for details
+
+156
+
+                                 3 low severity vulnerabilities
+
+157
+
+                                 To address all issues, run:
+
+158
+
+                                 npm audit fix
+
+159
+
+                                 Run `npm audit` for details.
+
+160
+
+2025-11-01T11:08:41.991Z [INFO]: ✅ Production dependencies installed
+
+161
+
+                                 🎨 Copying frontend static files...
+
+162
+
+2025-11-01T11:08:41.993Z [INFO]: ✅ Frontend files copied
+
+163
+
+2025-11-01T11:08:41.995Z [INFO]: ✅ Deployment manifest copied
+
+164
+
+2025-11-01T11:08:41.996Z [INFO]: ✅ Environment template created
+
+165
+
+                                 🎉 Post-build process completed!
+
+166
+
+2025-11-01T11:08:41.997Z [INFO]: # Completed phase: build
+
+167
+
+                                 ## Completed Frontend Build
+
+168
+
+2025-11-01T11:08:42.083Z [INFO]: ## Build completed successfully
+
+169
+
+2025-11-01T11:08:42.122Z [INFO]: # Starting caching...
+
+170
+
+2025-11-01T11:08:42.125Z [INFO]: # Creating cache artifact...
+
+171
+
+2025-11-01T11:08:52.940Z [INFO]: # Created cache artifact
+
+172
+
+2025-11-01T11:08:53.032Z [INFO]: # Uploading cache artifact...
+
+173
+
+2025-11-01T11:08:57.642Z [INFO]: # Uploaded cache artifact
+
+174
+
+2025-11-01T11:08:57.777Z [INFO]: # Caching completed
+
+175
+
+2025-11-01T11:09:24.809Z [ERROR]: !!! CustomerError: The size of the build output (350682280) exceeds the max allowed size of 230686720 bytes. Please reduce the size of your build output (/codebuild/output/src1009729490/src/TrisandhyaReminder/.amplify-hosting/compute/default) and try again.
+
+176
+
+2025-11-01T11:09:24.938Z [INFO]: # Starting environment caching...
+
+177
+
+2025-11-01T11:09:24.938Z [INFO]: # Uploading environment cache artifact...
+
+178
+
+2025-11-01T11:09:25.023Z [INFO]: # Uploaded environment cache artifact
+
+179
+
+2025-11-01T11:09:25.023Z [INFO]: # Environment caching completed

@@ -14,16 +14,32 @@ echo "✅ Created .amplify-hosting directory structure"
 echo "📋 Copying server files..."
 cp ./dist/index.js ./.amplify-hosting/compute/default/index.js
 cp -r ./shared ./.amplify-hosting/compute/default/ || true
-cp ./package.json ./.amplify-hosting/compute/default/
-cp ./package-lock.json ./.amplify-hosting/compute/default/
 
-# Install production dependencies only
+# Use minimal server-only package.json
+echo "📦 Setting up minimal server dependencies..."
+cp ./server-package.json ./.amplify-hosting/compute/default/package.json
+
+# Install production dependencies only (no lockfile for minimal size)
 echo "📦 Installing production dependencies..."
 cd ./.amplify-hosting/compute/default
-npm ci --production --ignore-scripts
+npm install --omit=dev --no-package-lock --ignore-scripts --no-audit --no-fund
+
+# Remove unnecessary files to reduce size
+echo "🧹 Removing unnecessary files..."
+find node_modules -name "*.md" -type f -delete 2>/dev/null || true
+find node_modules -name "*.ts" -type f -delete 2>/dev/null || true
+find node_modules -name "*.map" -type f -delete 2>/dev/null || true
+find node_modules -name "LICENSE*" -type f -delete 2>/dev/null || true
+find node_modules -name "CHANGELOG*" -type f -delete 2>/dev/null || true
+find node_modules -type d -name "test" -exec rm -rf {} + 2>/dev/null || true
+find node_modules -type d -name "tests" -exec rm -rf {} + 2>/dev/null || true
+find node_modules -type d -name "__tests__" -exec rm -rf {} + 2>/dev/null || true
+find node_modules -type d -name "docs" -exec rm -rf {} + 2>/dev/null || true
+find node_modules -type d -name "examples" -exec rm -rf {} + 2>/dev/null || true
+
 cd ../../..
 
-echo "✅ Production dependencies installed"
+echo "✅ Production dependencies installed and optimized"
 
 # Copy frontend build
 echo "🎨 Copying frontend static files..."
