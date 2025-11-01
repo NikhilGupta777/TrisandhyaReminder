@@ -7,6 +7,8 @@ import type { Request } from "express";
 
 function getS3Client() {
   if (!process.env.S3_ACCESS_KEY_ID || !process.env.S3_SECRET_ACCESS_KEY) {
+    console.warn('⚠️  S3 credentials not configured - file upload features will not work');
+    console.warn('   Set S3_ACCESS_KEY_ID and S3_SECRET_ACCESS_KEY in AWS Amplify Console → Environment variables');
     throw new Error("S3 credentials not configured. Please set S3_ACCESS_KEY_ID and S3_SECRET_ACCESS_KEY environment variables.");
   }
   
@@ -21,6 +23,8 @@ function getS3Client() {
 
 function getBucketName() {
   if (!process.env.S3_BUCKET_NAME) {
+    console.warn('⚠️  S3 bucket not configured - file upload features will not work');
+    console.warn('   Set S3_BUCKET_NAME in AWS Amplify Console → Environment variables');
     throw new Error("S3 bucket not configured. Please set S3_BUCKET_NAME environment variable.");
   }
   return process.env.S3_BUCKET_NAME;
