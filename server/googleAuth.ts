@@ -7,8 +7,16 @@ import { storage } from "./storage";
 import { setupLocalAuth } from "./localAuth";
 
 export function getSession() {
-  if (!process.env.SESSION_SECRET) {
-    throw new Error("SESSION_SECRET environment variable must be set for secure session management");
+  let sessionSecret = process.env.SESSION_SECRET;
+  
+  if (!sessionSecret) {
+    console.error("⚠️  CRITICAL SECURITY WARNING ⚠️");
+    console.error("   SESSION_SECRET environment variable is not set!");
+    console.error("   Using a fallback secret, but this is INSECURE for production.");
+    console.error("   Please set SESSION_SECRET in AWS Amplify Console → Environment variables");
+    console.error("   Generate a secure secret with: openssl rand -base64 32");
+    
+    sessionSecret = "INSECURE_FALLBACK_SECRET_PLEASE_CHANGE_" + Date.now();
   }
 
   const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week in milliseconds
@@ -18,7 +26,7 @@ export function getSession() {
   });
   
   return session({
-    secret: process.env.SESSION_SECRET,
+    secret: sessionSecret,
     store: sessionStore,
     resave: false,
     saveUninitialized: false,
@@ -42,11 +50,15 @@ export async function setupAuth(app: Express) {
   setupLocalAuth();
 
   if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
-    console.warn("Google OAuth credentials not configured. Google login will not work.");
+    console.warn("⚠️  Google OAuth credentials not configured. Google login will not work.");
+    console.warn("   Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in environment variables");
   } else {
-    const callbackURL = process.env.NODE_ENV === "production" 
-      ? `https://${process.env.REPL_SLUG}.replit.app/api/auth/google/callback`
-      : "http://localhost:5000/api/auth/google/callback";
+    const callbackURL = process.env.GOOGLE_CALLBACK_URL || 
+      (process.env.FRONTEND_URL 
+        ? `${process.env.FRONTEND_URL}/api/auth/google/callback`
+        : (process.env.NODE_ENV === "production" 
+          ? `https://${process.env.REPL_SLUG}.replit.app/api/auth/google/callback`
+          : "http://localhost:5000/api/auth/google/callback"));
 
     passport.use(
       new GoogleStrategy(
