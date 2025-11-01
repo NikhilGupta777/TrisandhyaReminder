@@ -1,0 +1,355 @@
+Deployment 25
+Deployed
+
+Started at
+11/1/2025, 4:55 PM
+
+Build duration
+3 minutes 39 seconds
+
+Domain
+https://main.d2nshwfv6xcw10.amplifyapp.com
+
+Repository
+TrisandhyaReminder:main
+
+Last commit
+done
+Build
+3 minutes 18 seconds
+
+127
+
+2025-11-01T11:27:46.558Z [WARNING]: npm warn deprecated lodash.isequal@4.5.0: This package is deprecated. Use require('node:util').isDeepStrictEqual instead.
+
+128
+
+2025-11-01T11:27:46.573Z [WARNING]: npm warn deprecated glob@5.0.15: Glob versions prior to v9 are no longer supported
+
+129
+
+2025-11-01T11:27:46.584Z [WARNING]: npm warn deprecated lodash.template@3.6.2: This package is deprecated. Use https://socket.dev/npm/package/eta instead.
+
+130
+
+2025-11-01T11:27:46.610Z [WARNING]: npm warn deprecated gulp-util@3.0.8: gulp-util is deprecated - replace it, following the guidelines at https://medium.com/gulpjs/gulp-util-ca3b1f9f9ac5
+
+131
+
+2025-11-01T11:27:46.625Z [WARNING]: npm warn deprecated uuid@2.0.3: Please upgrade  to version 7 or higher.  Older versions may use Math.random() in certain circumstances, which is known to be problematic.  See https://v8.dev/blog/math-random for details.
+
+132
+
+2025-11-01T11:27:47.070Z [INFO]: added 316 packages in 6s
+
+133
+
+2025-11-01T11:27:47.070Z [INFO]: 21 packages are looking for funding
+
+134
+
+                                 run `npm fund` for details
+
+135
+
+2025-11-01T11:27:47.084Z [INFO]: # Executing command: echo "Running post-build packaging for SSR deployment..."
+
+136
+
+                                 Running post-build packaging for SSR deployment...
+
+137
+
+                                 # Executing command: chmod +x bin/postbuild.sh
+
+138
+
+2025-11-01T11:27:47.085Z [INFO]: # Executing command: ./bin/postbuild.sh
+
+139
+
+2025-11-01T11:27:47.088Z [INFO]: 📦 Starting post-build process...
+
+140
+
+2025-11-01T11:27:47.091Z [INFO]: ✅ Created .amplify-hosting directory structure
+
+141
+
+                                 📋 Copying server files...
+
+142
+
+2025-11-01T11:27:47.094Z [INFO]: 📦 Setting up minimal server dependencies...
+
+143
+
+2025-11-01T11:27:47.095Z [INFO]: 📦 Installing production dependencies...
+
+144
+
+2025-11-01T11:28:02.178Z [INFO]: added 284 packages in 15s
+
+145
+
+2025-11-01T11:28:02.199Z [INFO]: 🧹 Removing unnecessary files...
+
+146
+
+2025-11-01T11:28:02.455Z [INFO]: ✅ Production dependencies installed and optimized
+
+147
+
+                                 🎨 Copying frontend static files...
+
+148
+
+2025-11-01T11:28:02.458Z [INFO]: ✅ Frontend files copied
+
+149
+
+2025-11-01T11:28:02.463Z [INFO]: ✅ Deployment manifest copied
+
+150
+
+2025-11-01T11:28:02.464Z [INFO]: ✅ Environment template created
+
+151
+
+                                 🎉 Post-build process completed!
+
+152
+
+2025-11-01T11:28:02.464Z [INFO]: # Completed phase: build
+
+153
+
+2025-11-01T11:28:02.464Z [INFO]: ## Completed Frontend Build
+
+154
+
+2025-11-01T11:28:02.476Z [INFO]: ## Build completed successfully
+
+155
+
+2025-11-01T11:28:02.509Z [INFO]: # Starting caching...
+
+156
+
+2025-11-01T11:28:02.512Z [INFO]: # Creating cache artifact...
+
+157
+
+2025-11-01T11:28:14.353Z [INFO]: # Created cache artifact
+
+158
+
+2025-11-01T11:28:14.495Z [INFO]: # Uploading cache artifact...
+
+159
+
+2025-11-01T11:28:19.087Z [INFO]: # Uploaded cache artifact
+
+160
+
+2025-11-01T11:28:19.200Z [INFO]: # Caching completed
+
+161
+
+2025-11-01T11:28:25.868Z [INFO]: # Starting environment caching...
+
+162
+
+2025-11-01T11:28:25.957Z [INFO]: # Uploading environment cache artifact...
+
+163
+
+2025-11-01T11:28:26.058Z [INFO]: # Uploaded environment cache artifact
+
+164
+
+2025-11-01T11:28:26.058Z [INFO]: # Environment caching completed
+
+165
+
+166
+
+Build
+3 minutes 18 seconds
+
+127
+
+2025-11-01T11:27:46.558Z [WARNING]: npm warn deprecated lodash.isequal@4.5.0: This package is deprecated. Use require('node:util').isDeepStrictEqual instead.
+
+128
+
+2025-11-01T11:27:46.573Z [WARNING]: npm warn deprecated glob@5.0.15: Glob versions prior to v9 are no longer supported
+
+129
+
+2025-11-01T11:27:46.584Z [WARNING]: npm warn deprecated lodash.template@3.6.2: This package is deprecated. Use https://socket.dev/npm/package/eta instead.
+
+130
+
+2025-11-01T11:27:46.610Z [WARNING]: npm warn deprecated gulp-util@3.0.8: gulp-util is deprecated - replace it, following the guidelines at https://medium.com/gulpjs/gulp-util-ca3b1f9f9ac5
+
+131
+
+2025-11-01T11:27:46.625Z [WARNING]: npm warn deprecated uuid@2.0.3: Please upgrade  to version 7 or higher.  Older versions may use Math.random() in certain circumstances, which is known to be problematic.  See https://v8.dev/blog/math-random for details.
+
+132
+
+2025-11-01T11:27:47.070Z [INFO]: added 316 packages in 6s
+
+133
+
+2025-11-01T11:27:47.070Z [INFO]: 21 packages are looking for funding
+
+134
+
+                                 run `npm fund` for details
+
+135
+
+2025-11-01T11:27:47.084Z [INFO]: # Executing command: echo "Running post-build packaging for SSR deployment..."
+
+136
+
+                                 Running post-build packaging for SSR deployment...
+
+137
+
+                                 # Executing command: chmod +x bin/postbuild.sh
+
+138
+
+2025-11-01T11:27:47.085Z [INFO]: # Executing command: ./bin/postbuild.sh
+
+139
+
+2025-11-01T11:27:47.088Z [INFO]: 📦 Starting post-build process...
+
+140
+
+2025-11-01T11:27:47.091Z [INFO]: ✅ Created .amplify-hosting directory structure
+
+141
+
+                                 📋 Copying server files...
+
+142
+
+2025-11-01T11:27:47.094Z [INFO]: 📦 Setting up minimal server dependencies...
+
+143
+
+2025-11-01T11:27:47.095Z [INFO]: 📦 Installing production dependencies...
+
+144
+
+2025-11-01T11:28:02.178Z [INFO]: added 284 packages in 15s
+
+145
+
+2025-11-01T11:28:02.199Z [INFO]: 🧹 Removing unnecessary files...
+
+146
+
+2025-11-01T11:28:02.455Z [INFO]: ✅ Production dependencies installed and optimized
+
+147
+
+                                 🎨 Copying frontend static files...
+
+148
+
+2025-11-01T11:28:02.458Z [INFO]: ✅ Frontend files copied
+
+149
+
+2025-11-01T11:28:02.463Z [INFO]: ✅ Deployment manifest copied
+
+150
+
+2025-11-01T11:28:02.464Z [INFO]: ✅ Environment template created
+
+151
+
+                                 🎉 Post-build process completed!
+
+152
+
+2025-11-01T11:28:02.464Z [INFO]: # Completed phase: build
+
+153
+
+2025-11-01T11:28:02.464Z [INFO]: ## Completed Frontend Build
+
+154
+
+2025-11-01T11:28:02.476Z [INFO]: ## Build completed successfully
+
+155
+
+2025-11-01T11:28:02.509Z [INFO]: # Starting caching...
+
+156
+
+2025-11-01T11:28:02.512Z [INFO]: # Creating cache artifact...
+
+157
+
+2025-11-01T11:28:14.353Z [INFO]: # Created cache artifact
+
+158
+
+2025-11-01T11:28:14.495Z [INFO]: # Uploading cache artifact...
+
+159
+
+2025-11-01T11:28:19.087Z [INFO]: # Uploaded cache artifact
+
+160
+
+2025-11-01T11:28:19.200Z [INFO]: # Caching completed
+
+161
+
+2025-11-01T11:28:25.868Z [INFO]: # Starting environment caching...
+
+162
+
+2025-11-01T11:28:25.957Z [INFO]: # Uploading environment cache artifact...
+
+163
+
+2025-11-01T11:28:26.058Z [INFO]: # Uploaded environment cache artifact
+
+164
+
+2025-11-01T11:28:26.058Z [INFO]: # Environment caching completed
+
+165
+
+166
+
+Deploy
+20 seconds
+
+0
+
+2025-11-01T11:28:36 [INFO]: Beginning deployment for application d2nshwfv6xcw10, branch:main, buildId 0000000025
+
+1
+
+2025-11-01T11:28:56 [INFO]: Deployment complete
+
+2
+
+0
+
+2025-11-01T11:28:36 [INFO]: Beginning deployment for application d2nshwfv6xcw10, branch:main, buildId 0000000025
+
+1
+
+2025-11-01T11:28:56 [INFO]: Deployment complete
