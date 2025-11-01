@@ -59,7 +59,7 @@ export async function setupVite(app: Express, server: Server) {
 
   // Serve service worker files from public directory during development
   app.get("/alarm-sw.js", async (req, res) => {
-    // 3. FIX THIS LINE: Use __dirname
+    // 3. FIX: Use __dirname
     const swPath = path.resolve(__dirname, "..", "public", "alarm-sw.js");
     res.type("application/javascript");
     const content = await fs.promises.readFile(swPath, "utf-8");
@@ -70,7 +70,7 @@ export async function setupVite(app: Express, server: Server) {
     const url = req.originalUrl;
 
     try {
-      // 4. FIX THIS LINE: Use __dirname
+      // 4. FIX: Use __dirname
       const clientTemplate = path.resolve(
         __dirname,
         "..",
@@ -98,8 +98,11 @@ export function serveStatic(app: Express) {
   // The compute function only handles dynamic routes
   // Static files are in .amplify-hosting/static/ and served via the manifest routing
 
-  // 5. FIX THIS LINE: Use __dirname and go up one directory
-  const distPath = path.resolve(__dirname, "..", "public");
+  // 5. FIX: Use __dirname.
+  // Note: At runtime, __dirname will be .amplify-hosting/compute/default
+  // So, path.resolve(__dirname, "public") correctly points to
+  // .amplify-hosting/compute/default/public
+  const distPath = path.resolve(__dirname, "public");
 
   if (fs.existsSync(distPath)) {
     console.log(`📁 Serving static files from: ${distPath}`);
@@ -110,8 +113,12 @@ export function serveStatic(app: Express) {
       res.sendFile(path.resolve(distPath, "index.html"));
     });
   } else {
+    // This 'else' block should not run, but it's a good fallback.
+    console.log(`📦 Could not find static path: ${distPath}`);
     console.log("📦 AWS Amplify mode: Static files served via CDN");
-    // This 'else' block should NOT run, but if it does, it's a fallback.
+    // In AWS Amplify, static files are served by CloudFront
+    // This compute function only handles API routes and SPA fallback
+    // Return a simple response for any unmatched routes
     app.use("*", (_req, res) => {
       res.status(200).send(`
 <!DOCTYPE html>
