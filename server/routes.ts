@@ -28,7 +28,7 @@ import {
 import bcrypt from "bcrypt";
 import crypto from "crypto";
 
-export async function registerRoutes(app: Express): Promise<Server> {
+export async function registerRoutes(app: Express, httpServer: Server): Promise<void> {
   // Auth middleware
   await setupAuth(app);
 
@@ -2398,8 +2398,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     },
   );
 
-  const httpServer = createServer(app);
-
   // WebSocket server for real-time notifications
   const { WebSocketServer } = await import("ws");
   const wss = new WebSocketServer({
@@ -2489,6 +2487,4 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   };
-
-  return httpServer;
 }

@@ -1,5 +1,6 @@
 import "dotenv/config";
 import express, { type Request, Response, NextFunction } from "express";
+import { createServer } from "http";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { seedAdmin } from "./seedAdmin";
@@ -12,69 +13,101 @@ app.use(express.urlencoded({ extended: false }));
 // Add logging middleware
 app.use(logger.middleware());
 
-// Initialize app asynchronously
-async function initializeApp() {
-  const server = await registerRoutes(app);
+// Track initialization state
+let isInitialized = false;
+let initializationPromise: Promise<void> | null = null;
 
-  await seedAdmin();
-
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-    const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
-
-    // Error handling request - logged via middleware
-
-    res.status(status).json({ message });
-  });
-
-  // importantly only setup vite in development and after
-  // setting up all the other routes so the catch-all route
-  // doesn't interfere with the other routes
-  if (app.get("env") === "development") {
-    await setupVite(app, server);
-  } else {
-    serveStatic(app);
+// Async initialization function
+async function initialize() {
+  if (isInitialized) {
+    return;
   }
 
-  // Only start the server if we're running locally (not in AWS Amplify)
-  // AWS Amplify will handle the server lifecycle
-  if (!process.env.AWS_EXECUTION_ENV && !process.env.AWS_LAMBDA_FUNCTION_NAME) {
-    // ALWAYS serve the app on the port specified in the environment variable PORT
-    // Other ports are firewalled. Default to 5000 if not specified.
-    // this serves both the API and the client.
-    // It is the only port that is not firewalled.
-    const port = parseInt(process.env.PORT || "5000", 10);
-    const isWindows = process.platform === "win32";
-
-    const listenOptions = {
-      port,
-      host: isWindows ? "127.0.0.1" : "0.0.0.0",
-      ...(isWindows ? {} : { reusePort: true }),
-    } as const;
-
-    server.listen(listenOptions, () => {
-      log(`serving on port ${port}`);
-    });
-  } else {
-    // In AWS Amplify, just log that we're ready
-    console.log("✅ Express app initialized for AWS Amplify");
+  if (initializationPromise) {
+    return initializationPromise;
   }
 
-  return app;
+  initializationPromise = (async () => {
+    console.log("🚀 Starting server initialization...");
+
+    try {
+      // Create HTTP server (needed for WebSocket in registerRoutes)
+      const server = createServer(app);
+      
+      // Register routes and setup WebSocket
+      await registerRoutes(app, server);
+      console.log("✅ Routes and WebSocket registered");
+
+      // Seed admin users
+      await seedAdmin();
+      console.log("✅ Admin seeding complete");
+
+      // Error handler middleware (must be last)
+      app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+        const status = err.status || err.statusCode || 500;
+        const message = err.message || "Internal Server Error";
+        console.error("❌ Request error:", { status, message, stack: err.stack });
+        res.status(status).json({ message });
+      });
+
+      // Setup Vite in development or serve static files in production
+      if (app.get("env") === "development") {
+        await setupVite(app, server);
+        console.log("✅ Vite dev server configured");
+      } else {
+        serveStatic(app);
+        console.log("✅ Static file serving configured");
+      }
+
+      // AWS Amplify Hosting requires compute functions to listen on port 3000
+      // We use PORT env var which AWS Amplify sets to 3000, with fallback to 3000
+      // Local development can override with PORT=5000
+      const port = parseInt(process.env.PORT || "3000", 10);
+      const isWindows = process.platform === "win32";
+
+      const listenOptions = {
+        port,
+        host: isWindows ? "127.0.0.1" : "0.0.0.0",
+        ...(isWindows ? {} : { reusePort: true }),
+      } as const;
+
+      // Start the server
+      server.listen(listenOptions, () => {
+        log(`serving on port ${port}`);
+        console.log("🌐 Server ready to accept connections");
+      });
+
+      isInitialized = true;
+      console.log("🎉 Server initialization complete!");
+    } catch (error) {
+      console.error("❌ Server initialization failed:", error);
+      throw error;
+    }
+  })();
+
+  return initializationPromise;
 }
 
-// Initialize the app immediately
-const appPromise = initializeApp();
+// Middleware to ensure initialization completes before processing requests
+app.use(async (req, res, next) => {
+  try {
+    await initialize();
+    next();
+  } catch (error) {
+    console.error("Failed to initialize app:", error);
+    res.status(500).json({ 
+      message: "Server initialization failed",
+      error: error instanceof Error ? error.message : "Unknown error"
+    });
+  }
+});
 
-// Export the app for AWS Amplify
-// AWS Amplify will import this and handle the requests
-export default app;
-
-// Also export as a named export for compatibility
-export { app };
-
-// Handle the initialization for local development
-appPromise.catch((error) => {
-  console.error("Failed to initialize app:", error);
+// Start initialization immediately (for AWS Amplify cold starts)
+initialize().catch((error) => {
+  console.error("❌ Fatal initialization error:", error);
   process.exit(1);
 });
+
+// Export the app for any tools that might need it
+export default app;
+export { app };
