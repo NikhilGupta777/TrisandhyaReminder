@@ -33,7 +33,7 @@ async function initialize() {
     try {
       // Create HTTP server (needed for WebSocket in registerRoutes)
       const server = createServer(app);
-      
+
       // Register routes and setup WebSocket
       await registerRoutes(app, server);
       console.log("✅ Routes and WebSocket registered");
@@ -71,11 +71,19 @@ async function initialize() {
         ...(isWindows ? {} : { reusePort: true }),
       } as const;
 
-      // Start the server
-      server.listen(listenOptions, () => {
-        log(`serving on port ${port}`);
-        console.log("🌐 Server ready to accept connections");
-      });
+      // --------------------- THIS IS THE FIX ---------------------
+      // Only call .listen() when running locally, NOT in AWS environment
+      if (!process.env.AWS_EXECUTION_ENV && !process.env.AWS_LAMBDA_FUNCTION_NAME) {
+        // Start the server for local development
+        server.listen(listenOptions, () => {
+          log(`serving on port ${port}`);
+          console.log("🌐 Server listening locally");
+        });
+      } else {
+        // Log that we are in Amplify and NOT starting a server
+        console.log("✅ Express app initialized for AWS Amplify");
+      }
+      // ------------------- END OF THE FIX -------------------
 
       isInitialized = true;
       console.log("🎉 Server initialization complete!");
@@ -95,7 +103,7 @@ app.use(async (req, res, next) => {
     next();
   } catch (error) {
     console.error("Failed to initialize app:", error);
-    res.status(500).json({ 
+    res.status(500).json({
       message: "Server initialization failed",
       error: error instanceof Error ? error.message : "Unknown error"
     });
