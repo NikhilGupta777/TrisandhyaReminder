@@ -6,6 +6,11 @@ import { users } from "@shared/schema";
 import { eq } from "drizzle-orm";
 
 export async function seedAdmin() {
+  if (!db) {
+    console.warn("⚠️  Database not configured - skipping admin seed");
+    return;
+  }
+  
   try {
     const adminEmailsString = process.env.ADMIN_EMAILS || "";
     const adminEmails = adminEmailsString.split(',').map(email => email.trim()).filter(email => email);

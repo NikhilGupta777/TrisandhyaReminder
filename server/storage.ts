@@ -80,6 +80,14 @@ import {
 import { db } from "./db";
 import { eq, and, desc, gte, lte, or, isNull, sql } from "drizzle-orm";
 
+// Type guard to ensure db is available
+function ensureDb() {
+  if (!db) {
+    throw new Error("Database not configured - DATABASE_URL environment variable is not set");
+  }
+  return db;
+}
+
 export interface IStorage {
   // User operations (required for Replit Auth)
   getUser(id: string): Promise<User | undefined>;
@@ -209,17 +217,17 @@ export interface IStorage {
 export class DatabaseStorage implements IStorage {
   // User operations
   async getUser(id: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.id, id));
+    const [user] = await ensureDb().select().from(users).where(eq(users.id, id));
     return user;
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.email, email));
+    const [user] = await ensureDb().select().from(users).where(eq(users.email, email));
     return user;
   }
 
   async upsertUser(userData: UpsertUser): Promise<User> {
-    const [user] = await db
+    const [user] = await ensureDb()
       .insert(users)
       .values(userData)
       .onConflictDoUpdate({
@@ -234,7 +242,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createLocalUser(userData: Omit<UpsertUser, 'id'>): Promise<User> {
-    const [user] = await db
+    const [user] = await ensureDb()
       .insert(users)
       .values(userData)
       .returning();
@@ -242,7 +250,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async verifyUserEmail(token: string): Promise<User | undefined> {
-    const [user] = await db
+    const [user] = await ensureDb()
       .select()
       .from(users)
       .where(eq(users.verificationToken, token));
@@ -251,7 +259,7 @@ export class DatabaseStorage implements IStorage {
       return undefined;
     }
 
-    const [updatedUser] = await db
+    const [updatedUser] = await ensureDb()
       .update(users)
       .set({
         emailVerified: true,
@@ -265,7 +273,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async verifyUserCode(email: string, code: string): Promise<User | undefined> {
-    const [user] = await db
+    const [user] = await ensureDb()
       .select()
       .from(users)
       .where(eq(users.email, email));
@@ -282,7 +290,7 @@ export class DatabaseStorage implements IStorage {
       return undefined;
     }
 
-    const [updatedUser] = await db
+    const [updatedUser] = await ensureDb()
       .update(users)
       .set({
         emailVerified: true,
@@ -297,7 +305,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateVerificationCode(email: string, code: string, token: string, expiry: Date): Promise<User | undefined> {
-    const [user] = await db
+    const [user] = await ensureDb()
       .select()
       .from(users)
       .where(eq(users.email, email));
@@ -306,7 +314,7 @@ export class DatabaseStorage implements IStorage {
       return undefined;
     }
 
-    const [updatedUser] = await db
+    const [updatedUser] = await ensureDb()
       .update(users)
       .set({
         verificationCode: code,
@@ -321,7 +329,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async setResetPasswordCode(email: string, code: string): Promise<User | undefined> {
-    const [user] = await db
+    const [user] = await ensureDb()
       .select()
       .from(users)
       .where(eq(users.email, email));
@@ -333,7 +341,7 @@ export class DatabaseStorage implements IStorage {
     const expiry = new Date();
     expiry.setMinutes(expiry.getMinutes() + 15);
 
-    const [updatedUser] = await db
+    const [updatedUser] = await ensureDb()
       .update(users)
       .set({
         resetPasswordCode: code,
@@ -347,7 +355,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async resetPasswordWithCode(email: string, code: string, newPassword: string): Promise<User | undefined> {
-    const [user] = await db
+    const [user] = await ensureDb()
       .select()
       .from(users)
       .where(eq(users.email, email));
@@ -364,7 +372,7 @@ export class DatabaseStorage implements IStorage {
       return undefined;
     }
 
-    const [updatedUser] = await db
+    const [updatedUser] = await ensureDb()
       .update(users)
       .set({
         password: newPassword,
@@ -380,7 +388,7 @@ export class DatabaseStorage implements IStorage {
 
   // Alarm settings
   async getAlarmSettings(userId: string): Promise<AlarmSettings | undefined> {
-    const [settings] = await db
+    const [settings] = await ensureDb()
       .select()
       .from(alarmSettings)
       .where(eq(alarmSettings.userId, userId));
@@ -391,14 +399,14 @@ export class DatabaseStorage implements IStorage {
     const existing = await this.getAlarmSettings(settingsData.userId);
     
     if (existing) {
-      const [updated] = await db
+      const [updated] = await ensureDb()
         .update(alarmSettings)
         .set({ ...settingsData, updatedAt: new Date() })
         .where(eq(alarmSettings.userId, settingsData.userId))
         .returning();
       return updated;
     } else {
-      const [created] = await db
+      const [created] = await ensureDb()
         .insert(alarmSettings)
         .values(settingsData)
         .returning();
@@ -408,7 +416,7 @@ export class DatabaseStorage implements IStorage {
 
   // Sadhana progress
   async getSadhanaProgress(userId: string, date: string): Promise<SadhanaProgress | undefined> {
-    const [progress] = await db
+    const [progress] = await ensureDb()
       .select()
       .from(sadhanaProgress)
       .where(and(eq(sadhanaProgress.userId, userId), eq(sadhanaProgress.date, date)));
@@ -420,7 +428,7 @@ export class DatabaseStorage implements IStorage {
     startDate: string,
     endDate: string
   ): Promise<SadhanaProgress[]> {
-    return await db
+    return await ensureDb()
       .select()
       .from(sadhanaProgress)
       .where(eq(sadhanaProgress.userId, userId))
@@ -431,7 +439,7 @@ export class DatabaseStorage implements IStorage {
     const existing = await this.getSadhanaProgress(progressData.userId, progressData.date);
     
     if (existing) {
-      const [updated] = await db
+      const [updated] = await ensureDb()
         .update(sadhanaProgress)
         .set({ ...progressData, updatedAt: new Date() })
         .where(and(
@@ -441,7 +449,7 @@ export class DatabaseStorage implements IStorage {
         .returning();
       return updated;
     } else {
-      const [created] = await db
+      const [created] = await ensureDb()
         .insert(sadhanaProgress)
         .values(progressData)
         .returning();
@@ -455,7 +463,7 @@ export class DatabaseStorage implements IStorage {
     totalJapCount: number;
     completedDays: number;
   }> {
-    const allProgress = await db
+    const allProgress = await ensureDb()
       .select()
       .from(sadhanaProgress)
       .where(eq(sadhanaProgress.userId, userId))
@@ -500,26 +508,26 @@ export class DatabaseStorage implements IStorage {
 
   // Media categories
   async getAllMediaCategories(): Promise<MediaCategory[]> {
-    return await db.select().from(mediaCategories).orderBy(mediaCategories.orderIndex, mediaCategories.displayName);
+    return await ensureDb().select().from(mediaCategories).orderBy(mediaCategories.orderIndex, mediaCategories.displayName);
   }
 
   async getMediaCategoryById(id: string): Promise<MediaCategory | undefined> {
-    const [category] = await db.select().from(mediaCategories).where(eq(mediaCategories.id, id));
+    const [category] = await ensureDb().select().from(mediaCategories).where(eq(mediaCategories.id, id));
     return category;
   }
 
   async getMediaCategoryByName(name: string): Promise<MediaCategory | undefined> {
-    const [category] = await db.select().from(mediaCategories).where(eq(mediaCategories.name, name));
+    const [category] = await ensureDb().select().from(mediaCategories).where(eq(mediaCategories.name, name));
     return category;
   }
 
   async createMediaCategory(categoryData: InsertMediaCategory): Promise<MediaCategory> {
-    const [category] = await db.insert(mediaCategories).values(categoryData).returning();
+    const [category] = await ensureDb().insert(mediaCategories).values(categoryData).returning();
     return category;
   }
 
   async updateMediaCategory(id: string, categoryData: Partial<InsertMediaCategory>): Promise<MediaCategory> {
-    const [updated] = await db
+    const [updated] = await ensureDb()
       .update(mediaCategories)
       .set({ ...categoryData, updatedAt: new Date() })
       .where(eq(mediaCategories.id, id))
@@ -528,33 +536,33 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteMediaCategory(id: string): Promise<void> {
-    await db.delete(mediaCategories).where(eq(mediaCategories.id, id));
+    await ensureDb().delete(mediaCategories).where(eq(mediaCategories.id, id));
   }
 
   // Media content
   async getAllMedia(categoryId?: string): Promise<MediaContent[]> {
     if (categoryId) {
-      return await db
+      return await ensureDb()
         .select()
         .from(mediaContent)
         .where(eq(mediaContent.categoryId, categoryId))
         .orderBy(desc(mediaContent.createdAt));
     }
-    return await db.select().from(mediaContent).orderBy(desc(mediaContent.createdAt));
+    return await ensureDb().select().from(mediaContent).orderBy(desc(mediaContent.createdAt));
   }
 
   async getMediaById(id: string): Promise<MediaContent | undefined> {
-    const [media] = await db.select().from(mediaContent).where(eq(mediaContent.id, id));
+    const [media] = await ensureDb().select().from(mediaContent).where(eq(mediaContent.id, id));
     return media;
   }
 
   async createMedia(mediaData: InsertMediaContent): Promise<MediaContent> {
-    const [media] = await db.insert(mediaContent).values(mediaData).returning();
+    const [media] = await ensureDb().insert(mediaContent).values(mediaData).returning();
     return media;
   }
 
   async updateMedia(id: string, mediaData: Partial<InsertMediaContent>): Promise<MediaContent> {
-    const [updated] = await db
+    const [updated] = await ensureDb()
       .update(mediaContent)
       .set({ ...mediaData, updatedAt: new Date() })
       .where(eq(mediaContent.id, id))
@@ -563,16 +571,16 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteMedia(id: string): Promise<void> {
-    await db.delete(mediaContent).where(eq(mediaContent.id, id));
+    await ensureDb().delete(mediaContent).where(eq(mediaContent.id, id));
   }
 
   // Scripture content
   async getAllScriptures(): Promise<ScriptureContent[]> {
-    return await db.select().from(scriptureContent).orderBy(scriptureContent.chapterNumber);
+    return await ensureDb().select().from(scriptureContent).orderBy(scriptureContent.chapterNumber);
   }
 
   async getScriptureByChapter(chapterNumber: number): Promise<ScriptureContent | undefined> {
-    const [scripture] = await db
+    const [scripture] = await ensureDb()
       .select()
       .from(scriptureContent)
       .where(eq(scriptureContent.chapterNumber, chapterNumber));
@@ -580,12 +588,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createScripture(scriptureData: InsertScriptureContent): Promise<ScriptureContent> {
-    const [scripture] = await db.insert(scriptureContent).values(scriptureData).returning();
+    const [scripture] = await ensureDb().insert(scriptureContent).values(scriptureData).returning();
     return scripture;
   }
 
   async updateScripture(id: string, scriptureData: Partial<InsertScriptureContent>): Promise<ScriptureContent> {
-    const [updated] = await db
+    const [updated] = await ensureDb()
       .update(scriptureContent)
       .set({ ...scriptureData, updatedAt: new Date() })
       .where(eq(scriptureContent.id, id))
@@ -594,26 +602,26 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteScripture(id: string): Promise<void> {
-    await db.delete(scriptureContent).where(eq(scriptureContent.id, id));
+    await ensureDb().delete(scriptureContent).where(eq(scriptureContent.id, id));
   }
 
   // Sadhana content operations
   async getAllSadhanaContent(category?: string): Promise<SadhanaContent[]> {
     if (category) {
-      return await db
+      return await ensureDb()
         .select()
         .from(sadhanaContent)
         .where(eq(sadhanaContent.category, category))
         .orderBy(sadhanaContent.orderNumber);
     }
-    return await db
+    return await ensureDb()
       .select()
       .from(sadhanaContent)
       .orderBy(sadhanaContent.category, sadhanaContent.orderNumber);
   }
 
   async getSadhanaContentById(id: string): Promise<SadhanaContent | undefined> {
-    const [content] = await db
+    const [content] = await ensureDb()
       .select()
       .from(sadhanaContent)
       .where(eq(sadhanaContent.id, id));
@@ -621,7 +629,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createSadhanaContent(contentData: InsertSadhanaContent): Promise<SadhanaContent> {
-    const [content] = await db
+    const [content] = await ensureDb()
       .insert(sadhanaContent)
       .values(contentData)
       .returning();
@@ -629,7 +637,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateSadhanaContent(id: string, contentData: Partial<InsertSadhanaContent>): Promise<SadhanaContent> {
-    const [updated] = await db
+    const [updated] = await ensureDb()
       .update(sadhanaContent)
       .set({ ...contentData, updatedAt: new Date() })
       .where(eq(sadhanaContent.id, id))
@@ -638,26 +646,26 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteSadhanaContent(id: string): Promise<void> {
-    await db.delete(sadhanaContent).where(eq(sadhanaContent.id, id));
+    await ensureDb().delete(sadhanaContent).where(eq(sadhanaContent.id, id));
   }
 
   // Alarm sounds operations
   async getAllAlarmSounds(): Promise<AlarmSound[]> {
-    return await db.select().from(alarmSounds).orderBy(desc(alarmSounds.isDefault), alarmSounds.name);
+    return await ensureDb().select().from(alarmSounds).orderBy(desc(alarmSounds.isDefault), alarmSounds.name);
   }
 
   async getAlarmSoundById(id: string): Promise<AlarmSound | undefined> {
-    const [sound] = await db.select().from(alarmSounds).where(eq(alarmSounds.id, id));
+    const [sound] = await ensureDb().select().from(alarmSounds).where(eq(alarmSounds.id, id));
     return sound;
   }
 
   async createAlarmSound(soundData: InsertAlarmSound): Promise<AlarmSound> {
-    const [sound] = await db.insert(alarmSounds).values(soundData).returning();
+    const [sound] = await ensureDb().insert(alarmSounds).values(soundData).returning();
     return sound;
   }
 
   async updateAlarmSound(id: string, soundData: Partial<InsertAlarmSound>): Promise<AlarmSound> {
-    const [updated] = await db
+    const [updated] = await ensureDb()
       .update(alarmSounds)
       .set({ ...soundData, updatedAt: new Date() })
       .where(eq(alarmSounds.id, id))
@@ -666,26 +674,26 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteAlarmSound(id: string): Promise<void> {
-    await db.delete(alarmSounds).where(eq(alarmSounds.id, id));
+    await ensureDb().delete(alarmSounds).where(eq(alarmSounds.id, id));
   }
 
   // Japa audios operations
   async getAllJapaAudios(): Promise<JapaAudio[]> {
-    return await db.select().from(japaAudios).orderBy(desc(japaAudios.isDefault), japaAudios.name);
+    return await ensureDb().select().from(japaAudios).orderBy(desc(japaAudios.isDefault), japaAudios.name);
   }
 
   async getJapaAudioById(id: string): Promise<JapaAudio | undefined> {
-    const [audio] = await db.select().from(japaAudios).where(eq(japaAudios.id, id));
+    const [audio] = await ensureDb().select().from(japaAudios).where(eq(japaAudios.id, id));
     return audio;
   }
 
   async createJapaAudio(audioData: InsertJapaAudio): Promise<JapaAudio> {
-    const [audio] = await db.insert(japaAudios).values(audioData).returning();
+    const [audio] = await ensureDb().insert(japaAudios).values(audioData).returning();
     return audio;
   }
 
   async updateJapaAudio(id: string, audioData: Partial<InsertJapaAudio>): Promise<JapaAudio> {
-    const [updated] = await db
+    const [updated] = await ensureDb()
       .update(japaAudios)
       .set({ ...audioData, updatedAt: new Date() })
       .where(eq(japaAudios.id, id))
@@ -694,17 +702,17 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteJapaAudio(id: string): Promise<void> {
-    await db.delete(japaAudios).where(eq(japaAudios.id, id));
+    await ensureDb().delete(japaAudios).where(eq(japaAudios.id, id));
   }
 
   // Japa settings operations
   async getJapaSettings(userId: string): Promise<JapaSettings | undefined> {
-    const [settings] = await db.select().from(japaSettings).where(eq(japaSettings.userId, userId));
+    const [settings] = await ensureDb().select().from(japaSettings).where(eq(japaSettings.userId, userId));
     return settings;
   }
 
   async upsertJapaSettings(settingsData: InsertJapaSettings): Promise<JapaSettings> {
-    const [settings] = await db
+    const [settings] = await ensureDb()
       .insert(japaSettings)
       .values(settingsData)
       .onConflictDoUpdate({
@@ -720,11 +728,11 @@ export class DatabaseStorage implements IStorage {
 
   // Admin operations
   async getAllUsers(): Promise<User[]> {
-    return await db.select().from(users).where(eq(users.emailVerified, true)).orderBy(desc(users.createdAt));
+    return await ensureDb().select().from(users).where(eq(users.emailVerified, true)).orderBy(desc(users.createdAt));
   }
 
   async updateUserAdminStatus(userId: string, isAdmin: boolean): Promise<User> {
-    const [updated] = await db
+    const [updated] = await ensureDb()
       .update(users)
       .set({ isAdmin, updatedAt: new Date() })
       .where(eq(users.id, userId))
@@ -733,12 +741,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteUser(userId: string): Promise<void> {
-    await db.delete(users).where(eq(users.id, userId));
+    await ensureDb().delete(users).where(eq(users.id, userId));
   }
   
   // Rate limiting
   async getRecentRegistrationAttempts(email: string, since: Date): Promise<RegistrationAttempt[]> {
-    return await db
+    return await ensureDb()
       .select()
       .from(registrationAttempts)
       .where(and(
@@ -749,7 +757,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async recordRegistrationAttempt(email: string, ipAddress?: string): Promise<RegistrationAttempt> {
-    const [attempt] = await db
+    const [attempt] = await ensureDb()
       .insert(registrationAttempts)
       .values({
         email,
@@ -760,7 +768,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async cleanupOldAttempts(before: Date): Promise<void> {
-    await db.delete(registrationAttempts).where(
+    await ensureDb().delete(registrationAttempts).where(
       lte(registrationAttempts.attemptedAt, before)
     );
   }
@@ -768,25 +776,25 @@ export class DatabaseStorage implements IStorage {
   // Mahapuran titles operations
   async getAllMahapuranTitles(collectionType?: string): Promise<MahapuranTitle[]> {
     if (collectionType) {
-      return await db.select().from(mahapuranTitles)
+      return await ensureDb().select().from(mahapuranTitles)
         .where(eq(mahapuranTitles.collectionType, collectionType))
         .orderBy(mahapuranTitles.orderIndex, mahapuranTitles.title);
     }
-    return await db.select().from(mahapuranTitles).orderBy(mahapuranTitles.orderIndex, mahapuranTitles.title);
+    return await ensureDb().select().from(mahapuranTitles).orderBy(mahapuranTitles.orderIndex, mahapuranTitles.title);
   }
 
   async getMahapuranTitleById(id: string): Promise<MahapuranTitle | undefined> {
-    const [title] = await db.select().from(mahapuranTitles).where(eq(mahapuranTitles.id, id));
+    const [title] = await ensureDb().select().from(mahapuranTitles).where(eq(mahapuranTitles.id, id));
     return title;
   }
 
   async createMahapuranTitle(titleData: InsertMahapuranTitle): Promise<MahapuranTitle> {
-    const [title] = await db.insert(mahapuranTitles).values(titleData).returning();
+    const [title] = await ensureDb().insert(mahapuranTitles).values(titleData).returning();
     return title;
   }
 
   async updateMahapuranTitle(id: string, titleData: Partial<InsertMahapuranTitle>): Promise<MahapuranTitle> {
-    const [updated] = await db
+    const [updated] = await ensureDb()
       .update(mahapuranTitles)
       .set({ ...titleData, updatedAt: new Date() })
       .where(eq(mahapuranTitles.id, id))
@@ -795,29 +803,29 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteMahapuranTitle(id: string): Promise<void> {
-    await db.delete(mahapuranTitles).where(eq(mahapuranTitles.id, id));
+    await ensureDb().delete(mahapuranTitles).where(eq(mahapuranTitles.id, id));
   }
 
   // Mahapuran skandas operations
   async getAllMahapuranSkandas(mahapuranTitleId?: string): Promise<MahapuranSkanda[]> {
     if (mahapuranTitleId) {
-      return await db.select().from(mahapuranSkandas).where(eq(mahapuranSkandas.mahapuranTitleId, mahapuranTitleId)).orderBy(mahapuranSkandas.skandaNumber);
+      return await ensureDb().select().from(mahapuranSkandas).where(eq(mahapuranSkandas.mahapuranTitleId, mahapuranTitleId)).orderBy(mahapuranSkandas.skandaNumber);
     }
-    return await db.select().from(mahapuranSkandas).orderBy(mahapuranSkandas.mahapuranTitleId, mahapuranSkandas.skandaNumber);
+    return await ensureDb().select().from(mahapuranSkandas).orderBy(mahapuranSkandas.mahapuranTitleId, mahapuranSkandas.skandaNumber);
   }
 
   async getMahapuranSkandaById(id: string): Promise<MahapuranSkanda | undefined> {
-    const [skanda] = await db.select().from(mahapuranSkandas).where(eq(mahapuranSkandas.id, id));
+    const [skanda] = await ensureDb().select().from(mahapuranSkandas).where(eq(mahapuranSkandas.id, id));
     return skanda;
   }
 
   async createMahapuranSkanda(skandaData: InsertMahapuranSkanda): Promise<MahapuranSkanda> {
-    const [skanda] = await db.insert(mahapuranSkandas).values(skandaData).returning();
+    const [skanda] = await ensureDb().insert(mahapuranSkandas).values(skandaData).returning();
     return skanda;
   }
 
   async updateMahapuranSkanda(id: string, skandaData: Partial<InsertMahapuranSkanda>): Promise<MahapuranSkanda> {
-    const [updated] = await db
+    const [updated] = await ensureDb()
       .update(mahapuranSkandas)
       .set({ ...skandaData, updatedAt: new Date() })
       .where(eq(mahapuranSkandas.id, id))
@@ -826,29 +834,29 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteMahapuranSkanda(id: string): Promise<void> {
-    await db.delete(mahapuranSkandas).where(eq(mahapuranSkandas.id, id));
+    await ensureDb().delete(mahapuranSkandas).where(eq(mahapuranSkandas.id, id));
   }
 
   // Mahapuran chapters operations
   async getAllMahapuranChapters(skandaId?: string): Promise<MahapuranChapter[]> {
     if (skandaId) {
-      return await db.select().from(mahapuranChapters).where(eq(mahapuranChapters.skandaId, skandaId)).orderBy(mahapuranChapters.chapterNumber);
+      return await ensureDb().select().from(mahapuranChapters).where(eq(mahapuranChapters.skandaId, skandaId)).orderBy(mahapuranChapters.chapterNumber);
     }
-    return await db.select().from(mahapuranChapters).orderBy(mahapuranChapters.skandaId, mahapuranChapters.chapterNumber);
+    return await ensureDb().select().from(mahapuranChapters).orderBy(mahapuranChapters.skandaId, mahapuranChapters.chapterNumber);
   }
 
   async getMahapuranChapterById(id: string): Promise<MahapuranChapter | undefined> {
-    const [chapter] = await db.select().from(mahapuranChapters).where(eq(mahapuranChapters.id, id));
+    const [chapter] = await ensureDb().select().from(mahapuranChapters).where(eq(mahapuranChapters.id, id));
     return chapter;
   }
 
   async createMahapuranChapter(chapterData: InsertMahapuranChapter): Promise<MahapuranChapter> {
-    const [chapter] = await db.insert(mahapuranChapters).values(chapterData).returning();
+    const [chapter] = await ensureDb().insert(mahapuranChapters).values(chapterData).returning();
     return chapter;
   }
 
   async updateMahapuranChapter(id: string, chapterData: Partial<InsertMahapuranChapter>): Promise<MahapuranChapter> {
-    const [updated] = await db
+    const [updated] = await ensureDb()
       .update(mahapuranChapters)
       .set({ ...chapterData, updatedAt: new Date() })
       .where(eq(mahapuranChapters.id, id))
@@ -857,12 +865,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteMahapuranChapter(id: string): Promise<void> {
-    await db.delete(mahapuranChapters).where(eq(mahapuranChapters.id, id));
+    await ensureDb().delete(mahapuranChapters).where(eq(mahapuranChapters.id, id));
   }
 
   // User media favorites operations
   async getUserMediaFavorites(userId: string): Promise<MediaContent[]> {
-    const favorites = await db
+    const favorites = await ensureDb()
       .select({
         media: mediaContent,
       })
@@ -875,12 +883,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async addMediaFavorite(favoriteData: InsertUserMediaFavorite): Promise<UserMediaFavorite> {
-    const [favorite] = await db.insert(userMediaFavorites).values(favoriteData).returning();
+    const [favorite] = await ensureDb().insert(userMediaFavorites).values(favoriteData).returning();
     return favorite;
   }
 
   async removeMediaFavorite(userId: string, mediaId: string): Promise<void> {
-    await db.delete(userMediaFavorites).where(
+    await ensureDb().delete(userMediaFavorites).where(
       and(
         eq(userMediaFavorites.userId, userId),
         eq(userMediaFavorites.mediaId, mediaId)
@@ -889,7 +897,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async isMediaFavorited(userId: string, mediaId: string): Promise<boolean> {
-    const [favorite] = await db
+    const [favorite] = await ensureDb()
       .select()
       .from(userMediaFavorites)
       .where(
@@ -903,26 +911,26 @@ export class DatabaseStorage implements IStorage {
 
   // Mahapuran PDFs operations
   async getAllMahapuranPdfs(): Promise<MahapuranPdf[]> {
-    return await db.select().from(mahapuranPdfs).where(eq(mahapuranPdfs.isActive, true)).orderBy(mahapuranPdfs.orderIndex, mahapuranPdfs.languageName);
+    return await ensureDb().select().from(mahapuranPdfs).where(eq(mahapuranPdfs.isActive, true)).orderBy(mahapuranPdfs.orderIndex, mahapuranPdfs.languageName);
   }
 
   async getMahapuranPdfById(id: string): Promise<MahapuranPdf | undefined> {
-    const [pdf] = await db.select().from(mahapuranPdfs).where(eq(mahapuranPdfs.id, id));
+    const [pdf] = await ensureDb().select().from(mahapuranPdfs).where(eq(mahapuranPdfs.id, id));
     return pdf;
   }
 
   async getMahapuranPdfByLanguage(languageCode: string): Promise<MahapuranPdf | undefined> {
-    const [pdf] = await db.select().from(mahapuranPdfs).where(eq(mahapuranPdfs.languageCode, languageCode));
+    const [pdf] = await ensureDb().select().from(mahapuranPdfs).where(eq(mahapuranPdfs.languageCode, languageCode));
     return pdf;
   }
 
   async createMahapuranPdf(pdfData: InsertMahapuranPdf): Promise<MahapuranPdf> {
-    const [pdf] = await db.insert(mahapuranPdfs).values(pdfData).returning();
+    const [pdf] = await ensureDb().insert(mahapuranPdfs).values(pdfData).returning();
     return pdf;
   }
 
   async updateMahapuranPdf(id: string, pdfData: Partial<InsertMahapuranPdf>): Promise<MahapuranPdf> {
-    const [updated] = await db
+    const [updated] = await ensureDb()
       .update(mahapuranPdfs)
       .set({ ...pdfData, updatedAt: new Date() })
       .where(eq(mahapuranPdfs.id, id))
@@ -931,26 +939,26 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteMahapuranPdf(id: string): Promise<void> {
-    await db.delete(mahapuranPdfs).where(eq(mahapuranPdfs.id, id));
+    await ensureDb().delete(mahapuranPdfs).where(eq(mahapuranPdfs.id, id));
   }
 
   // Trisandhya PDFs operations
   async getAllTrisandhyaPdfs(): Promise<TrisandhyaPdf[]> {
-    return await db.select().from(trisandhyaPdfs).where(eq(trisandhyaPdfs.isActive, true)).orderBy(trisandhyaPdfs.orderIndex, trisandhyaPdfs.languageName);
+    return await ensureDb().select().from(trisandhyaPdfs).where(eq(trisandhyaPdfs.isActive, true)).orderBy(trisandhyaPdfs.orderIndex, trisandhyaPdfs.languageName);
   }
 
   async getTrisandhyaPdfById(id: string): Promise<TrisandhyaPdf | undefined> {
-    const [pdf] = await db.select().from(trisandhyaPdfs).where(eq(trisandhyaPdfs.id, id));
+    const [pdf] = await ensureDb().select().from(trisandhyaPdfs).where(eq(trisandhyaPdfs.id, id));
     return pdf;
   }
 
   async createTrisandhyaPdf(pdfData: InsertTrisandhyaPdf): Promise<TrisandhyaPdf> {
-    const [pdf] = await db.insert(trisandhyaPdfs).values(pdfData).returning();
+    const [pdf] = await ensureDb().insert(trisandhyaPdfs).values(pdfData).returning();
     return pdf;
   }
 
   async updateTrisandhyaPdf(id: string, pdfData: Partial<InsertTrisandhyaPdf>): Promise<TrisandhyaPdf> {
-    const [updated] = await db
+    const [updated] = await ensureDb()
       .update(trisandhyaPdfs)
       .set({ ...pdfData, updatedAt: new Date() })
       .where(eq(trisandhyaPdfs.id, id))
@@ -959,26 +967,26 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteTrisandhyaPdf(id: string): Promise<void> {
-    await db.delete(trisandhyaPdfs).where(eq(trisandhyaPdfs.id, id));
+    await ensureDb().delete(trisandhyaPdfs).where(eq(trisandhyaPdfs.id, id));
   }
 
   // Scripture PDFs operations
   async getAllScripturePdfs(): Promise<ScripturePdf[]> {
-    return await db.select().from(scripturePdfs).where(eq(scripturePdfs.isActive, true)).orderBy(scripturePdfs.orderIndex, scripturePdfs.languageName);
+    return await ensureDb().select().from(scripturePdfs).where(eq(scripturePdfs.isActive, true)).orderBy(scripturePdfs.orderIndex, scripturePdfs.languageName);
   }
 
   async getScripturePdfById(id: string): Promise<ScripturePdf | undefined> {
-    const [pdf] = await db.select().from(scripturePdfs).where(eq(scripturePdfs.id, id));
+    const [pdf] = await ensureDb().select().from(scripturePdfs).where(eq(scripturePdfs.id, id));
     return pdf;
   }
 
   async createScripturePdf(pdfData: InsertScripturePdf): Promise<ScripturePdf> {
-    const [pdf] = await db.insert(scripturePdfs).values(pdfData).returning();
+    const [pdf] = await ensureDb().insert(scripturePdfs).values(pdfData).returning();
     return pdf;
   }
 
   async updateScripturePdf(id: string, pdfData: Partial<InsertScripturePdf>): Promise<ScripturePdf> {
-    const [updated] = await db
+    const [updated] = await ensureDb()
       .update(scripturePdfs)
       .set({ ...pdfData, updatedAt: new Date() })
       .where(eq(scripturePdfs.id, id))
@@ -987,26 +995,26 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteScripturePdf(id: string): Promise<void> {
-    await db.delete(scripturePdfs).where(eq(scripturePdfs.id, id));
+    await ensureDb().delete(scripturePdfs).where(eq(scripturePdfs.id, id));
   }
 
   // Notification sounds operations
   async getAllNotificationSounds(): Promise<NotificationSound[]> {
-    return await db.select().from(notificationSounds).orderBy(notificationSounds.name);
+    return await ensureDb().select().from(notificationSounds).orderBy(notificationSounds.name);
   }
 
   async getNotificationSoundById(id: string): Promise<NotificationSound | undefined> {
-    const [sound] = await db.select().from(notificationSounds).where(eq(notificationSounds.id, id));
+    const [sound] = await ensureDb().select().from(notificationSounds).where(eq(notificationSounds.id, id));
     return sound;
   }
 
   async createNotificationSound(soundData: InsertNotificationSound): Promise<NotificationSound> {
-    const [sound] = await db.insert(notificationSounds).values(soundData).returning();
+    const [sound] = await ensureDb().insert(notificationSounds).values(soundData).returning();
     return sound;
   }
 
   async updateNotificationSound(id: string, soundData: Partial<InsertNotificationSound>): Promise<NotificationSound> {
-    const [updated] = await db
+    const [updated] = await ensureDb()
       .update(notificationSounds)
       .set({ ...soundData, updatedAt: new Date() })
       .where(eq(notificationSounds.id, id))
@@ -1015,12 +1023,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteNotificationSound(id: string): Promise<void> {
-    await db.delete(notificationSounds).where(eq(notificationSounds.id, id));
+    await ensureDb().delete(notificationSounds).where(eq(notificationSounds.id, id));
   }
 
   // Notifications operations
   async getAllNotifications(limit?: number): Promise<Notification[]> {
-    const query = db.select().from(notifications).orderBy(desc(notifications.createdAt));
+    const query = ensureDb().select().from(notifications).orderBy(desc(notifications.createdAt));
     if (limit) {
       return await query.limit(limit);
     }
@@ -1028,13 +1036,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getNotificationById(id: string): Promise<Notification | undefined> {
-    const [notification] = await db.select().from(notifications).where(eq(notifications.id, id));
+    const [notification] = await ensureDb().select().from(notifications).where(eq(notifications.id, id));
     return notification;
   }
 
   async getActiveNotifications(): Promise<Notification[]> {
     const now = new Date();
-    return await db
+    return await ensureDb()
       .select()
       .from(notifications)
       .where(
@@ -1050,12 +1058,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createNotification(notificationData: InsertNotification): Promise<Notification> {
-    const [notification] = await db.insert(notifications).values(notificationData).returning();
+    const [notification] = await ensureDb().insert(notifications).values(notificationData).returning();
     return notification;
   }
 
   async updateNotification(id: string, notificationData: Partial<InsertNotification>): Promise<Notification> {
-    const [updated] = await db
+    const [updated] = await ensureDb()
       .update(notifications)
       .set(notificationData)
       .where(eq(notifications.id, id))
@@ -1064,12 +1072,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteNotification(id: string): Promise<void> {
-    await db.delete(notifications).where(eq(notifications.id, id));
+    await ensureDb().delete(notifications).where(eq(notifications.id, id));
   }
 
   // Notification receipts operations
   async getUserNotifications(userId: string, limit?: number): Promise<any[]> {
-    const query = db
+    const query = ensureDb()
       .select({
         notification: notifications,
         receipt: notificationReceipts,
@@ -1086,7 +1094,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUnreadNotificationCount(userId: string): Promise<number> {
-    const result = await db
+    const result = await ensureDb()
       .select({ count: sql<number>`count(*)` })
       .from(notificationReceipts)
       .where(
@@ -1099,12 +1107,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createNotificationReceipt(receiptData: InsertNotificationReceipt): Promise<NotificationReceipt> {
-    const [receipt] = await db.insert(notificationReceipts).values(receiptData).returning();
+    const [receipt] = await ensureDb().insert(notificationReceipts).values(receiptData).returning();
     return receipt;
   }
 
   async markNotificationAsRead(userId: string, notificationId: string): Promise<void> {
-    await db
+    await ensureDb()
       .update(notificationReceipts)
       .set({ isRead: true, readAt: new Date() })
       .where(
@@ -1116,7 +1124,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async markAllNotificationsAsRead(userId: string): Promise<void> {
-    await db
+    await ensureDb()
       .update(notificationReceipts)
       .set({ isRead: true, readAt: new Date() })
       .where(eq(notificationReceipts.userId, userId));
@@ -1124,17 +1132,17 @@ export class DatabaseStorage implements IStorage {
 
   // Notification preferences operations
   async getNotificationPreferences(userId: string): Promise<NotificationPreferences | undefined> {
-    const [prefs] = await db.select().from(notificationPreferences).where(eq(notificationPreferences.userId, userId));
+    const [prefs] = await ensureDb().select().from(notificationPreferences).where(eq(notificationPreferences.userId, userId));
     return prefs;
   }
 
   async createNotificationPreferences(prefsData: InsertNotificationPreferences): Promise<NotificationPreferences> {
-    const [prefs] = await db.insert(notificationPreferences).values(prefsData).returning();
+    const [prefs] = await ensureDb().insert(notificationPreferences).values(prefsData).returning();
     return prefs;
   }
 
   async updateNotificationPreferences(userId: string, prefsData: Partial<InsertNotificationPreferences>): Promise<NotificationPreferences> {
-    const [updated] = await db
+    const [updated] = await ensureDb()
       .update(notificationPreferences)
       .set({ ...prefsData, updatedAt: new Date() })
       .where(eq(notificationPreferences.userId, userId))
@@ -1144,7 +1152,7 @@ export class DatabaseStorage implements IStorage {
 
   // Push subscriptions operations
   async getPushSubscription(userId: string, endpoint: string): Promise<PushSubscription | undefined> {
-    const [sub] = await db
+    const [sub] = await ensureDb()
       .select()
       .from(pushSubscriptions)
       .where(
@@ -1157,20 +1165,20 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAllPushSubscriptions(userId: string): Promise<PushSubscription[]> {
-    return await db.select().from(pushSubscriptions).where(eq(pushSubscriptions.userId, userId));
+    return await ensureDb().select().from(pushSubscriptions).where(eq(pushSubscriptions.userId, userId));
   }
 
   async createPushSubscription(subData: InsertPushSubscription): Promise<PushSubscription> {
-    const [sub] = await db.insert(pushSubscriptions).values(subData).returning();
+    const [sub] = await ensureDb().insert(pushSubscriptions).values(subData).returning();
     return sub;
   }
 
   async deletePushSubscription(endpoint: string): Promise<void> {
-    await db.delete(pushSubscriptions).where(eq(pushSubscriptions.endpoint, endpoint));
+    await ensureDb().delete(pushSubscriptions).where(eq(pushSubscriptions.endpoint, endpoint));
   }
 
   async updatePushSubscriptionLastUsed(endpoint: string): Promise<void> {
-    await db
+    await ensureDb()
       .update(pushSubscriptions)
       .set({ lastUsedAt: new Date() })
       .where(eq(pushSubscriptions.endpoint, endpoint));
