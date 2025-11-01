@@ -20,6 +20,8 @@ async function getCredentials() {
     : null;
 
   if (!xReplitToken) {
+    console.warn('⚠️  SendGrid not configured - email features will not work');
+    console.warn('   Set SENDGRID_API_KEY and SENDGRID_FROM_EMAIL in AWS Amplify Console → Environment variables');
     throw new Error('SendGrid not configured. Please set SENDGRID_API_KEY and SENDGRID_FROM_EMAIL environment variables or configure the SendGrid connector.');
   }
 
@@ -41,6 +43,8 @@ async function getCredentials() {
     console.error('Failed to fetch SendGrid connector credentials:', error);
   }
 
+  console.warn('⚠️  SendGrid not configured - email features will not work');
+  console.warn('   Set SENDGRID_API_KEY and SENDGRID_FROM_EMAIL in AWS Amplify Console → Environment variables');
   throw new Error('SendGrid not configured. Please set SENDGRID_API_KEY and SENDGRID_FROM_EMAIL environment variables or configure the SendGrid connector.');
 }
 
@@ -57,9 +61,11 @@ export async function sendVerificationEmail(to: string, firstName: string, verif
   try {
     const { client, fromEmail } = await getUncachableSendGridClient();
     
-    const verificationUrl = process.env.NODE_ENV === "production"
-      ? `https://${process.env.REPL_SLUG}.replit.app/api/auth/verify-email?token=${verificationToken}`
-      : `http://localhost:5000/api/auth/verify-email?token=${verificationToken}`;
+    const baseUrl = process.env.FRONTEND_URL || 
+      (process.env.NODE_ENV === "production"
+        ? `https://${process.env.REPL_SLUG}.replit.app`
+        : "http://localhost:5000");
+    const verificationUrl = `${baseUrl}/api/auth/verify-email?token=${verificationToken}`;
 
     const msg = {
       to,
@@ -116,9 +122,11 @@ export async function sendVerificationCodeEmail(to: string, firstName: string, v
   try {
     const { client, fromEmail } = await getUncachableSendGridClient();
     
-    const verificationUrl = process.env.NODE_ENV === "production"
-      ? `https://${process.env.REPL_SLUG}.replit.app/api/auth/verify-email?token=${verificationToken}`
-      : `http://localhost:5000/api/auth/verify-email?token=${verificationToken}`;
+    const baseUrl = process.env.FRONTEND_URL || 
+      (process.env.NODE_ENV === "production"
+        ? `https://${process.env.REPL_SLUG}.replit.app`
+        : "http://localhost:5000");
+    const verificationUrl = `${baseUrl}/api/auth/verify-email?token=${verificationToken}`;
 
     const msg = {
       to,
