@@ -5,6 +5,11 @@ import { createServer as createViteServer, createLogger } from "vite";
 import { type Server } from "http";
 import viteConfig from "../vite.config";
 import { nanoid } from "nanoid";
+import { fileURLToPath } from "url"; // <-- 1. ADD THIS IMPORT
+
+// 2. ADD THESE TWO LINES TO CREATE __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const viteLogger = createLogger();
 
@@ -22,14 +27,14 @@ export function log(message: string, source = "express") {
 export async function setupVite(app: Express, server: Server) {
   // For Replit HTTPS environment, use wss:// protocol
   const hmrConfig = process.env.REPL_ID
-    ? { 
+    ? {
         protocol: "wss" as const,
-        host: process.env.REPLIT_DOMAINS?.split(',')[0] || undefined,
+        host: process.env.REPLIT_DOMAINS?.split(",")[0] || undefined,
         clientPort: 443,
-        server 
+        server,
       }
     : { server };
-  
+
   const serverOptions = {
     middlewareMode: true,
     hmr: hmrConfig,
@@ -51,11 +56,12 @@ export async function setupVite(app: Express, server: Server) {
   });
 
   app.use(vite.middlewares);
-  
+
   // Serve service worker files from public directory during development
-  app.get('/alarm-sw.js', async (req, res) => {
-    const swPath = path.resolve(import.meta.dirname, "..", "public", "alarm-sw.js");
-    res.type('application/javascript');
+  app.get("/alarm-sw.js", async (req, res) => {
+    // 3. FIX THIS LINE: Use __dirname
+    const swPath = path.resolve(__dirname, "..", "public", "alarm-sw.js");
+    res.type("application/javascript");
     const content = await fs.promises.readFile(swPath, "utf-8");
     res.send(content);
   });
@@ -64,18 +70,19 @@ export async function setupVite(app: Express, server: Server) {
     const url = req.originalUrl;
 
     try {
+      // 4. FIX THIS LINE: Use __dirname
       const clientTemplate = path.resolve(
-        import.meta.dirname,
+        __dirname,
         "..",
         "client",
-        "index.html",
+        "index.html"
       );
 
       // always reload the index.html file from disk incase it changes
       let template = await fs.promises.readFile(clientTemplate, "utf-8");
       template = template.replace(
         `src="/src/main.tsx"`,
-        `src="/src/main.tsx?v=${nanoid()}"`,
+        `src="/src/main.tsx?v=${nanoid()}`
       );
       const page = await vite.transformIndexHtml(url, template);
       res.status(200).set({ "Content-Type": "text/html" }).end(page);
@@ -90,23 +97,21 @@ export function serveStatic(app: Express) {
   // In AWS Amplify, static files are served directly from the CDN
   // The compute function only handles dynamic routes
   // Static files are in .amplify-hosting/static/ and served via the manifest routing
-  
-  // For local production testing, try to serve from dist/public
-  const distPath = path.resolve(import.meta.dirname, "public");
+
+  // 5. FIX THIS LINE: Use __dirname and go up one directory
+  const distPath = path.resolve(__dirname, "..", "public");
 
   if (fs.existsSync(distPath)) {
     console.log(`📁 Serving static files from: ${distPath}`);
     app.use(express.static(distPath));
-    
+
     // Fall through to index.html for client-side routing
     app.use("*", (_req, res) => {
       res.sendFile(path.resolve(distPath, "index.html"));
     });
   } else {
     console.log("📦 AWS Amplify mode: Static files served via CDN");
-    // In AWS Amplify, static files are served by CloudFront
-    // This compute function only handles API routes and SPA fallback
-    // Return a simple response for any unmatched routes
+    // This 'else' block should NOT run, but if it does, it's a fallback.
     app.use("*", (_req, res) => {
       res.status(200).send(`
 <!DOCTYPE html>
