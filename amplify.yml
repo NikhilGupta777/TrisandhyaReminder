@@ -13,8 +13,6 @@ frontend:
     build:
       commands:
         - echo "Building frontend and backend..."
-        - echo "Setting environment..."
-        - export NODE_ENV=production
         - npm run build
         - echo "Installing jq via npm..."
         - npm install -g jq-cli-wrapper

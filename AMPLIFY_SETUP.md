@@ -65,13 +65,18 @@ Use comma-separated emails for multiple admins.
 
 ---
 
+## Recent Fixes
+
+### Build Error Fix (November 1, 2025)
+Fixed the "vite: command not found" error by removing `export NODE_ENV=production` from the build phase in `amplify.yml`. The NODE_ENV should only be set as an environment variable in Amplify Console, not during the build process, as it can prevent build tools from working.
+
 ## Current Deployment Status
 
-Based on your deployment logs, the build completed successfully but the server is returning a 500 error. This is most likely because:
+Your build should now complete successfully. However, the application still needs these environment variables to run properly:
 
-1. **SESSION_SECRET is missing** - The server now has a fallback, but you should set it properly
-2. **DATABASE_URL might be missing or incorrect** - Check your database connection string
-3. **Other environment variables are missing** - Set at minimum: SESSION_SECRET, DATABASE_URL, PORT, NODE_ENV, FRONTEND_URL
+1. **SESSION_SECRET** - The server has a secure fallback, but you should set it for production
+2. **DATABASE_URL** - Required for database features
+3. **Other environment variables** - Set at minimum: SESSION_SECRET, DATABASE_URL, PORT, NODE_ENV, FRONTEND_URL
 
 ---
 

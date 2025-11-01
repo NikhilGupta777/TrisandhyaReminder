@@ -1,0 +1,151 @@
+75
+
+2025-11-01T16:04:37.057Z [WARNING]: npm warn deprecated webpack-chain@4.12.1: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
+
+76
+
+2025-11-01T16:04:37.210Z [WARNING]: npm warn deprecated webpack-chain@6.5.1: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
+
+77
+
+2025-11-01T16:04:37.270Z [WARNING]: npm warn deprecated request@2.88.2: request has been deprecated, see https://github.com/request/request/issues/3142
+
+78
+
+2025-11-01T16:04:37.736Z [WARNING]: npm warn deprecated svgo@1.3.2: This SVGO version is no longer supported. Upgrade to v2.x.x.
+
+79
+
+2025-11-01T16:04:37.772Z [WARNING]: npm warn deprecated docsearch.js@2.6.3: This package has been deprecated and is no longer maintained. Please use @docsearch/js.
+
+80
+
+2025-11-01T16:04:38.410Z [WARNING]: npm warn deprecated highlight.js@9.18.5: Support has ended for 9.x series. Upgrade to @latest
+
+81
+
+2025-11-01T16:04:38.523Z [WARNING]: npm warn deprecated vue@2.7.16: Vue 2 has reached EOL and is no longer actively maintained. See https://v2.vuejs.org/eol/ for more details.
+
+82
+
+2025-11-01T16:05:00.341Z [INFO]: added 1863 packages in 1m
+
+83
+
+2025-11-01T16:05:00.346Z [INFO]: 206 packages are looking for funding
+
+84
+
+                                 run `npm fund` for details
+
+85
+
+2025-11-01T16:05:00.370Z [INFO]: # Executing command: nvm use 20
+
+86
+
+2025-11-01T16:05:00.659Z [INFO]: Now using node v20.19.5 (npm v10.8.2)
+
+87
+
+2025-11-01T16:05:00.661Z [INFO]: # Executing command: node --version
+
+88
+
+2025-11-01T16:05:00.664Z [INFO]: v20.19.5
+
+89
+
+2025-11-01T16:05:00.664Z [INFO]: # Executing command: npm --version
+
+90
+
+2025-11-01T16:05:00.758Z [INFO]: 10.8.2
+
+91
+
+2025-11-01T16:05:00.761Z [INFO]: # Executing command: echo "Installing dependencies..."
+
+92
+
+                                 Installing dependencies...
+
+93
+
+2025-11-01T16:05:00.762Z [INFO]: # Executing command: npm ci --legacy-peer-deps
+
+94
+
+2025-11-01T16:05:14.978Z [INFO]: added 930 packages in 14s
+
+95
+
+2025-11-01T16:05:14.999Z [INFO]: # Completed phase: preBuild
+
+96
+
+                                 # Starting phase: build
+
+97
+
+2025-11-01T16:05:15.000Z [INFO]: # Executing command: echo "Building frontend and backend..."
+
+98
+
+                                 Building frontend and backend...
+
+99
+
+                                 # Executing command: echo "Setting environment..."
+
+100
+
+                                 Setting environment...
+
+101
+
+                                 # Executing command: export NODE_ENV=production
+
+102
+
+                                 # Executing command: npm run build
+
+103
+
+2025-11-01T16:05:15.110Z [INFO]: > rest-express@1.0.0 build
+
+104
+
+                                 > vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist
+
+105
+
+2025-11-01T16:05:15.115Z [WARNING]: sh: line 1: vite: command not found
+
+106
+
+2025-11-01T16:05:15.122Z [ERROR]: !!! Build failed
+
+107
+
+2025-11-01T16:05:15.122Z [INFO]: Please read more about Amplify Hosting's support for SSR frameworks to find if your build failure is related to an unsupported feature: https://docs.aws.amazon.com/amplify/latest/userguide/amplify-ssr-framework-support.html. You may also find this troubleshooting guide useful: https://docs.aws.amazon.com/amplify/latest/userguide/troubleshooting-ssr-deployment.html
+
+108
+
+2025-11-01T16:05:15.122Z [ERROR]: !!! Error: Command failed with exit code 127
+
+109
+
+2025-11-01T16:05:15.122Z [INFO]: # Starting environment caching...
+
+110
+
+2025-11-01T16:05:15.122Z [INFO]: # Uploading environment cache artifact...
+
+111
+
+2025-11-01T16:05:15.205Z [INFO]: # Uploaded environment cache artifact
+
+112
+
+2025-11-01T16:05:15.205Z [INFO]: # Environment caching completed
