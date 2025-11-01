@@ -115,7 +115,39 @@ function arrayBufferToBase64(buffer: ArrayBuffer | null): string {
   return window.btoa(binary);
 }
 
-// WebSocket connection manager for real-time notifications
+// ⚠️ AWS AMPLIFY COMPATIBILITY NOTE:
+// WebSocket connection is DISABLED for AWS Amplify Hosting deployment.
+// AWS Amplify compute functions (serverless) do NOT support persistent WebSocket connections.
+// 
+// This class is now a no-op stub that gracefully handles the absence of WebSocket support.
+// Notifications will still work through the REST API and will appear when users refresh
+// or navigate between pages. For real-time notifications, integrate AWS AppSync or IoT Core.
+
+export class NotificationWebSocket {
+  private listeners: Set<(notification: any) => void> = new Set();
+  private userId: string | null = null;
+
+  // Stub connect method - does nothing on AWS Amplify
+  connect(userId: string) {
+    this.userId = userId;
+    // WebSocket disabled for AWS Amplify serverless compatibility
+    // Notifications will be fetched via REST API polling or on page refresh
+    console.log('[NotificationWS] WebSocket disabled (AWS Amplify mode) - using REST API fallback');
+  }
+
+  // Stub disconnect method
+  disconnect() {
+    this.userId = null;
+  }
+
+  // Allow components to register listeners (no-op but prevents errors)
+  onNotification(callback: (notification: any) => void) {
+    this.listeners.add(callback);
+    return () => this.listeners.delete(callback);
+  }
+}
+
+/* ORIGINAL WebSocket CODE (for reference - use with non-Amplify deployments)
 export class NotificationWebSocket {
   private ws: WebSocket | null = null;
   private reconnectAttempts = 0;
@@ -126,36 +158,22 @@ export class NotificationWebSocket {
 
   connect(userId: string) {
     if (this.ws?.readyState === WebSocket.OPEN) {
-      return; // Already connected
+      return;
     }
-
     this.userId = userId;
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsUrl = `${protocol}//${window.location.host}/ws/notifications`;
-
     try {
       this.ws = new WebSocket(wsUrl);
-
       this.ws.onopen = () => {
-        // [NotificationWS] Connected
         this.reconnectAttempts = 0;
-        
-        // Authenticate
-        this.ws?.send(JSON.stringify({
-          type: 'authenticate',
-          userId: this.userId,
-        }));
+        this.ws?.send(JSON.stringify({ type: 'authenticate', userId: this.userId }));
       };
-
       this.ws.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
-          
           if (data.type === 'new_notification') {
-            // Notify all listeners
             this.listeners.forEach(listener => listener(data.notification));
-            
-            // Show browser notification if permission granted
             if (Notification.permission === 'granted') {
               showBrowserNotification(
                 data.notification.notification.title,
@@ -172,22 +190,14 @@ export class NotificationWebSocket {
               );
             }
           }
-        } catch (error) {
-          // [NotificationWS] Error parsing message - handle silently
-        }
+        } catch (error) {}
       };
-
       this.ws.onclose = () => {
-        // [NotificationWS] Disconnected
         this.ws = null;
         this.attemptReconnect();
       };
-
-      this.ws.onerror = (error) => {
-        // [NotificationWS] Error - handle silently
-      };
+      this.ws.onerror = (error) => {};
     } catch (error) {
-      // [NotificationWS] Connection error - handle silently
       this.attemptReconnect();
     }
   }
@@ -196,8 +206,6 @@ export class NotificationWebSocket {
     if (this.reconnectAttempts < this.maxReconnectAttempts && this.userId) {
       this.reconnectAttempts++;
       const delay = this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1);
-      // [NotificationWS] Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts})
-      
       setTimeout(() => {
         if (this.userId) {
           this.connect(this.userId);
@@ -220,6 +228,7 @@ export class NotificationWebSocket {
     return () => this.listeners.delete(callback);
   }
 }
+*/
 
 // Singleton instance
 export const notificationWS = new NotificationWebSocket();

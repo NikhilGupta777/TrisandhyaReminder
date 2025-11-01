@@ -2398,55 +2398,55 @@ export async function registerRoutes(app: Express, httpServer: Server): Promise<
     },
   );
 
-  // WebSocket server for real-time notifications
+  // ⚠️ AWS AMPLIFY COMPATIBILITY NOTE:
+  // WebSocket support is DISABLED for AWS Amplify Hosting deployment.
+  // AWS Amplify compute functions (serverless) do NOT support persistent WebSocket connections.
+  // 
+  // For real-time notifications on AWS Amplify, use one of these alternatives:
+  // 1. AWS AppSync with GraphQL Subscriptions (recommended)
+  // 2. AWS IoT Core with MQTT over WebSocket
+  // 3. Server-Sent Events (SSE) via HTTP
+  // 4. Short polling via REST API
+  //
+  // The app will function normally without real-time notifications - users will
+  // see notifications when they refresh or navigate between pages.
+
+  // DISABLED WebSocket server (incompatible with AWS Amplify serverless compute)
+  // Uncomment only for local development or non-Amplify deployments
+  /*
   const { WebSocketServer } = await import("ws");
   const wss = new WebSocketServer({
     server: httpServer,
     path: "/ws/notifications",
   });
 
-  // Store connected clients with their user IDs
   const notificationClients = new Map<string, Set<any>>();
 
   wss.on("connection", (ws, req) => {
     let userId: string | null = null;
-
     ws.on("message", async (message) => {
       try {
         const rawMessage = message.toString();
-
-        // Basic validation - ensure it's valid JSON and not too large
         if (rawMessage.length > 10000) {
           ws.send(JSON.stringify({ type: "error", message: "Message too large" }));
           return;
         }
-
         const data = JSON.parse(rawMessage);
-
-        // Validate message structure
         if (typeof data !== 'object' || !data.type) {
           ws.send(JSON.stringify({ type: "error", message: "Invalid message format" }));
           return;
         }
-
         if (data.type === "authenticate" && data.userId) {
-          // Validate userId format
           if (typeof data.userId !== 'string' || data.userId.length > 100) {
             ws.send(JSON.stringify({ type: "error", message: "Invalid userId" }));
             return;
           }
-
           userId = data.userId as string;
-
-          // Add client to user's connection set
           if (!notificationClients.has(userId)) {
             notificationClients.set(userId, new Set());
           }
           notificationClients.get(userId)?.add(ws);
-
           console.log(`[WS] User ${userId} connected for notifications`);
-
-          // Send confirmation
           ws.send(JSON.stringify({ type: "authenticated", userId }));
         }
       } catch (error) {
@@ -2454,7 +2454,6 @@ export async function registerRoutes(app: Express, httpServer: Server): Promise<
         ws.send(JSON.stringify({ type: "error", message: "Failed to process message" }));
       }
     });
-
     ws.on("close", () => {
       if (userId && notificationClients.has(userId)) {
         notificationClients.get(userId)!.delete(ws);
@@ -2464,27 +2463,16 @@ export async function registerRoutes(app: Express, httpServer: Server): Promise<
         console.log(`[WS] User ${userId} disconnected from notifications`);
       }
     });
-
     ws.on("error", (error) => {
       console.error("[WS] WebSocket error:", error);
     });
   });
+  */
 
-  // Export function to broadcast notifications to users
+  // Stub broadcast function (does nothing when WebSocket is disabled)
   (app as any).broadcastNotification = (userId: string, notification: any) => {
-    if (notificationClients.has(userId)) {
-      const clients = notificationClients.get(userId)!;
-      const message = JSON.stringify({
-        type: "new_notification",
-        notification,
-      });
-
-      clients.forEach((client) => {
-        if (client.readyState === 1) {
-          // OPEN
-          client.send(message);
-        }
-      });
-    }
+    // WebSocket disabled for AWS Amplify compatibility
+    // Notifications will appear on page refresh/navigation
+    console.log(`[Notification] Would broadcast to user ${userId}:`, notification.notification?.title);
   };
 }

@@ -41,25 +41,21 @@ cd ../../..
 
 echo "✅ Production dependencies installed and optimized"
 
-# Copy frontend build
+# Copy frontend build to BOTH static (for CDN) AND compute/default/public (for SPA fallback)
 echo "🎨 Copying frontend static files..."
 cp -r ./dist/public/* ./.amplify-hosting/static/
 
-echo "✅ Frontend files copied"
+# CRITICAL FIX: Also copy to compute/default/public for serveStatic() fallback
+echo "📁 Copying frontend to compute/default/public for SPA fallback..."
+mkdir -p ./.amplify-hosting/compute/default/public
+cp -r ./dist/public/* ./.amplify-hosting/compute/default/public/
+
+echo "✅ Frontend files copied to both static/ and compute/default/public/"
 
 # Copy deployment manifest
 cp deploy-manifest.json ./.amplify-hosting/deploy-manifest.json
 
 echo "✅ Deployment manifest copied"
-
-# --- Add computeResources to deploy-manifest.json ---
-#
-# THIS BLOCK HAS BEEN INTENTIONALLY REMOVED
-# AS IT WAS CAUSING THE DEPLOYMENT ERROR.
-# THE CONFIGURATION IS NOW CORRECTLY PLACED
-# IN THE `deploy-manifest.json` FILE.
-#
-# ----------------------------------------------------
 
 # Create environment variable template
 cat > ./.amplify-hosting/compute/default/.env.production << 'EOF'
