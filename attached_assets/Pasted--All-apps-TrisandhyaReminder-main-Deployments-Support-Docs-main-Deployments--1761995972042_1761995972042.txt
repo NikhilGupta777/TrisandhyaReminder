@@ -1,0 +1,388 @@
+    All apps
+    TrisandhyaReminder
+
+    main: Deployments
+
+Support
+Docs
+
+main
+Deployments
+Authentication
+Data
+AI
+Storage
+Functions
+Deployments
+Deployment card updated showing deployment 24
+Deployment 24
+Deployed
+
+Started at
+11/1/2025, 4:42 PM
+
+Build duration
+6 minutes 32 seconds
+
+Domain
+https://main.d2nshwfv6xcw10.amplifyapp.com
+
+Repository
+TrisandhyaReminder:main
+
+Last commit
+Fix Amplify deployment issues ...
+Build
+3 minutes 16 seconds
+
+128
+
+2025-11-01T11:14:54.516Z [WARNING]: npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+
+129
+
+2025-11-01T11:14:55.109Z [WARNING]: npm warn deprecated glob@5.0.15: Glob versions prior to v9 are no longer supported
+
+130
+
+2025-11-01T11:14:55.120Z [WARNING]: npm warn deprecated lodash.isequal@4.5.0: This package is deprecated. Use require('node:util').isDeepStrictEqual instead.
+
+131
+
+2025-11-01T11:14:55.143Z [WARNING]: npm warn deprecated lodash.template@3.6.2: This package is deprecated. Use https://socket.dev/npm/package/eta instead.
+
+132
+
+2025-11-01T11:14:55.172Z [WARNING]: npm warn deprecated gulp-util@3.0.8: gulp-util is deprecated - replace it, following the guidelines at https://medium.com/gulpjs/gulp-util-ca3b1f9f9ac5
+
+133
+
+2025-11-01T11:14:55.193Z [WARNING]: npm warn deprecated uuid@2.0.3: Please upgrade  to version 7 or higher.  Older versions may use Math.random() in certain circumstances, which is known to be problematic.  See https://v8.dev/blog/math-random for details.
+
+134
+
+2025-11-01T11:14:55.658Z [INFO]: added 316 packages in 5s
+
+135
+
+2025-11-01T11:14:55.660Z [INFO]: 21 packages are looking for funding
+
+136
+
+                                 run `npm fund` for details
+
+137
+
+2025-11-01T11:14:55.676Z [INFO]: # Executing command: echo "Running post-build packaging for SSR deployment..."
+
+138
+
+                                 Running post-build packaging for SSR deployment...
+
+139
+
+                                 # Executing command: chmod +x bin/postbuild.sh
+
+140
+
+2025-11-01T11:14:55.678Z [INFO]: # Executing command: ./bin/postbuild.sh
+
+141
+
+2025-11-01T11:14:55.681Z [INFO]: 📦 Starting post-build process...
+
+142
+
+2025-11-01T11:14:55.685Z [INFO]: ✅ Created .amplify-hosting directory structure
+
+143
+
+                                 📋 Copying server files...
+
+144
+
+2025-11-01T11:14:55.687Z [INFO]: 📦 Setting up minimal server dependencies...
+
+145
+
+2025-11-01T11:14:55.690Z [INFO]: 📦 Installing production dependencies...
+
+146
+
+2025-11-01T11:15:10.704Z [INFO]: added 284 packages in 15s
+
+147
+
+2025-11-01T11:15:10.728Z [INFO]: 🧹 Removing unnecessary files...
+
+148
+
+2025-11-01T11:15:10.986Z [INFO]: ✅ Production dependencies installed and optimized
+
+149
+
+                                 🎨 Copying frontend static files...
+
+150
+
+2025-11-01T11:15:10.988Z [INFO]: ✅ Frontend files copied
+
+151
+
+2025-11-01T11:15:10.990Z [INFO]: ✅ Deployment manifest copied
+
+152
+
+2025-11-01T11:15:10.991Z [INFO]: ✅ Environment template created
+
+153
+
+2025-11-01T11:15:10.991Z [INFO]: 🎉 Post-build process completed!
+
+154
+
+2025-11-01T11:15:10.991Z [INFO]: # Completed phase: build
+
+155
+
+                                 ## Completed Frontend Build
+
+156
+
+2025-11-01T11:15:11.001Z [INFO]: ## Build completed successfully
+
+157
+
+2025-11-01T11:15:11.002Z [INFO]: # Starting caching...
+
+158
+
+2025-11-01T11:15:11.005Z [INFO]: # Creating cache artifact...
+
+159
+
+2025-11-01T11:15:22.788Z [INFO]: # Created cache artifact
+
+160
+
+2025-11-01T11:15:22.889Z [INFO]: # Uploading cache artifact...
+
+161
+
+2025-11-01T11:15:28.355Z [INFO]: # Uploaded cache artifact
+
+162
+
+2025-11-01T11:15:28.453Z [INFO]: # Caching completed
+
+163
+
+2025-11-01T11:15:35.009Z [INFO]: # Starting environment caching...
+
+164
+
+2025-11-01T11:15:35.109Z [INFO]: # Uploading environment cache artifact...
+
+165
+
+2025-11-01T11:15:35.258Z [INFO]: # Uploaded environment cache artifact
+
+166
+
+2025-11-01T11:15:35.258Z [INFO]: # Environment caching completed
+
+167
+
+168
+
+Build
+3 minutes 16 seconds
+
+128
+
+2025-11-01T11:14:54.516Z [WARNING]: npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+
+129
+
+2025-11-01T11:14:55.109Z [WARNING]: npm warn deprecated glob@5.0.15: Glob versions prior to v9 are no longer supported
+
+130
+
+2025-11-01T11:14:55.120Z [WARNING]: npm warn deprecated lodash.isequal@4.5.0: This package is deprecated. Use require('node:util').isDeepStrictEqual instead.
+
+131
+
+2025-11-01T11:14:55.143Z [WARNING]: npm warn deprecated lodash.template@3.6.2: This package is deprecated. Use https://socket.dev/npm/package/eta instead.
+
+132
+
+2025-11-01T11:14:55.172Z [WARNING]: npm warn deprecated gulp-util@3.0.8: gulp-util is deprecated - replace it, following the guidelines at https://medium.com/gulpjs/gulp-util-ca3b1f9f9ac5
+
+133
+
+2025-11-01T11:14:55.193Z [WARNING]: npm warn deprecated uuid@2.0.3: Please upgrade  to version 7 or higher.  Older versions may use Math.random() in certain circumstances, which is known to be problematic.  See https://v8.dev/blog/math-random for details.
+
+134
+
+2025-11-01T11:14:55.658Z [INFO]: added 316 packages in 5s
+
+135
+
+2025-11-01T11:14:55.660Z [INFO]: 21 packages are looking for funding
+
+136
+
+                                 run `npm fund` for details
+
+137
+
+2025-11-01T11:14:55.676Z [INFO]: # Executing command: echo "Running post-build packaging for SSR deployment..."
+
+138
+
+                                 Running post-build packaging for SSR deployment...
+
+139
+
+                                 # Executing command: chmod +x bin/postbuild.sh
+
+140
+
+2025-11-01T11:14:55.678Z [INFO]: # Executing command: ./bin/postbuild.sh
+
+141
+
+2025-11-01T11:14:55.681Z [INFO]: 📦 Starting post-build process...
+
+142
+
+2025-11-01T11:14:55.685Z [INFO]: ✅ Created .amplify-hosting directory structure
+
+143
+
+                                 📋 Copying server files...
+
+144
+
+2025-11-01T11:14:55.687Z [INFO]: 📦 Setting up minimal server dependencies...
+
+145
+
+2025-11-01T11:14:55.690Z [INFO]: 📦 Installing production dependencies...
+
+146
+
+2025-11-01T11:15:10.704Z [INFO]: added 284 packages in 15s
+
+147
+
+2025-11-01T11:15:10.728Z [INFO]: 🧹 Removing unnecessary files...
+
+148
+
+2025-11-01T11:15:10.986Z [INFO]: ✅ Production dependencies installed and optimized
+
+149
+
+                                 🎨 Copying frontend static files...
+
+150
+
+2025-11-01T11:15:10.988Z [INFO]: ✅ Frontend files copied
+
+151
+
+2025-11-01T11:15:10.990Z [INFO]: ✅ Deployment manifest copied
+
+152
+
+2025-11-01T11:15:10.991Z [INFO]: ✅ Environment template created
+
+153
+
+2025-11-01T11:15:10.991Z [INFO]: 🎉 Post-build process completed!
+
+154
+
+2025-11-01T11:15:10.991Z [INFO]: # Completed phase: build
+
+155
+
+                                 ## Completed Frontend Build
+
+156
+
+2025-11-01T11:15:11.001Z [INFO]: ## Build completed successfully
+
+157
+
+2025-11-01T11:15:11.002Z [INFO]: # Starting caching...
+
+158
+
+2025-11-01T11:15:11.005Z [INFO]: # Creating cache artifact...
+
+159
+
+2025-11-01T11:15:22.788Z [INFO]: # Created cache artifact
+
+160
+
+2025-11-01T11:15:22.889Z [INFO]: # Uploading cache artifact...
+
+161
+
+2025-11-01T11:15:28.355Z [INFO]: # Uploaded cache artifact
+
+162
+
+2025-11-01T11:15:28.453Z [INFO]: # Caching completed
+
+163
+
+2025-11-01T11:15:35.009Z [INFO]: # Starting environment caching...
+
+164
+
+2025-11-01T11:15:35.109Z [INFO]: # Uploading environment cache artifact...
+
+165
+
+2025-11-01T11:15:35.258Z [INFO]: # Uploaded environment cache artifact
+
+166
+
+2025-11-01T11:15:35.258Z [INFO]: # Environment caching completed
+
+167
+
+168
+
+Deploy
+3 minutes 15 seconds
+
+0
+
+2025-11-01T11:15:48 [INFO]: Beginning deployment for application d2nshwfv6xcw10, branch:main, buildId 0000000024
+
+1
+
+2025-11-01T11:16:08 [INFO]: Due to optimizations in the CloudFront cache configuration, this deployment may take longer than usual. Subsequent builds will not face longer deploy times. View the caching documentation: https://docs.aws.amazon.com/amplify/latest/userguide/caching.html
+
+2
+
+2025-11-01T11:19:03 [INFO]: Deployment complete
+
+3
+
+0
+
+2025-11-01T11:15:48 [INFO]: Beginning deployment for application d2nshwfv6xcw10, branch:main, buildId 0000000024
+
+1
+
+2025-11-01T11:16:08 [INFO]: Due to optimizations in the CloudFront cache configuration, this deployment may take longer than usual. Subsequent builds will not face longer deploy times. View the caching documentation: https://docs.aws.amazon.com/amplify/latest/userguide/caching.html
+
+2
+
+2025-11-01T11:19:03 [INFO]: Deployment complete
