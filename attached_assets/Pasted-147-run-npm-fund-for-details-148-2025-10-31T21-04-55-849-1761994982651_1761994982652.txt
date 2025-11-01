@@ -1,0 +1,150 @@
+147
+
+                                 run `npm fund` for details
+
+148
+
+2025-10-31T21:04:55.849Z [INFO]: # Executing command: echo "Running post-build packaging for SSR deployment..."
+
+149
+
+                                 Running post-build packaging for SSR deployment...
+
+150
+
+2025-10-31T21:04:55.849Z [INFO]: # Executing command: chmod +x bin/postbuild.sh
+
+151
+
+2025-10-31T21:04:55.851Z [INFO]: # Executing command: ./bin/postbuild.sh
+
+152
+
+2025-10-31T21:04:55.891Z [INFO]: 📦 Starting post-build process...
+
+153
+
+2025-10-31T21:04:55.895Z [INFO]: ✅ Created .amplify-hosting directory structure
+
+154
+
+                                 📋 Copying server files...
+
+155
+
+2025-10-31T21:04:55.901Z [INFO]: 📦 Installing production dependencies...
+
+156
+
+2025-10-31T21:04:55.990Z [WARNING]: npm warn config production Use `--omit=dev` instead.
+
+157
+
+2025-10-31T21:05:05.489Z [INFO]: added 930 packages, and audited 931 packages in 10s
+
+158
+
+2025-10-31T21:05:05.493Z [INFO]: 73 packages are looking for funding
+
+159
+
+                                 run `npm fund` for details
+
+160
+
+                                 3 low severity vulnerabilities
+
+161
+
+                                 To address all issues, run:
+
+162
+
+                                 npm audit fix
+
+163
+
+                                 Run `npm audit` for details.
+
+164
+
+2025-10-31T21:05:05.522Z [INFO]: ✅ Production dependencies installed
+
+165
+
+                                 🎨 Copying frontend static files...
+
+166
+
+2025-10-31T21:05:05.525Z [INFO]: ✅ Frontend files copied
+
+167
+
+2025-10-31T21:05:05.527Z [INFO]: ✅ Deployment manifest copied
+
+168
+
+2025-10-31T21:05:05.528Z [INFO]: ✅ Environment template created
+
+169
+
+                                 🎉 Post-build process completed!
+
+170
+
+2025-10-31T21:05:05.528Z [INFO]: # Completed phase: build
+
+171
+
+                                 ## Completed Frontend Build
+
+172
+
+2025-10-31T21:05:05.618Z [INFO]: ## Build completed successfully
+
+173
+
+2025-10-31T21:05:05.657Z [INFO]: # Starting caching...
+
+174
+
+2025-10-31T21:05:05.661Z [INFO]: # Creating cache artifact...
+
+175
+
+2025-10-31T21:05:16.568Z [INFO]: # Created cache artifact
+
+176
+
+2025-10-31T21:05:16.693Z [INFO]: # Uploading cache artifact...
+
+177
+
+2025-10-31T21:05:21.644Z [INFO]: # Uploaded cache artifact
+
+178
+
+2025-10-31T21:05:21.810Z [INFO]: # Caching completed
+
+179
+
+2025-10-31T21:05:21.894Z [ERROR]: !!! CustomerError: We failed to validate the deploy-manifest.json file found in your build output directory - An invalid 'deploy-manifest.json' file was provided. The entrypoint file 'index.js' cannot be found for the specified compute resource. Please ensure that the file exists.. When using a framework adapter for hosting on Amplify, double-check that the adapter settings are correct.
+
+180
+
+2025-10-31T21:05:21.895Z [INFO]: # Starting environment caching...
+
+181
+
+2025-10-31T21:05:21.895Z [INFO]: # Uploading environment cache artifact...
+
+182
+
+2025-10-31T21:05:21.983Z [INFO]: # Uploaded environment cache artifact
+
+183
+
+2025-10-31T21:05:21.983Z [INFO]: # Environment caching completed
+
+184
+
