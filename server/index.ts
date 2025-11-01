@@ -39,12 +39,34 @@ async function initialize() {
     console.log("🚀 Starting server initialization...");
 
     try {
-      // Create HTTP server (needed for WebSocket in registerRoutes)
-      const server = createServer(app);
+      // Check if running in AWS Lambda/Amplify environment
+      const isAWS = !!(process.env.AWS_EXECUTION_ENV || process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.AMPLIFY_BRANCH);
 
-      // Register routes and setup WebSocket
-      await registerRoutes(app, server);
-      console.log("✅ Routes and WebSocket registered");
+      if (isAWS) {
+        // AWS Lambda path: Skip HTTP server and WebSocket, just register routes
+        console.log("🔧 AWS environment detected - skipping WebSocket setup");
+        await registerRoutes(app, null);
+        console.log("✅ API routes registered (WebSocket skipped in AWS)");
+      } else {
+        // Local development path: Full setup with WebSocket
+        const server = createServer(app);
+        await registerRoutes(app, server);
+        console.log("✅ Routes and WebSocket registered");
+
+        // Start the local server
+        const port = parseInt(process.env.PORT || "5000", 10);
+        const isWindows = process.platform === "win32";
+        const listenOptions = {
+          port,
+          host: isWindows ? "127.0.0.1" : "0.0.0.0",
+          ...(isWindows ? {} : { reusePort: true }),
+        } as const;
+
+        server.listen(listenOptions, () => {
+          log(`serving on port ${port}`);
+          console.log("🌐 Server listening locally");
+        });
+      }
 
       // Seed admin users
       await seedAdmin();
@@ -60,38 +82,13 @@ async function initialize() {
 
       // Setup Vite in development or serve static files in production
       if (app.get("env") === "development") {
+        const server = createServer(app);
         await setupVite(app, server);
         console.log("✅ Vite dev server configured");
       } else {
         serveStatic(app);
         console.log("✅ Static file serving configured");
       }
-
-      // AWS Amplify Hosting requires compute functions to listen on port 3000
-      // We use PORT env var which AWS Amplify sets to 3000, with fallback to 3000
-      // Local development can override with PORT=5000
-      const port = parseInt(process.env.PORT || "3000", 10);
-      const isWindows = process.platform === "win32";
-
-      const listenOptions = {
-        port,
-        host: isWindows ? "127.0.0.1" : "0.0.0.0",
-        ...(isWindows ? {} : { reusePort: true }),
-      } as const;
-
-      // --------------------- THIS IS THE FIX ---------------------
-      // Only call .listen() when running locally, NOT in AWS environment
-      if (!process.env.AWS_EXECUTION_ENV && !process.env.AWS_LAMBDA_FUNCTION_NAME) {
-        // Start the server for local development
-        server.listen(listenOptions, () => {
-          log(`serving on port ${port}`);
-          console.log("🌐 Server listening locally");
-        });
-      } else {
-        // Log that we are in Amplify and NOT starting a server
-        console.log("✅ Express app initialized for AWS Amplify");
-      }
-      // ------------------- END OF THE FIX -------------------
 
       isInitialized = true;
       console.log("🎉 Server initialization complete!");
@@ -127,3 +124,8 @@ initialize().catch((error) => {
 // Export the app for any tools that might need it
 export default app;
 export { app };
+
+// CommonJS export for AWS Amplify compatibility
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = app;
+}

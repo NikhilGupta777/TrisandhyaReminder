@@ -28,7 +28,7 @@ import {
 import bcrypt from "bcrypt";
 import crypto from "crypto";
 
-export async function registerRoutes(app: Express, httpServer: Server): Promise<void> {
+export async function registerRoutes(app: Express, httpServer: Server | null): Promise<void> {
   // Auth middleware
   await setupAuth(app);
 
