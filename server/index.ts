@@ -6,6 +6,14 @@ import { setupVite, serveStatic, log } from "./vite";
 import { seedAdmin } from "./seedAdmin";
 import { logger } from "./middleware/logger";
 
+// CRITICAL FIX: Force production mode in AWS Amplify environment
+// AWS Amplify doesn't automatically set NODE_ENV=production, which causes
+// the server to try loading Vite dev server (which doesn't exist in production)
+if (process.env.AWS_EXECUTION_ENV || process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.AMPLIFY_BRANCH) {
+  process.env.NODE_ENV = "production";
+  console.log("🔧 Detected AWS environment - forcing NODE_ENV=production");
+}
+
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
