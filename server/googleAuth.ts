@@ -5,6 +5,9 @@ import type { Express, RequestHandler } from "express";
 import MemoryStore from "memorystore";
 import { storage } from "./storage";
 import { setupLocalAuth } from "./localAuth";
+import crypto from "crypto";
+
+let generatedSecret: string | null = null;
 
 export function getSession() {
   let sessionSecret = process.env.SESSION_SECRET;
@@ -12,11 +15,16 @@ export function getSession() {
   if (!sessionSecret) {
     console.error("⚠️  CRITICAL SECURITY WARNING ⚠️");
     console.error("   SESSION_SECRET environment variable is not set!");
-    console.error("   Using a fallback secret, but this is INSECURE for production.");
+    console.error("   Using a randomly generated secret that will change on server restart.");
+    console.error("   This will invalidate all existing sessions on restart!");
     console.error("   Please set SESSION_SECRET in AWS Amplify Console → Environment variables");
     console.error("   Generate a secure secret with: openssl rand -base64 32");
     
-    sessionSecret = "INSECURE_FALLBACK_SECRET_PLEASE_CHANGE_" + Date.now();
+    if (!generatedSecret) {
+      generatedSecret = crypto.randomBytes(32).toString('hex');
+      console.error(`   Generated temporary session secret (valid until restart)`);
+    }
+    sessionSecret = generatedSecret;
   }
 
   const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week in milliseconds
