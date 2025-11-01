@@ -1,0 +1,78 @@
+Alright, this setup is actually well thought out — just one or two subtle things could be tripping the runtime. From what you shared, the **build succeeds**, but the **runtime compute (Express)** is failing once deployed. Here’s the probable root and how to patch it.
+
+---
+
+### 🔥 Core issue
+
+You’re compiling with:
+
+```bash
+esbuild server/index.ts --bundle --format=esm --outdir=dist
+```
+
+and your `package.json` has `"type": "module"`.
+But in your `amplify-hosting/compute/default`, the **postbuild script** copies `dist/index.js` and creates a **new `package.json`** from `server-package.json`.
+
+If that `server-package.json` **doesn’t include `"type": "module"`**, Amplify will treat it as CommonJS.
+Then when it tries to `import` something in your built file, Node 20 throws:
+
+```
+Error [ERR_REQUIRE_ESM]: Must use import to load ES Module
+```
+
+→ which crashes silently as a 500 in Amplify.
+
+---
+
+### ✅ Fix
+
+1. Open your `server-package.json` (the one copied in postbuild).
+2. Make sure it includes this near the top:
+
+   ```json
+   {
+     "type": "module",
+     "main": "index.js",
+     "scripts": {
+       "start": "node index.js"
+     },
+     "dependencies": {
+       "express": "^4.21.2"
+     }
+   }
+   ```
+3. Commit and redeploy.
+
+That alone likely fixes it.
+
+---
+
+### 🧩 If it still 500s
+
+Grab the runtime logs:
+
+* In Amplify Console → Hosting → **Logs** → “Compute” logs.
+  If you see a line like `Cannot find module 'express'`, it means the server-package.json didn’t install dependencies right — add them explicitly.
+
+---
+
+### 💡 Optional refinements
+
+* Add a line at the end of `server/index.ts`:
+
+  ```ts
+  console.log("Server running on port", process.env.PORT);
+  ```
+
+  That way, you’ll see confirmation in logs if it actually starts.
+* You can also tweak `postbuild.sh` to echo Node version before `npm install`:
+
+  ```bash
+  node -v
+  ```
+
+---
+
+In short: your build and deploy pipeline are fine — the runtime crash is almost certainly due to the **missing `"type": "module"` or `start` script in server-package.json**.
+
+Would you like to paste that `server-package.json` here so I can check the exact fix line-by-line?

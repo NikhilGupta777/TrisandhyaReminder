@@ -87,18 +87,49 @@ export async function setupVite(app: Express, server: Server) {
 }
 
 export function serveStatic(app: Express) {
+  // In AWS Amplify, static files are served directly from the CDN
+  // The compute function only handles dynamic routes
+  // Static files are in .amplify-hosting/static/ and served via the manifest routing
+  
+  // For local production testing, try to serve from dist/public
   const distPath = path.resolve(import.meta.dirname, "public");
 
-  if (!fs.existsSync(distPath)) {
-    throw new Error(
-      `Could not find the build directory: ${distPath}, make sure to build the client first`,
-    );
+  if (fs.existsSync(distPath)) {
+    console.log(`📁 Serving static files from: ${distPath}`);
+    app.use(express.static(distPath));
+    
+    // Fall through to index.html for client-side routing
+    app.use("*", (_req, res) => {
+      res.sendFile(path.resolve(distPath, "index.html"));
+    });
+  } else {
+    console.log("📦 AWS Amplify mode: Static files served via CDN");
+    // In AWS Amplify, static files are served by CloudFront
+    // This compute function only handles API routes and SPA fallback
+    // Return a simple response for any unmatched routes
+    app.use("*", (_req, res) => {
+      res.status(200).send(`
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Loading...</title>
+  <meta charset="UTF-8">
+</head>
+<body>
+  <div id="root">
+    <div style="display: flex; justify-content: center; align-items: center; height: 100vh; font-family: system-ui;">
+      <div>Loading application...</div>
+    </div>
+  </div>
+  <script>
+    // Reload to let Amplify's CDN serve the actual frontend
+    if (!window.location.search.includes('retry')) {
+      window.location.href = window.location.pathname + '?retry=1';
+    }
+  </script>
+</body>
+</html>
+      `);
+    });
   }
-
-  app.use(express.static(distPath));
-
-  // fall through to index.html if the file doesn't exist
-  app.use("*", (_req, res) => {
-    res.sendFile(path.resolve(distPath, "index.html"));
-  });
 }
